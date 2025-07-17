@@ -11,7 +11,8 @@ from PySide6.QtWidgets import (
     QTextEdit, QSpinBox
 )
 from PySide6.QtCore import Qt, QDate, Signal
-from PySide6.QtGui import QFont
+from PySide6.QtGui import QFont, QPixmap, QIcon
+import os
 
 from .constants import PROFILE_EQUIPMENT, WORK_TYPES, COLORS
 
@@ -28,6 +29,20 @@ class TaskCreateDialog(QDialog):
         self.profiles = []
         self.products = []
         self.type_works = []
+        
+        # Set window icon - use smaller, cleaner version
+        ico_path = os.path.join(os.path.dirname(__file__), "aditim_logo.ico")
+        icon_32_path = os.path.join(os.path.dirname(__file__), "aditim_logo_32x32.png")
+        png_logo_path = os.path.join(os.path.dirname(__file__), "aditim_logo.png")
+        
+        if os.path.exists(ico_path):
+            self.setWindowIcon(QIcon(ico_path))
+        elif os.path.exists(icon_32_path):
+            self.setWindowIcon(QIcon(icon_32_path))
+        elif os.path.exists(png_logo_path):
+            pixmap = QPixmap(png_logo_path)
+            scaled_icon = pixmap.scaled(32, 32, Qt.AspectRatioMode.KeepAspectRatio, Qt.TransformationMode.SmoothTransformation)
+            self.setWindowIcon(QIcon(scaled_icon))
         
         self.setup_ui()
         self.load_data()

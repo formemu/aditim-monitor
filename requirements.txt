@@ -8,6 +8,7 @@ python-multipart>=0.0.6
 # Client dependencies  
 PySide6>=6.9.1
 httpx>=0.25.2
+Pillow>=10.0.0
 qasync>=0.25.0
 
 # Development tools

@@ -10,7 +10,8 @@ from PySide6.QtWidgets import (
     QAbstractItemView, QMessageBox
 )
 from PySide6.QtCore import Qt, QTimer, Signal, Slot, QThread, QObject
-from PySide6.QtGui import QAction
+from PySide6.QtGui import QAction, QPixmap, QIcon
+import os
 
 from .constants import (
     COLORS, FONTS, SIZES, PATHS, TASK_STATUSES, 
@@ -84,6 +85,21 @@ class MainWindow(QMainWindow):
         self.setWindowTitle("ADITIM Monitor - Задачи")
         self.setGeometry(100, 100, SIZES["MAIN_WINDOW_WIDTH"], SIZES["MAIN_WINDOW_HEIGHT"])
         
+        # Set window icon - use smaller, cleaner version for window icon
+        ico_path = os.path.join(os.path.dirname(__file__), "aditim_logo.ico")
+        icon_32_path = os.path.join(os.path.dirname(__file__), "aditim_logo_32x32.png")
+        png_logo_path = os.path.join(os.path.dirname(__file__), "aditim_logo.png")
+        
+        if os.path.exists(ico_path):
+            self.setWindowIcon(QIcon(ico_path))
+        elif os.path.exists(icon_32_path):
+            self.setWindowIcon(QIcon(icon_32_path))
+        elif os.path.exists(png_logo_path):
+            # Create a smaller icon from the original PNG
+            pixmap = QPixmap(png_logo_path)
+            scaled_icon = pixmap.scaled(32, 32, Qt.AspectRatioMode.KeepAspectRatio, Qt.TransformationMode.SmoothTransformation)
+            self.setWindowIcon(QIcon(scaled_icon))
+        
         # Central widget
         central_widget = QWidget()
         self.setCentralWidget(central_widget)
@@ -94,12 +110,37 @@ class MainWindow(QMainWindow):
         # Status bar
         self.statusBar().showMessage("Инициализация...")
         
-        # Header
+        # Header with logo
         header_layout = QHBoxLayout()
+        
+        # Title
         title_label = QLabel("ЦЕХ МЕТАЛЛООБРАБОТКИ")
         title_label.setObjectName("header_title")
         header_layout.addWidget(title_label)
+        
+        # Spacer to push logo to the right
         header_layout.addStretch()
+        
+        # Logo - bigger and on the right
+        logo_label = QLabel()
+        if os.path.exists(png_logo_path):
+            pixmap = QPixmap(png_logo_path)
+            # Calculate size as 1/3 of window width, with max height of 120px
+            window_width = SIZES["MAIN_WINDOW_WIDTH"]
+            logo_width = window_width // 3
+            logo_height = min(120, logo_width)  # Keep aspect ratio in mind
+            
+            # Scale logo to larger size
+            scaled_pixmap = pixmap.scaled(
+                logo_width, logo_height, 
+                Qt.AspectRatioMode.KeepAspectRatio, 
+                Qt.TransformationMode.SmoothTransformation
+            )
+            logo_label.setPixmap(scaled_pixmap)
+        logo_label.setObjectName("logo_label")
+        logo_label.setAlignment(Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter)
+        header_layout.addWidget(logo_label)
+        
         layout.addLayout(header_layout)
         
         # Filter section
@@ -183,7 +224,14 @@ class MainWindow(QMainWindow):
                     color: {COLORS["PRIMARY"]}; 
                     font-size: 24px; 
                     font-weight: bold; 
-                    margin: 10px;
+                    margin: 15px;
+                    margin-left: 20px;
+                }}
+                
+                QLabel#logo_label {{
+                    margin: 15px;
+                    margin-right: 20px;
+                    padding: 10px;
                 }}
                 
                 QTableWidget {{ 
