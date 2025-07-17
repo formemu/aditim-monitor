@@ -2,9 +2,12 @@
 Constants for ADITIM Monitor Client
 """
 
-# API Configuration
-API_BASE_URL = "http://localhost:8000"
-API_TIMEOUT = 30
+import os
+
+# API Configuration (поддержка VPN и внешнего подключения через переменные окружения)
+# Задайте переменную окружения ADITIM_API_URL, например: http://<host-ip>:8000
+API_BASE_URL = os.getenv('ADITIM_API_URL', 'http://127.0.0.1:8000') # Заменено localhost на 127.0.0.1 для совместимости с VPN
+API_TIMEOUT = int(os.getenv('ADITIM_API_TIMEOUT', '30'))
 
 # UI Colors
 COLORS = {

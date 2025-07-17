@@ -19,7 +19,7 @@ try:
         print("Starting ADITIM Monitor Server...")
         uvicorn.run(
             "src.server.main:app",
-            host="0.0.0.0",
+            host="0.0.0.0", # Слушаем на всех интерфейсах
             port=8000,
             reload=True,
             log_level="info"
