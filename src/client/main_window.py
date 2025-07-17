@@ -18,7 +18,7 @@ from .constants import (
     UPDATE_INTERVAL_MS, MAX_ACTIVE_TASKS
 )
 from .api_client import ApiClient
-from .task_dialog import TaskCreateDialog
+from .widgets import TaskCreateDialog
 
 
 class DataWorker(QObject):
@@ -86,9 +86,9 @@ class MainWindow(QMainWindow):
         self.setGeometry(100, 100, SIZES["MAIN_WINDOW_WIDTH"], SIZES["MAIN_WINDOW_HEIGHT"])
         
         # Set window icon - use smaller, cleaner version for window icon
-        ico_path = os.path.join(os.path.dirname(__file__), "aditim_logo.ico")
-        icon_32_path = os.path.join(os.path.dirname(__file__), "aditim_logo_32x32.png")
-        png_logo_path = os.path.join(os.path.dirname(__file__), "aditim_logo.png")
+        ico_path = os.path.join(os.path.dirname(__file__), "resources", "icons", "aditim_logo.ico")
+        icon_32_path = os.path.join(os.path.dirname(__file__), "resources", "icons", "aditim_logo_32x32.png")
+        png_logo_path = os.path.join(os.path.dirname(__file__), "resources", "icons", "aditim_logo.png")
         
         if os.path.exists(ico_path):
             self.setWindowIcon(QIcon(ico_path))
@@ -214,89 +214,101 @@ class MainWindow(QMainWindow):
     def load_styles(self) -> None:
         """Load application styles"""
         try:
-            style = f"""
-                QMainWindow {{ 
-                    background-color: {COLORS["BACKGROUND"]}; 
-                    color: {COLORS["TEXT_PRIMARY"]};
-                }}
-                
-                QLabel#header_title {{ 
-                    color: {COLORS["PRIMARY"]}; 
-                    font-size: 24px; 
-                    font-weight: bold; 
-                    margin: 15px;
-                    margin-left: 20px;
-                }}
-                
-                QLabel#logo_label {{
-                    margin: 15px;
-                    margin-right: 20px;
-                    padding: 10px;
-                }}
-                
-                QTableWidget {{ 
-                    background-color: {COLORS["SURFACE"]}; 
-                    color: {COLORS["TEXT_PRIMARY"]}; 
-                    border-radius: 8px; 
-                    font-size: 14px;
-                    gridline-color: {COLORS["PRIMARY"]};
-                }}
-                
-                QHeaderView::section {{ 
-                    background-color: {COLORS["SURFACE"]}; 
-                    color: {COLORS["TEXT_SECONDARY"]}; 
-                    font-size: 13px; 
-                    border: none;
-                    padding: 8px;
-                }}
-                
-                QTableWidget::item {{ 
-                    border: none;
-                    padding: 8px;
-                }}
-                
-                QPushButton {{ 
-                    background-color: {COLORS["PRIMARY"]}; 
-                    color: {COLORS["TEXT_PRIMARY"]}; 
-                    border-radius: 6px; 
-                    padding: 8px 16px; 
-                    font-size: 14px;
-                    font-weight: bold;
-                }}
-                
-                QPushButton:hover {{ 
-                    background-color: {COLORS["SECONDARY"]}; 
-                    color: {COLORS["BACKGROUND"]};
-                }}
-                
-                QComboBox {{
-                    background-color: {COLORS["SURFACE"]};
-                    color: {COLORS["TEXT_PRIMARY"]};
-                    border: 1px solid {COLORS["PRIMARY"]};
-                    border-radius: 4px;
-                    padding: 4px 8px;
-                    min-width: 120px;
-                }}
-                
-                QLabel {{
-                    color: {COLORS["TEXT_PRIMARY"]};
-                    font-size: 12px;
-                }}
-                
-                QLabel#info_label {{
-                    color: {COLORS["TEXT_SECONDARY"]};
-                    font-size: 11px;
-                    font-style: italic;
-                }}
-                
-                QStatusBar {{
-                    background-color: {COLORS["SURFACE"]};
-                    color: {COLORS["TEXT_SECONDARY"]};
-                }}
-            """
-            self.setStyleSheet(style)
+            # Load main styles from external file
+            style_path = os.path.join(os.path.dirname(__file__), PATHS["MAIN_STYLE"])
+            if os.path.exists(style_path):
+                with open(style_path, 'r', encoding='utf-8') as f:
+                    self.setStyleSheet(f.read())
+            else:
+                # Fallback to inline styles if file not found
+                self._load_fallback_styles()
         except Exception as e:
             print(f"Error loading styles: {e}")
+            self._load_fallback_styles()
+    
+    def _load_fallback_styles(self):
+        """Fallback inline styles"""
+        style = f"""
+            QMainWindow {{ 
+                background-color: {COLORS["BACKGROUND"]}; 
+                color: {COLORS["TEXT_PRIMARY"]};
+            }}
+            
+            QLabel#header_title {{ 
+                color: {COLORS["PRIMARY"]}; 
+                font-size: 24px; 
+                font-weight: bold; 
+                margin: 15px;
+                margin-left: 20px;
+            }}
+            
+            QLabel#logo_label {{
+                margin: 15px;
+                margin-right: 20px;
+                padding: 10px;
+            }}
+            
+            QTableWidget {{ 
+                background-color: {COLORS["SURFACE"]}; 
+                color: {COLORS["TEXT_PRIMARY"]}; 
+                border-radius: 8px; 
+                font-size: 14px;
+                gridline-color: {COLORS["PRIMARY"]};
+            }}
+            
+            QHeaderView::section {{ 
+                background-color: {COLORS["SURFACE"]}; 
+                color: {COLORS["TEXT_SECONDARY"]}; 
+                font-size: 13px; 
+                border: none;
+                padding: 8px;
+            }}
+            
+            QTableWidget::item {{ 
+                border: none;
+                padding: 8px;
+            }}
+            
+            QPushButton {{ 
+                background-color: {COLORS["PRIMARY"]}; 
+                color: {COLORS["TEXT_PRIMARY"]}; 
+                border-radius: 6px; 
+                padding: 8px 16px; 
+                font-size: 14px;
+                font-weight: bold;
+            }}
+            
+            QPushButton:hover {{ 
+                background-color: {COLORS["SECONDARY"]}; 
+                color: {COLORS["BACKGROUND"]};
+            }}
+            
+            QComboBox {{
+                background-color: {COLORS["SURFACE"]};
+                color: {COLORS["TEXT_PRIMARY"]};
+                border: 1px solid {COLORS["PRIMARY"]};
+                border-radius: 4px;
+                padding: 4px 8px;
+                min-width: 120px;
+            }}
+            
+            QLabel {{
+                color: {COLORS["TEXT_PRIMARY"]};
+                font-size: 12px;
+            }}
+            
+            QLabel#info_label {{
+                color: {COLORS["TEXT_SECONDARY"]};
+                font-size: 11px;
+                font-style: italic;
+            }}
+            
+            QStatusBar {{
+                background-color: {COLORS["SURFACE"]};
+                color: {COLORS["TEXT_SECONDARY"]};
+            }}
+        """
+        self.setStyleSheet(style)
     
     def start_background_loading(self):
         """Start background data loading"""

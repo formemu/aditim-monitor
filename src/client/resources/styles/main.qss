@@ -1,0 +1,80 @@
+/* Main application styles for ADITIM Monitor */
+
+QMainWindow { 
+    background-color: #1e1e1e; 
+    color: #ffffff;
+}
+
+QLabel#header_title { 
+    color: #4CAF50; 
+    font-size: 24px; 
+    font-weight: bold; 
+    margin: 15px;
+    margin-left: 20px;
+}
+
+QLabel#logo_label {
+    margin: 15px;
+    margin-right: 20px;
+    padding: 10px;
+}
+
+QTableWidget { 
+    background-color: #2d2d2d; 
+    color: #ffffff; 
+    border-radius: 8px; 
+    font-size: 14px;
+    gridline-color: #4CAF50;
+}
+
+QHeaderView::section { 
+    background-color: #2d2d2d; 
+    color: #cccccc; 
+    font-size: 13px; 
+    border: none;
+    padding: 8px;
+}
+
+QTableWidget::item { 
+    border: none;
+    padding: 8px;
+}
+
+QPushButton { 
+    background-color: #4CAF50; 
+    color: #ffffff; 
+    border-radius: 6px; 
+    padding: 8px 16px; 
+    font-size: 14px;
+    font-weight: bold;
+}
+
+QPushButton:hover { 
+    background-color: #FFC107; 
+    color: #1e1e1e;
+}
+
+QComboBox {
+    background-color: #2d2d2d;
+    color: #ffffff;
+    border: 1px solid #4CAF50;
+    border-radius: 4px;
+    padding: 4px 8px;
+    min-width: 120px;
+}
+
+QLabel {
+    color: #ffffff;
+    font-size: 12px;
+}
+
+QLabel#info_label {
+    color: #cccccc;
+    font-size: 11px;
+    font-style: italic;
+}
+
+QStatusBar {
+    background-color: #2d2d2d;
+    color: #cccccc;
+}
