@@ -17,6 +17,7 @@ from .constants import (
     UPDATE_INTERVAL_MS, MAX_ACTIVE_TASKS
 )
 from .api_client import ApiClient
+from .task_dialog import TaskCreateDialog
 
 
 class DataWorker(QObject):
@@ -138,6 +139,9 @@ class MainWindow(QMainWindow):
         # Enable drag and drop for reordering
         self.tasks_table.setDragDropMode(QAbstractItemView.DragDropMode.InternalMove)
         
+        # Enable double-click to edit status
+        self.tasks_table.itemDoubleClicked.connect(self.edit_task_status)
+        
         layout.addWidget(self.tasks_table)
         
         # Bottom buttons
@@ -147,7 +151,17 @@ class MainWindow(QMainWindow):
         self.add_task_btn.clicked.connect(self.add_task)
         button_layout.addWidget(self.add_task_btn)
         
+        self.delete_task_btn = QPushButton("Удалить задачу")
+        self.delete_task_btn.clicked.connect(self.delete_selected_task)
+        button_layout.addWidget(self.delete_task_btn)
+        
         button_layout.addStretch()
+        
+        # Add info label
+        info_label = QLabel("💡 Дважды кликните на статус для изменения")
+        info_label.setObjectName("info_label")
+        button_layout.addWidget(info_label)
+        
         layout.addLayout(button_layout)
         
     def setup_timer(self) -> None:
@@ -219,6 +233,12 @@ class MainWindow(QMainWindow):
                 QLabel {{
                     color: {COLORS["TEXT_PRIMARY"]};
                     font-size: 12px;
+                }}
+                
+                QLabel#info_label {{
+                    color: {COLORS["TEXT_SECONDARY"]};
+                    font-size: 11px;
+                    font-style: italic;
                 }}
                 
                 QStatusBar {{
@@ -330,7 +350,97 @@ class MainWindow(QMainWindow):
     
     def add_task(self):
         """Open task creation dialog"""
-        QMessageBox.information(self, "Добавить задачу", "Функция в разработке")
+        dialog = TaskCreateDialog(self.api_client, self)
+        dialog.task_created.connect(self.on_task_created)
+        dialog.exec()
+    
+    @Slot(dict)
+    def on_task_created(self, task_data):
+        """Handle task created"""
+        print(f"Task created: {task_data}")
+        # Refresh tasks to show new task
+        self.start_background_loading()
+    
+    def edit_task_status(self, item):
+        """Edit task status on double-click"""
+        if item.column() == 4:  # Status column
+            row = item.row()
+            if row < len(self.current_tasks):
+                task = self.current_tasks[row]
+                self.show_status_change_dialog(task)
+    
+    def show_status_change_dialog(self, task):
+        """Show dialog to change task status"""
+        try:
+            # Get available statuses
+            statuses = self.api_client.get_statuses()
+            
+            # Create simple input dialog
+            from PySide6.QtWidgets import QInputDialog
+            
+            status_names = [status["name"] for status in statuses]
+            current_status = task.get("status", {}).get("name", "Новая")
+            
+            new_status, ok = QInputDialog.getItem(
+                self, 
+                "Изменить статус",
+                f"Выберите новый статус для задачи #{task['id']}:",
+                status_names,
+                status_names.index(current_status) if current_status in status_names else 0,
+                False
+            )
+            
+            if ok and new_status != current_status:
+                # Find status ID
+                new_status_id = None
+                for status in statuses:
+                    if status["name"] == new_status:
+                        new_status_id = status["id"]
+                        break
+                
+                if new_status_id:
+                    # Update task status
+                    update_data = {"id_status": new_status_id}
+                    self.api_client.update_task(task["id"], update_data)
+                    
+                    QMessageBox.information(self, "Успех", f"Статус задачи изменён на '{new_status}'")
+                    self.start_background_loading()  # Refresh
+                    
+        except Exception as e:
+            QMessageBox.warning(self, "Ошибка", f"Не удалось изменить статус: {e}")
+    
+    def delete_selected_task(self):
+        """Delete selected task"""
+        current_row = self.tasks_table.currentRow()
+        if current_row < 0:
+            QMessageBox.warning(self, "Предупреждение", "Выберите задачу для удаления")
+            return
+        
+        if current_row >= len(self.current_tasks):
+            QMessageBox.warning(self, "Ошибка", "Некорректный выбор задачи")
+            return
+        
+        task = self.current_tasks[current_row]
+        task_id = task["id"]
+        
+        # Get task description for confirmation
+        description = self.get_task_description(task)
+        
+        reply = QMessageBox.question(
+            self, 
+            "Подтверждение удаления",
+            f"Вы уверены, что хотите удалить задачу:\n{description}?",
+            QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
+            QMessageBox.StandardButton.No
+        )
+        
+        if reply == QMessageBox.StandardButton.Yes:
+            try:
+                self.api_client.delete_task(task_id)
+                QMessageBox.information(self, "Успех", "Задача удалена")
+                self.start_background_loading()  # Refresh tasks
+            except Exception as e:
+                QMessageBox.warning(self, "Ошибка", f"Не удалось удалить задачу: {e}")
     
     def closeEvent(self, event) -> None:
         """Handle window close event"""
