@@ -11,6 +11,9 @@ httpx>=0.25.2
 Pillow>=10.0.0
 qasync>=0.25.0
 
+# Configuration
+PyYAML>=6.0.1
+
 # Development tools
 black>=23.11.0
 flake8>=6.1.0

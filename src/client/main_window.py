@@ -18,7 +18,7 @@ from .constants import (
     UPDATE_INTERVAL_MS, MAX_ACTIVE_TASKS
 )
 from .api_client import ApiClient
-from .widgets import TaskCreateDialog
+from .widgets.task_dialog import TaskCreateDialog
 
 
 class DataWorker(QObject):
