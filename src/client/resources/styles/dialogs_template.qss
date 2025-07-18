@@ -1,23 +1,23 @@
 /* Dialog styles for ADITIM Monitor */
 
 QDialog {
-    background-color: #181B20;
-    color: #FFFFFF;
+    background-color: $COLOR_BACKGROUND;
+    color: $COLOR_TEXT_PRIMARY;
 }
 
 QTabWidget {
-    background-color: #23262B;
+    background-color: $COLOR_SURFACE;
 }
 
 QTabWidget::pane {
-    border: 1px solid #2196F3;
+    border: 1px solid $COLOR_PRIMARY;
     border-radius: 4px;
-    background-color: #23262B;
+    background-color: $COLOR_SURFACE;
 }
 
 QTabBar::tab {
-    background-color: #23262B;
-    color: #FFFFFF;
+    background-color: $COLOR_SURFACE;
+    color: $COLOR_TEXT_PRIMARY;
     padding: 8px 16px;
     margin-right: 2px;
     border-top-left-radius: 4px;
@@ -25,16 +25,16 @@ QTabBar::tab {
 }
 
 QTabBar::tab:selected {
-    background-color: #2196F3;
-    color: #FFFFFF;
+    background-color: $COLOR_PRIMARY;
+    color: $COLOR_TEXT_PRIMARY;
 }
 
 QTabBar::tab:hover {
-    background-color: #FFC107;
+    background-color: $COLOR_SECONDARY;
 }
 
 QCheckBox {
-    color: #FFFFFF;
+    color: $COLOR_TEXT_PRIMARY;
     spacing: 5px;
 }
 
@@ -45,18 +45,18 @@ QCheckBox::indicator {
 
 QCheckBox::indicator:unchecked {
     border: 2px solid #cccccc;
-    background-color: #23262B;
+    background-color: $COLOR_SURFACE;
     border-radius: 3px;
 }
 
 QCheckBox::indicator:checked {
-    border: 2px solid #2196F3;
-    background-color: #2196F3;
+    border: 2px solid $COLOR_PRIMARY;
+    background-color: $COLOR_PRIMARY;
     border-radius: 3px;
 }
 
 QRadioButton {
-    color: #FFFFFF;
+    color: $COLOR_TEXT_PRIMARY;
     spacing: 5px;
 }
 
@@ -66,20 +66,20 @@ QRadioButton::indicator {
 }
 
 QRadioButton::indicator:unchecked {
-    border: 2px solid #FFC107;
-    background-color: #23262B;
+    border: 2px solid $COLOR_SECONDARY;
+    background-color: $COLOR_SURFACE;
     border-radius: 9px;
 }
 
 QRadioButton::indicator:checked {
-    border: 2px solid #2196F3;
-    background-color: #2196F3;
+    border: 2px solid $COLOR_PRIMARY;
+    background-color: $COLOR_PRIMARY;
     border-radius: 9px;
 }
 
 QGroupBox {
-    color: #FFFFFF;
-    border: 2px solid #2196F3;
+    color: $COLOR_TEXT_PRIMARY;
+    border: 2px solid $COLOR_PRIMARY;
     border-radius: 5px;
     margin-top: 1ex;
     font-weight: bold;
@@ -92,50 +92,50 @@ QGroupBox::title {
 }
 
 QDateEdit {
-    background-color: #23262B;
-    color: #FFFFFF;
-    border: 1px solid #2196F3;
+    background-color: $COLOR_SURFACE;
+    color: $COLOR_TEXT_PRIMARY;
+    border: 1px solid $COLOR_PRIMARY;
     border-radius: 4px;
     padding: 4px 8px;
 }
 
 QListWidget {
-    background-color: #23262B;
-    color: #FFFFFF;
-    border: 1px solid #2196F3;
+    background-color: $COLOR_SURFACE;
+    color: $COLOR_TEXT_PRIMARY;
+    border: 1px solid $COLOR_PRIMARY;
     border-radius: 4px;
 }
 
 QListWidget::item {
     padding: 4px;
-    border-bottom: 1px solid #FFC107;
+    border-bottom: 1px solid $COLOR_SECONDARY;
 }
 
 QListWidget::item:selected {
-    background-color: #2196F3;
-    color: #FFFFFF;
+    background-color: $COLOR_PRIMARY;
+    color: $COLOR_TEXT_PRIMARY;
 }
 
 QLineEdit {
-    background-color: #23262B;
-    color: #FFFFFF;
-    border: 1px solid #2196F3;
+    background-color: $COLOR_SURFACE;
+    color: $COLOR_TEXT_PRIMARY;
+    border: 1px solid $COLOR_PRIMARY;
     border-radius: 4px;
     padding: 4px 8px;
 }
 
 QSpinBox {
-    background-color: #23262B;
-    color: #FFFFFF;
-    border: 1px solid #2196F3;
+    background-color: $COLOR_SURFACE;
+    color: $COLOR_TEXT_PRIMARY;
+    border: 1px solid $COLOR_PRIMARY;
     border-radius: 4px;
     padding: 4px 8px;
 }
 
 QComboBox {
-    background-color: #23262B;
-    color: #FFFFFF;
-    border: 1px solid #2196F3;
+    background-color: $COLOR_SURFACE;
+    color: $COLOR_TEXT_PRIMARY;
+    border: 1px solid $COLOR_PRIMARY;
     border-radius: 4px;
     padding: 4px 8px;
 }
@@ -143,20 +143,20 @@ QComboBox {
 QComboBox::drop-down {
     border: none;
     border-radius: 4px;
-    background-color: #2196F3;
+    background-color: $COLOR_PRIMARY;
     width: 20px;
 }
 
 QComboBox QAbstractItemView {
-    background-color: #23262B;
-    color: #FFFFFF;
-    border: 1px solid #2196F3;
+    background-color: $COLOR_SURFACE;
+    color: $COLOR_TEXT_PRIMARY;
+    border: 1px solid $COLOR_PRIMARY;
     border-radius: 4px;
 }
 
 QPushButton {
-    background-color: #2196F3;
-    color: #FFFFFF;
+    background-color: $COLOR_PRIMARY;
+    color: $COLOR_TEXT_PRIMARY;
     border-radius: 6px;
     padding: 8px 16px;
     font-size: 14px;

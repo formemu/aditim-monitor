@@ -1,12 +1,12 @@
 /* Main application styles for ADITIM Monitor */
 
 QMainWindow { 
-    background-color: #181B20; 
-    color: #FFFFFF;
+    background-color: $COLOR_BACKGROUND; 
+    color: $COLOR_TEXT_PRIMARY;
 }
 
 QLabel#header_title { 
-    color: #2196F3; 
+    color: $COLOR_PRIMARY; 
     font-size: 24px; 
     font-weight: bold; 
     margin: 15px;
@@ -20,16 +20,16 @@ QLabel#logo_label {
 }
 
 QTableWidget { 
-    background-color: #23262B; 
-    color: #FFFFFF; 
+    background-color: $COLOR_SURFACE; 
+    color: $COLOR_TEXT_PRIMARY; 
     border-radius: 8px; 
     font-size: 14px;
-    gridline-color: #2196F3;
+    gridline-color: $COLOR_PRIMARY;
 }
 
 QHeaderView::section { 
-    background-color: #23262B; 
-    color: #90CAF9; 
+    background-color: $COLOR_SURFACE; 
+    color: $COLOR_TEXT_SECONDARY; 
     font-size: 13px; 
     border: none;
     padding: 8px;
@@ -41,8 +41,8 @@ QTableWidget::item {
 }
 
 QPushButton { 
-    background-color: #2196F3; 
-    color: #FFFFFF; 
+    background-color: $COLOR_PRIMARY; 
+    color: $COLOR_TEXT_PRIMARY; 
     border-radius: 6px; 
     padding: 8px 16px; 
     font-size: 14px;
@@ -58,8 +58,8 @@ QPushButton:pressed {
 }
 
 QComboBox { 
-    background-color: #23262B; 
-    color: #FFFFFF; 
+    background-color: $COLOR_SURFACE; 
+    color: $COLOR_TEXT_PRIMARY; 
     border-radius: 6px; 
     padding: 8px;
     font-size: 14px;
@@ -68,7 +68,7 @@ QComboBox {
 QComboBox::drop-down { 
     border: none;
     border-radius: 6px;
-    background-color: #2196F3;
+    background-color: $COLOR_PRIMARY;
     width: 20px;
 }
 
@@ -79,7 +79,7 @@ QComboBox::down-arrow {
 }
 
 QComboBox QAbstractItemView { 
-    background-color: #23262B; 
-    color: #FFFFFF; 
+    background-color: $COLOR_SURFACE; 
+    color: $COLOR_TEXT_PRIMARY; 
     border-radius: 6px;
 }

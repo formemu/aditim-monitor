@@ -62,30 +62,30 @@ class ApiClient:
     # Directory operations
     def get_departments(self) -> List[Dict[Any, Any]]:
         """Get all departments"""
-        return self._request("GET", "/api/directories/departments/")
+        return self._request("GET", "/api/directories/departments")
     
     def get_statuses(self) -> List[Dict[Any, Any]]:
         """Get all task statuses"""
-        return self._request("GET", "/api/directories/statuses/")
+        return self._request("GET", "/api/directories/statuses")
     
     def get_type_works(self) -> List[Dict[Any, Any]]:
         """Get all work types"""
-        return self._request("GET", "/api/directories/type_works/")
+        return self._request("GET", "/api/directories/work_types")
     
     # Profile operations
     def get_profiles(self) -> List[Dict[Any, Any]]:
         """Get all profiles"""
-        return self._request("GET", "/api/profiles/")
+        return self._request("GET", "/api/profiles")
     
     def create_profile(self, profile_data: Dict[str, Any]) -> Dict[Any, Any]:
         """Create new profile"""
-        return self._request("POST", "/api/profiles/", json=profile_data)
+        return self._request("POST", "/api/profiles", json=profile_data)
     
     # Product operations  
     def get_products(self) -> List[Dict[Any, Any]]:
         """Get all products"""
-        return self._request("GET", "/api/products/")
+        return self._request("GET", "/api/products")
     
     def create_product(self, product_data: Dict[str, Any]) -> Dict[Any, Any]:
         """Create new product"""
-        return self._request("POST", "/api/products/", json=product_data)
+        return self._request("POST", "/api/products", json=product_data)

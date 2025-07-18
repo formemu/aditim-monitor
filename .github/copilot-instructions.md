@@ -221,53 +221,29 @@ PATHS = {
   - `asyncqt + asyncio` (if applicable)
 - Don't block the main thread!
 
-### 🔄 Real-time Updates
-- Client updates every 5 seconds or on demand
-- Use WebSockets or polling for real-time task status changes
-- All operations must be asynchronous to prevent UI freezing
+### Style Guidelines
 
-### File Organization
-```
-src/
-├── server/
-│   ├── main.py              # FastAPI app
-│   ├── models/              # SQLAlchemy models  
-│   ├── api/                 # Route handlers grouped by entities
-│   └── schemas/             # Pydantic models
-├── client/
-│   ├── main.py              # PySide6 app entry
-│   ├── ui/                  # .ui files
-│   ├── widgets/             # Custom widgets
-│   ├── api_client.py        # HTTP client
-│   ├── constants.py         # UI constants (colors, sizes, paths)
-│   └── resources/           # Static resources
-│       ├── styles/          # QSS style files
-│       │   ├── main.qss     # Main application styles
-│       │   └── dialogs.qss  # Dialog-specific styles
-│       ├── icons/           # Application icons
-│       ├── images/          # Images and graphics
-│       └── resources.qrc    # Qt resource file
-└── shared/                  # Common utilities
+#### Color Management
+- All colors used in QSS files must be defined in `constants.py` under the `COLORS` dictionary.
+- Use the `COLOR_` prefix for all color keys (e.g., `COLOR_PRIMARY`, `COLOR_BACKGROUND`).
+- Avoid hardcoding colors directly in QSS files.
+
+#### Example Usage
+```qss
+QPushButton {
+    background-color: COLORS["COLOR_PRIMARY"];
+    color: COLORS["COLOR_TEXT_PRIMARY"];
+}
 ```
 
-## 🛡️ Error Handling & Best Practices
+#### File Organization
+- `constants.py`: Contains all color definitions.
+- `styles/main.qss`: Main application styles.
+- `styles/dialogs.qss`: Dialog-specific styles.
 
-### Exception Handling
-- Handle exceptions, especially when working with external resources
-- Use `try...except` where necessary
-- Don't ignore errors — at least log them
-- Use structured logging with proper levels
-
-### Code Quality
-- ✨ Extract repeating functionality: If the same code appears twice — make it a method or function
-- 📚 Comments: Write docstrings for classes and methods. Explain non-obvious logic inside methods
-- Use comments for separating blocks (`#region ... #endregion`)
-
-### Async Best Practices
-- All database operations should be async
-- Use httpx for async HTTP requests in client
-- FastAPI endpoints should use async/await
-- PySide6 long operations must use QThread to prevent UI blocking
+#### Maintenance
+- Update `constants.py` for any color changes.
+- Ensure all QSS files reference colors from `constants.py`.
 
 ## Critical Implementation Notes
 

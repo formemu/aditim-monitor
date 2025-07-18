@@ -16,7 +16,8 @@ Base.metadata.create_all(bind=engine)
 app = FastAPI(
     title="ADITIM Monitor API",
     description="Task management system for metalworking workshop",
-    version="1.0.0"
+    version="1.0.0",
+    redirect_slashes=False
 )
 
 # CORS настройки

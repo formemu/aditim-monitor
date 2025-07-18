@@ -13,12 +13,13 @@ from PySide6.QtCore import Qt, QTimer, Signal, Slot, QThread, QObject
 from PySide6.QtGui import QAction, QPixmap, QIcon
 import os
 
+from .style_utils import load_styles_with_constants
 from .constants import (
     COLORS, FONTS, SIZES, PATHS, TASK_STATUSES, 
     UPDATE_INTERVAL_MS, MAX_ACTIVE_TASKS
 )
 from .api_client import ApiClient
-from .widgets.task_dialog import TaskCreateDialog
+from .widgets.dialog_task import DialogTask
 
 
 class DataWorker(QObject):
@@ -214,14 +215,9 @@ class MainWindow(QMainWindow):
     def load_styles(self) -> None:
         """Load application styles"""
         try:
-            # Load main styles from external file
-            style_path = os.path.join(os.path.dirname(__file__), PATHS["MAIN_STYLE"])
-            if os.path.exists(style_path):
-                with open(style_path, 'r', encoding='utf-8') as f:
-                    self.setStyleSheet(f.read())
-            else:
-                # Fallback to inline styles if file not found
-                self._load_fallback_styles()
+            # Load main styles from template file with constants
+            stylesheet = load_styles_with_constants("src/client/resources/styles/main_template.qss")
+            self.setStyleSheet(stylesheet)
         except Exception as e:
             print(f"Error loading styles: {e}")
             self._load_fallback_styles()
@@ -410,7 +406,7 @@ class MainWindow(QMainWindow):
     
     def add_task(self):
         """Open task creation dialog"""
-        dialog = TaskCreateDialog(self.api_client, self)
+        dialog = DialogTask(self.api_client, self)
         dialog.task_created.connect(self.on_task_created)
         dialog.exec()
     
@@ -505,14 +501,20 @@ class MainWindow(QMainWindow):
     def closeEvent(self, event) -> None:
         """Handle window close event"""
         print("Closing ADITIM Monitor Client...")
-        
+
         # Stop timer
         if hasattr(self, 'timer'):
             self.timer.stop()
-        
+
         # Clean up worker thread
-        if self.worker_thread and self.worker_thread.isRunning():
-            self.worker_thread.quit()
-            self.worker_thread.wait(2000)  # Wait up to 2 seconds
-        
+        if self.worker_thread is not None:
+            try:
+                if self.worker_thread.isRunning():
+                    self.worker_thread.quit()
+                    self.worker_thread.wait()
+            except RuntimeError:
+                # Thread object already deleted, ignore
+                pass
+            self.worker_thread = None
+
         event.accept()

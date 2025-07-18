@@ -11,14 +11,14 @@ API_TIMEOUT = int(os.getenv('ADITIM_API_TIMEOUT', '30'))
 
 # UI Colors
 COLORS = {
-    "PRIMARY": "#2196F3",
-    "SECONDARY": "#FFC107", 
-    "SUCCESS": "#4CAF50",
-    "ERROR": "#F44336",
-    "BACKGROUND": "#181B20",
-    "SURFACE": "#23262B",
-    "TEXT_PRIMARY": "#FFFFFF",
-    "TEXT_SECONDARY": "#90CAF9"
+    "COLOR_PRIMARY": "#2196F3",
+    "COLOR_SECONDARY": "#2196F3", 
+    "COLOR_SUCCESS": "#2196F3",
+    "COLOR_ERROR": "#F44336",
+    "COLOR_BACKGROUND": "#181B20",
+    "COLOR_SURFACE": "#23262B",
+    "COLOR_TEXT_PRIMARY": "#FFFFFF",
+    "COLOR_TEXT_SECONDARY": "#90CAF9"
 }
 
 # UI Fonts
@@ -41,6 +41,7 @@ SIZES = {
 PATHS = {
     "MAIN_STYLE": "src/client/resources/styles/main.qss",
     "DIALOG_STYLE": "src/client/resources/styles/dialogs.qss", 
+    "DIALOG_TASK_UI": "src/client/ui/dialogtask.ui",
     "ICONS": "src/client/resources/icons/",
     "IMAGES": "src/client/resources/images/"
 }
