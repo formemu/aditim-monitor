@@ -60,13 +60,13 @@ class ApiClient:
                            json={"position": new_position})
     
     # Directory operations
-    def get_statuses(self) -> List[Dict[Any, Any]]:
-        """Get all task statuses"""
-        return self._request("GET", "/api/directories/statuses/")
-    
     def get_departments(self) -> List[Dict[Any, Any]]:
         """Get all departments"""
         return self._request("GET", "/api/directories/departments/")
+    
+    def get_statuses(self) -> List[Dict[Any, Any]]:
+        """Get all task statuses"""
+        return self._request("GET", "/api/directories/statuses/")
     
     def get_type_works(self) -> List[Dict[Any, Any]]:
         """Get all work types"""

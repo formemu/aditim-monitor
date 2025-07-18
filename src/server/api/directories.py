@@ -10,7 +10,7 @@ from ..database import get_db
 from ..models.directories import DirDepartament, DirQueueStatus, DirTypeWork, DirComponent
 from ..schemas.directories import DepartamentResponse, StatusResponse, TypeWorkResponse, ComponentResponse
 
-router = APIRouter(prefix="/api/directories", tags=["directories"])
+router = APIRouter(prefix="/api/directories", tags=["directories"], redirect_slashes=False)
 
 
 @router.get("/departments", response_model=List[DepartamentResponse])
