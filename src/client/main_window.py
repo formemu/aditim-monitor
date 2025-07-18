@@ -6,20 +6,21 @@ from typing import List, Dict, Any
 from PySide6.QtWidgets import (
     QMainWindow, QWidget, QVBoxLayout, QHBoxLayout,
     QTableWidget, QTableWidgetItem, QPushButton, 
-    QComboBox, QLabel, QStatusBar, QHeaderView,
+    QComboBox, QLabel,  QHeaderView,
     QAbstractItemView, QMessageBox
 )
 from PySide6.QtCore import Qt, QTimer, Signal, Slot, QThread, QObject
-from PySide6.QtGui import QAction, QPixmap, QIcon
+from PySide6.QtGui import QPixmap, QIcon
 import os
 
 from .style_utils import load_styles_with_constants
 from .constants import (
-    COLORS, FONTS, SIZES, PATHS, TASK_STATUSES, 
-    UPDATE_INTERVAL_MS, MAX_ACTIVE_TASKS
+    COLORS, SIZES, UPDATE_INTERVAL_MS
 )
 from .api_client import ApiClient
 from .widgets.dialog_task import DialogTask
+from .exceptions import DataLoadError
+from .error_handler import handle_api_error
 
 
 class DataWorker(QObject):
@@ -41,8 +42,6 @@ class DataWorker(QObject):
             self.tasks_loaded.emit(tasks)
         except Exception as e:
             self.error_occurred.emit(str(e))
-        finally:
-            self.finished.emit()
     
     @Slot()
     def load_filters(self):
@@ -54,8 +53,6 @@ class DataWorker(QObject):
             self.filters_loaded.emit(filters)
         except Exception as e:
             self.error_occurred.emit(str(e))
-        finally:
-            self.finished.emit()
 
 
 class MainWindow(QMainWindow):
@@ -220,91 +217,6 @@ class MainWindow(QMainWindow):
             self.setStyleSheet(stylesheet)
         except Exception as e:
             print(f"Error loading styles: {e}")
-            self._load_fallback_styles()
-    
-    def _load_fallback_styles(self):
-        """Fallback inline styles"""
-        style = f"""
-            QMainWindow {{ 
-                background-color: {COLORS["BACKGROUND"]}; 
-                color: {COLORS["TEXT_PRIMARY"]};
-            }}
-            
-            QLabel#header_title {{ 
-                color: {COLORS["PRIMARY"]}; 
-                font-size: 24px; 
-                font-weight: bold; 
-                margin: 15px;
-                margin-left: 20px;
-            }}
-            
-            QLabel#logo_label {{
-                margin: 15px;
-                margin-right: 20px;
-                padding: 10px;
-            }}
-            
-            QTableWidget {{ 
-                background-color: {COLORS["SURFACE"]}; 
-                color: {COLORS["TEXT_PRIMARY"]}; 
-                border-radius: 8px; 
-                font-size: 14px;
-                gridline-color: {COLORS["PRIMARY"]};
-            }}
-            
-            QHeaderView::section {{ 
-                background-color: {COLORS["SURFACE"]}; 
-                color: {COLORS["TEXT_SECONDARY"]}; 
-                font-size: 13px; 
-                border: none;
-                padding: 8px;
-            }}
-            
-            QTableWidget::item {{ 
-                border: none;
-                padding: 8px;
-            }}
-            
-            QPushButton {{ 
-                background-color: {COLORS["PRIMARY"]}; 
-                color: {COLORS["TEXT_PRIMARY"]}; 
-                border-radius: 6px; 
-                padding: 8px 16px; 
-                font-size: 14px;
-                font-weight: bold;
-            }}
-            
-            QPushButton:hover {{ 
-                background-color: {COLORS["SECONDARY"]}; 
-                color: {COLORS["BACKGROUND"]};
-            }}
-            
-            QComboBox {{
-                background-color: {COLORS["SURFACE"]};
-                color: {COLORS["TEXT_PRIMARY"]};
-                border: 1px solid {COLORS["PRIMARY"]};
-                border-radius: 4px;
-                padding: 4px 8px;
-                min-width: 120px;
-            }}
-            
-            QLabel {{
-                color: {COLORS["TEXT_PRIMARY"]};
-                font-size: 12px;
-            }}
-            
-            QLabel#info_label {{
-                color: {COLORS["TEXT_SECONDARY"]};
-                font-size: 11px;
-                font-style: italic;
-            }}
-            
-            QStatusBar {{
-                background-color: {COLORS["SURFACE"]};
-                color: {COLORS["TEXT_SECONDARY"]};
-            }}
-        """
-        self.setStyleSheet(style)
     
     def start_background_loading(self):
         """Start background data loading"""
@@ -347,13 +259,7 @@ class MainWindow(QMainWindow):
         """Handle error"""
         print(f"Error: {error_msg}")
         self.statusBar().showMessage(f"Ошибка: {error_msg}")
-        
-        # Show error message to user
-        QMessageBox.warning(
-            self, 
-            "Ошибка подключения", 
-            f"Не удалось подключиться к серверу:\n{error_msg}\n\nПроверьте, что сервер запущен."
-        )
+        handle_api_error(self, error_msg)
     
     @Slot()
     def on_loading_finished(self):

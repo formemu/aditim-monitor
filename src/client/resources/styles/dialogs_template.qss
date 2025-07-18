@@ -163,10 +163,13 @@ QPushButton {
     font-weight: bold;
 }
 
-QPushButton:hover {
-    background-color: #1976D2;
-}
 
-QPushButton:pressed {
-    background-color: #1565C0;
+QPushButton[objectName="pushButton_product_equipment_add"],
+QPushButton[objectName="pushButton_product_equipment_delete"], 
+QPushButton[objectName="pushButton_product_equipment_edit"] {
+    width: 40px;
+    height: 30px; 
+
+    border-radius: 5px;
+    padding: 0px;
 }

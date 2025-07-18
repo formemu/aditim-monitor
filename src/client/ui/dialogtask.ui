@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>656</width>
-    <height>539</height>
+    <width>671</width>
+    <height>540</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -34,7 +34,7 @@
       </font>
      </property>
      <property name="currentIndex">
-      <number>0</number>
+      <number>1</number>
      </property>
      <widget class="QWidget" name="tab_profile">
       <attribute name="title">
@@ -512,7 +512,7 @@
                 </size>
                </property>
                <property name="text">
-                <string>+</string>
+                <string/>
                </property>
               </widget>
              </item>
@@ -525,7 +525,7 @@
                 </size>
                </property>
                <property name="text">
-                <string>-</string>
+                <string/>
                </property>
               </widget>
              </item>
@@ -538,7 +538,7 @@
                 </size>
                </property>
                <property name="text">
-                <string>E</string>
+                <string/>
                </property>
               </widget>
              </item>

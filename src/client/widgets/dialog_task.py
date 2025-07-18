@@ -1,15 +1,14 @@
-from typing import List, Dict, Any
-from PySide6.QtWidgets import (
-    QVBoxLayout, QHBoxLayout, QTabWidget, QWidget,
-    QComboBox, QCheckBox, QDateEdit, QListWidget, QPushButton,
-    QGroupBox, QFormLayout, QRadioButton, QButtonGroup, QMessageBox
-)
-from PySide6.QtCore import Qt, QDate, Signal
+from typing import Dict, Any
+from PySide6.QtWidgets import ( QCheckBox , QMessageBox)
+from PySide6.QtCore import Signal, QSize, QSize
 from PySide6.QtWidgets import QDialog
 from PySide6.QtUiTools import QUiLoader
 from PySide6.QtCore import QFile
+from PySide6.QtGui import QIcon
+import os
 from ..style_utils import load_styles_with_constants
 from ..constants import PATHS
+from ..resources import ICON_PATHS 
 
 class DialogTask(QDialog):
     task_created = Signal(dict)
@@ -48,6 +47,19 @@ class DialogTask(QDialog):
     def setup_logic(self):
         self.ui.buttonBox.accepted.connect(self.create_task)
         self.ui.buttonBox.rejected.connect(self.reject)
+
+        # Set icons for buttons
+        button = self.ui.pushButton_product_equipment_add
+        button.setIcon(QIcon(ICON_PATHS["ADD"]))
+        button.setIconSize(QSize(24, 24))
+
+        button = self.ui.pushButton_product_equipment_delete
+        button.setIcon(QIcon(ICON_PATHS["DELETE"]))
+        button.setIconSize(QSize(24, 24))
+
+        button = self.ui.pushButton_product_equipment_edit
+        button.setIcon(QIcon(ICON_PATHS["EDIT"]))
+        button.setIconSize(QSize(24, 24))
 
     def load_data(self):
         try:
