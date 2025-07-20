@@ -26,10 +26,7 @@ class DialogCreateProfile(QDialog):
         
         # Загружаем UI файл
         self.load_ui()
-        
-        # Применяем стили
-        self.apply_styles()
-        
+       
         # Настраиваем логику
         self.setup_logic()
 
@@ -45,13 +42,7 @@ class DialogCreateProfile(QDialog):
         # Заменяем layout
         self.setLayout(self.ui.layout())
 
-    def apply_styles(self):
-        """Применяет стили к диалогу"""
-        try:
-            stylesheet = load_styles_with_constants("src/client/resources/styles/dialogs_template.qss")
-            self.setStyleSheet(stylesheet)
-        except Exception as e:
-            print(f"Предупреждение: Не удалось загрузить стили: {e}")
+
 
     def setup_logic(self):
         """Настраивает логику диалога"""
@@ -95,6 +86,7 @@ class DialogCreateProfile(QDialog):
     def validate_and_get_data(self) -> Dict[str, Any]:
         """Валидирует введенные данные и возвращает их"""
         article = self.ui.lineEdit_article.text().strip()
+        description = self.ui.textEdit_description.toPlainText().strip()
         
         # Проверка обязательных полей
         if not article:
@@ -106,6 +98,7 @@ class DialogCreateProfile(QDialog):
         
         data = {
             "article": article,
+            "description": description if description else None,
             "sketch": self.image_data if self.image_data else None
         }
         

@@ -10,6 +10,7 @@ from .constants import UI_PATHS_ABS as UI_PATHS, STYLE_PATHS_ABS as STYLE_PATHS
 from .style_utils import load_styles_with_constants
 from .widgets.home_page import HomePage
 from .windows.window_profiles import ProfilesContent
+from .api_client import ApiClient
 
 
 class MainWindow(QMainWindow):
@@ -17,6 +18,8 @@ class MainWindow(QMainWindow):
     
     def __init__(self):
         super().__init__()
+        # Создаем API клиент
+        self.api_client = ApiClient()
         self.load_ui()
         self.setup_content()
         self.setup_ui()
@@ -47,8 +50,8 @@ class MainWindow(QMainWindow):
         # Создаем домашнюю страницу
         self.home_page = HomePage()
         
-        # Создаем страницу профилей
-        self.profiles_content = ProfilesContent()
+        # Создаем страницу профилей с API клиентом
+        self.profiles_content = ProfilesContent(self.api_client)
         
         # Добавляем в стек
         self.ui.stackedWidget_content.addWidget(self.home_page.ui)

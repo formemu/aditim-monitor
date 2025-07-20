@@ -32,6 +32,7 @@ class Profile(Base):
     __tablename__ = "profile"
     id = Column(Integer, primary_key=True, index=True)
     article = Column(String, nullable=False, unique=True)
+    description = Column(String, nullable=True)  # Описание профиля
     sketch = Column(LargeBinary, nullable=True)  # Бинарные данные изображения
 
 

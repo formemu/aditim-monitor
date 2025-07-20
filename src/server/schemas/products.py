@@ -32,6 +32,7 @@ class ProductResponse(ProductBase):
 
 class ProfileBase(BaseModel):
     article: str
+    description: Optional[str] = None  # Описание профиля
     sketch: Optional[Union[str, bytes]] = None  # Base64 encoded image data or binary
 
 
@@ -41,6 +42,7 @@ class ProfileCreate(ProfileBase):
 
 class ProfileUpdate(BaseModel):
     article: Optional[str] = None
+    description: Optional[str] = None  # Описание профиля
     sketch: Optional[Union[str, bytes]] = None  # Base64 encoded image data or binary
 
 

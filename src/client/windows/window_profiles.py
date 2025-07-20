@@ -7,15 +7,19 @@ from PySide6.QtCore import QFile
 from PySide6.QtUiTools import QUiLoader
 
 from ..constants import UI_PATHS_ABS as UI_PATHS
+from ..widgets.dialog_create_profile import DialogCreateProfile
+from ..api_client import ApiClient
 
 
 class ProfilesContent(QWidget):
     """Виджет содержимого профилей"""
     
-    def __init__(self):
+    def __init__(self, api_client: ApiClient = None):
         super().__init__()
+        self.api_client = api_client or ApiClient()
         self.load_ui()
         self.setup_ui()
+        self.load_profiles_from_server()
 
     def load_ui(self):
         """Загрузка UI из файла"""
@@ -42,7 +46,80 @@ class ProfilesContent(QWidget):
 
     def on_add_clicked(self):
         """Добавление нового профиля"""
-        QMessageBox.information(self, "Добавить", "Добавление нового профиля")
+        try:
+            # Создаем диалог создания профиля
+            dialog = DialogCreateProfile(self.api_client, self)
+            
+            # Подключаем сигнал успешного создания профиля
+            dialog.profile_created.connect(self.on_profile_created)
+            
+            # Показываем диалог
+            dialog.exec()
+            
+        except Exception as e:
+            QMessageBox.critical(self, "Ошибка", f"Не удалось открыть диалог создания профиля: {e}")
+
+    def on_profile_created(self, profile_data):
+        """Обработчик успешного создания профиля"""
+        try:
+            # Перезагружаем список профилей с сервера
+            self.load_profiles_from_server()
+            
+            # Находим и выделяем новый профиль в таблице
+            for row in range(self.ui.tableWidget_profiles.rowCount()):
+                article_item = self.ui.tableWidget_profiles.item(row, 0)
+                if article_item and article_item.text() == profile_data.get('article', ''):
+                    self.ui.tableWidget_profiles.selectRow(row)
+                    break
+                    
+        except Exception as e:
+            QMessageBox.warning(self, "Предупреждение", f"Профиль создан, но не удалось обновить список: {e}")
+
+    def load_profiles_from_server(self):
+        """Загружает профили с сервера"""
+        try:
+            profiles = self.api_client.get_profiles()
+            
+            # Очищаем таблицу
+            self.ui.tableWidget_profiles.setRowCount(0)
+            
+            # Заполняем таблицу данными с сервера
+            self.ui.tableWidget_profiles.setRowCount(len(profiles))
+            
+            for row, profile in enumerate(profiles):
+                # Артикул
+                article_item = QTableWidgetItem(profile.get('article', ''))
+                self.ui.tableWidget_profiles.setItem(row, 0, article_item)
+                
+                # Описание
+                description_item = QTableWidgetItem(profile.get('description', ''))
+                self.ui.tableWidget_profiles.setItem(row, 1, description_item)
+                
+        except Exception as e:
+            QMessageBox.warning(self, "Предупреждение", f"Не удалось загрузить профили с сервера: {e}")
+            # Загружаем тестовые данные в случае ошибки
+            self.load_sample_data()
+
+    def load_sample_data(self):
+        """Загружает тестовые данные (fallback)"""
+        sample_profiles = [
+            ("ПР-001-2024", "Стандартный оконный профиль"),
+            ("ПР-002-2024", "Усиленный профиль для промышленных объектов"), 
+            ("ПР-003-2024", "Энергосберегающий профиль"),
+            ("ПР-004-2024", "Декоративный профиль"),
+            ("ПР-005-2024", "Угловой профиль")
+        ]
+        
+        self.ui.tableWidget_profiles.setRowCount(len(sample_profiles))
+        
+        for row, (article, description) in enumerate(sample_profiles):
+            # Артикул
+            article_item = QTableWidgetItem(article)
+            self.ui.tableWidget_profiles.setItem(row, 0, article_item)
+            
+            # Описание
+            description_item = QTableWidgetItem(description)
+            self.ui.tableWidget_profiles.setItem(row, 1, description_item)
 
     def on_edit_clicked(self):
         """Редактирование профиля"""
@@ -69,14 +146,14 @@ class ProfilesContent(QWidget):
             # Обновляем информацию в панели предварительного просмотра
             row = selected_items[0].row()
             article = self.ui.tableWidget_profiles.item(row, 0).text()
-            name = self.ui.tableWidget_profiles.item(row, 1).text()
+            description = self.ui.tableWidget_profiles.item(row, 1).text() if self.ui.tableWidget_profiles.item(row, 1) else ""
             self.ui.label_profile_article.setText(f"Артикул: {article}")
-            self.ui.label_profile_name.setText(f"Название: {name}")
+            self.ui.label_profile_name.setText(f"Описание: {description}")
         else:
             self.ui.pushButton_sketch_open.setEnabled(False)
             self.ui.pushButton_autocad_open.setEnabled(False)
             self.ui.label_profile_article.setText("Артикул: -")
-            self.ui.label_profile_name.setText("Название: -")
+            self.ui.label_profile_name.setText("Описание: -")
 
     def on_search_changed(self, text):
         """Поиск по артикулу"""
