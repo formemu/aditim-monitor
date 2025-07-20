@@ -36,32 +36,10 @@
        <number>0</number>
       </property>
       <widget class="QWidget" name="page_home">
-       <layout class="QVBoxLayout" name="verticalLayout_home">
-        <item>
-         <widget class="QLabel" name="label_placeholder">
-          <property name="text">
-           <string>Главная страница загружается...</string>
-          </property>
-          <property name="alignment">
-           <set>Qt::AlignCenter</set>
-          </property>
-         </widget>
-        </item>
-       </layout>
+       <layout class="QVBoxLayout" name="verticalLayout_home"/>
       </widget>
       <widget class="QWidget" name="page_profiles">
-       <layout class="QVBoxLayout" name="verticalLayout_profiles">
-        <item>
-         <widget class="QLabel" name="label_profiles_placeholder">
-          <property name="text">
-           <string>Профили загружаются...</string>
-          </property>
-          <property name="alignment">
-           <set>Qt::AlignCenter</set>
-          </property>
-         </widget>
-        </item>
-       </layout>
+       <layout class="QVBoxLayout" name="verticalLayout_profiles"/>
       </widget>
      </widget>
     </item>
@@ -73,7 +51,7 @@
      <x>0</x>
      <y>0</y>
      <width>1200</width>
-     <height>22</height>
+     <height>33</height>
     </rect>
    </property>
    <widget class="QMenu" name="menu_navigation">

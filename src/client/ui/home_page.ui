@@ -10,9 +10,7 @@
     <height>446</height>
    </rect>
   </property>
-  <property name="styleSheet">
-   <string>QWidget { background-color: #262a35; }</string>
-  </property>
+
   <layout class="QVBoxLayout" name="verticalLayout">
    <item>
     <spacer name="verticalSpacer_top">
@@ -56,9 +54,7 @@
          <height>96</height>
         </size>
        </property>
-       <property name="styleSheet">
-        <string>margin-bottom: 20px; color: #ffffff;</string>
-       </property>
+
        <property name="text">
         <string>ЛОГОТИП</string>
        </property>
@@ -107,9 +103,7 @@
            <height>96</height>
           </size>
          </property>
-         <property name="styleSheet">
-          <string>font-size: 22px; font-weight: bold; padding: 18px; background-color: #14426a; color: white; border-radius: 12px;</string>
-         </property>
+
          <property name="text">
           <string>🏗️ ПРОФИЛИ</string>
          </property>
@@ -125,9 +119,6 @@
              <height>60</height>
             </size>
            </property>
-           <property name="styleSheet">
-            <string>font-size: 17px; padding: 12px; background-color: #14426a; color: white; border-radius: 10px;</string>
-           </property>
            <property name="text">
             <string>📦 Изделия</string>
            </property>
@@ -140,9 +131,6 @@
              <width>168</width>
              <height>60</height>
             </size>
-           </property>
-           <property name="styleSheet">
-            <string>font-size: 17px; padding: 12px; background-color: #14426a; color: white; border-radius: 10px;</string>
            </property>
            <property name="text">
             <string>� Заготовки</string>
@@ -174,9 +162,6 @@
              <height>60</height>
             </size>
            </property>
-           <property name="styleSheet">
-            <string>font-size: 17px; padding: 12px; background-color: #14426a; color: white; border-radius: 10px;</string>
-           </property>
            <property name="text">
             <string>📝 Задачи</string>
            </property>
@@ -207,9 +192,6 @@
              <height>48</height>
             </size>
            </property>
-           <property name="styleSheet">
-            <string>font-size: 14px; padding: 10px; background-color: #14426a; color: white; border-radius: 7px;</string>
-           </property>
            <property name="text">
             <string>⚙️ Настройки</string>
            </property>
@@ -222,9 +204,6 @@
              <width>168</width>
              <height>48</height>
             </size>
-           </property>
-           <property name="styleSheet">
-            <string>font-size: 14px; padding: 10px; background-color: #14426a; color: white; border-radius: 7px;</string>
            </property>
            <property name="text">
             <string>📊 Отчеты</string>

@@ -6,7 +6,8 @@ from PySide6.QtWidgets import QMainWindow, QMessageBox, QVBoxLayout
 from PySide6.QtCore import QFile
 from PySide6.QtUiTools import QUiLoader
 
-from .constants import UI_PATHS_ABS as UI_PATHS
+from .constants import UI_PATHS_ABS as UI_PATHS, STYLE_PATHS_ABS as STYLE_PATHS
+from .style_utils import load_styles_with_constants
 from .widgets.home_page import HomePage
 from .windows.window_profiles import ProfilesContent
 
@@ -58,6 +59,10 @@ class MainWindow(QMainWindow):
 
     def setup_ui(self):
         """Настройка UI компонентов после загрузки"""
+        # Загружаем и применяем стили
+        style_sheet = load_styles_with_constants(STYLE_PATHS["MAIN"])
+        self.setStyleSheet(style_sheet)
+        
         # Подключаем действия меню навигации
         self.ui.action_home.triggered.connect(self.show_home)
         self.ui.action_profiles.triggered.connect(self.show_profiles)
