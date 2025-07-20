@@ -10,7 +10,6 @@ BASE_PATH = Path(__file__).parent
 
 # Пути к UI файлам
 UI_PATHS = {
-    "DIALOG_TASK": str(BASE_PATH / "ui" / "dialogtask.ui"),
 }
 
 # Пути к иконкам

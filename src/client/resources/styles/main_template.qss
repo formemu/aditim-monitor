@@ -83,3 +83,20 @@ QComboBox QAbstractItemView {
     color: $COLOR_TEXT_PRIMARY; 
     border-radius: 6px;
 }
+
+/* Primary button style for main actions */
+QPushButton#primary_button {
+    background-color: $COLOR_SUCCESS;
+    color: white;
+    font-weight: bold;
+    padding: 10px 20px;
+    border-radius: 8px;
+}
+
+QPushButton#primary_button:hover {
+    background-color: #45a049;
+}
+
+QPushButton#primary_button:pressed {
+    background-color: #3d8b40;
+}

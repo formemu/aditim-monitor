@@ -41,7 +41,6 @@ SIZES = {
 PATHS = {
     "MAIN_STYLE": "src/client/resources/styles/main.qss",
     "DIALOG_STYLE": "src/client/resources/styles/dialogs.qss", 
-    "DIALOG_TASK_UI": "src/client/ui/dialogtask.ui",
     "ICONS": "src/client/resources/icons/",
     "IMAGES": "src/client/resources/images/"
 }

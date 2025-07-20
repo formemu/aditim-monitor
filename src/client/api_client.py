@@ -42,10 +42,6 @@ class ApiClient:
             
         return self._request("GET", "/api/tasks/", params=params)
     
-    def create_task(self, task_data: Dict[str, Any]) -> Dict[Any, Any]:
-        """Create new task"""
-        return self._request("POST", "/api/tasks/", json=task_data)
-    
     def update_task(self, task_id: int, task_data: Dict[str, Any]) -> Dict[Any, Any]:
         """Update task"""
         return self._request("PUT", f"/api/tasks/{task_id}", json=task_data)

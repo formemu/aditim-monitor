@@ -18,7 +18,6 @@ from .constants import (
     COLORS, SIZES, UPDATE_INTERVAL_MS
 )
 from .api_client import ApiClient
-from .widgets.dialog_task import DialogTask
 from .exceptions import DataLoadError
 from .error_handler import handle_api_error
 
@@ -186,9 +185,10 @@ class MainWindow(QMainWindow):
         # Bottom buttons
         button_layout = QHBoxLayout()
         
-        self.add_task_btn = QPushButton("Добавить задачу")
-        self.add_task_btn.clicked.connect(self.add_task)
-        button_layout.addWidget(self.add_task_btn)
+        self.create_product_btn = QPushButton("Создать изделие")
+        self.create_product_btn.clicked.connect(self.create_product)
+        self.create_product_btn.setObjectName("primary_button")  # Для стилизации
+        button_layout.addWidget(self.create_product_btn)
         
         self.delete_task_btn = QPushButton("Удалить задачу")
         self.delete_task_btn.clicked.connect(self.delete_selected_task)
@@ -310,18 +310,13 @@ class MainWindow(QMainWindow):
             equipment = task.get("equipment", "")
             return f"Продукт: {name} - {equipment}"
     
-    def add_task(self):
-        """Open task creation dialog"""
-        dialog = DialogTask(self.api_client, self)
-        dialog.task_created.connect(self.on_task_created)
-        dialog.exec()
-    
-    @Slot(dict)
-    def on_task_created(self, task_data):
-        """Handle task created"""
-        print(f"Task created: {task_data}")
-        # Refresh tasks to show new task
-        self.start_background_loading()
+    def create_product(self):
+        """Create new product - placeholder functionality"""
+        QMessageBox.information(
+            self, 
+            "Создание изделия", 
+            "Функционал создания изделия будет реализован позже."
+        )
     
     def edit_task_status(self, item):
         """Edit task status on double-click"""

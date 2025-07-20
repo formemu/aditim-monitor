@@ -3,13 +3,13 @@ Pydantic schemas for tasks
 """
 
 from datetime import datetime
-from typing import Optional, List
+from typing import Optional, List, Union
 from pydantic import BaseModel
 
 
 class TaskBase(BaseModel):
-    id_product: Optional[int] = None
-    id_profile: Optional[int] = None
+    id_product: Optional[Union[int, str]] = None
+    id_profile: Optional[Union[int, str]] = None
     id_departament: int
     equipment: Optional[str] = None
     stage: Optional[str] = None
@@ -35,17 +35,19 @@ class TaskUpdate(BaseModel):
     id_status: Optional[int] = None
 
 
-class TaskResponse(TaskBase):
+class TaskResponse(BaseModel):
     id: int
+    id_product: Optional[int] = None
+    id_profile: Optional[int] = None
+    id_departament: int
+    equipment: Optional[str] = None
+    stage: Optional[str] = None
+    deadline: Optional[datetime] = None
+    position: int = 0
+    id_type_work: int
+    id_status: int = 1
     created_at: datetime
     updated_at: datetime
-    
-    # Related objects
-    product: Optional[dict] = None
-    profile: Optional[dict] = None
-    departament: Optional[dict] = None
-    type_work: Optional[dict] = None
-    status: Optional[dict] = None
     
     class Config:
         from_attributes = True
