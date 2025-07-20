@@ -2,7 +2,7 @@
 Product models for ADITIM Monitor
 """
 
-from sqlalchemy import Column, Integer, String, ForeignKey, Text
+from sqlalchemy import Column, Integer, String, ForeignKey, Text, LargeBinary
 from sqlalchemy.orm import relationship
 from ..database import Base
 
@@ -32,7 +32,7 @@ class Profile(Base):
     __tablename__ = "profile"
     id = Column(Integer, primary_key=True, index=True)
     article = Column(String, nullable=False, unique=True)
-    sketch = Column(Text, nullable=True)
+    sketch = Column(LargeBinary, nullable=True)  # Бинарные данные изображения
 
 
 class ProfileComponent(Base):

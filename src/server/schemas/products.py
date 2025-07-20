@@ -2,8 +2,9 @@
 Pydantic schemas for products and profiles
 """
 
-from typing import Optional, List
-from pydantic import BaseModel
+from typing import Optional, List, Union
+from pydantic import BaseModel, validator
+import base64
 
 
 class ProductBase(BaseModel):
@@ -31,7 +32,7 @@ class ProductResponse(ProductBase):
 
 class ProfileBase(BaseModel):
     article: str
-    sketch: Optional[str] = None
+    sketch: Optional[Union[str, bytes]] = None  # Base64 encoded image data or binary
 
 
 class ProfileCreate(ProfileBase):
@@ -40,11 +41,22 @@ class ProfileCreate(ProfileBase):
 
 class ProfileUpdate(BaseModel):
     article: Optional[str] = None
-    sketch: Optional[str] = None
+    sketch: Optional[Union[str, bytes]] = None  # Base64 encoded image data or binary
 
 
 class ProfileResponse(ProfileBase):
     id: int
+    
+    @validator('sketch', pre=True)
+    def convert_binary_to_base64(cls, v):
+        """Конвертирует бинарные данные в base64 строку для ответа"""
+        if v is None:
+            return None
+        if isinstance(v, bytes):
+            # Конвертируем бинарные данные в base64
+            base64_data = base64.b64encode(v).decode('utf-8')
+            return f"data:image/png;base64,{base64_data}"
+        return v
     
     class Config:
         from_attributes = True

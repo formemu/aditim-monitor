@@ -18,6 +18,7 @@ from .constants import (
     COLORS, SIZES, UPDATE_INTERVAL_MS
 )
 from .api_client import ApiClient
+from .widgets.dialog_create_profile import DialogCreateProfile
 from .exceptions import DataLoadError
 from .error_handler import handle_api_error
 
@@ -185,7 +186,7 @@ class MainWindow(QMainWindow):
         # Bottom buttons
         button_layout = QHBoxLayout()
         
-        self.create_product_btn = QPushButton("Создать изделие")
+        self.create_product_btn = QPushButton("Создать профиль")
         self.create_product_btn.clicked.connect(self.create_product)
         self.create_product_btn.setObjectName("primary_button")  # Для стилизации
         button_layout.addWidget(self.create_product_btn)
@@ -311,11 +312,19 @@ class MainWindow(QMainWindow):
             return f"Продукт: {name} - {equipment}"
     
     def create_product(self):
-        """Create new product - placeholder functionality"""
+        """Open profile creation dialog"""
+        dialog = DialogCreateProfile(self.api_client, self)
+        dialog.profile_created.connect(self.on_profile_created)
+        dialog.exec()
+    
+    @Slot(dict)
+    def on_profile_created(self, profile_data):
+        """Handle profile created successfully"""
+        # Можно добавить обновление списка профилей или другую логику
         QMessageBox.information(
-            self, 
-            "Создание изделия", 
-            "Функционал создания изделия будет реализован позже."
+            self,
+            "Профиль создан",
+            f"Профиль '{profile_data.get('article', 'N/A')}' успешно создан!"
         )
     
     def edit_task_status(self, item):

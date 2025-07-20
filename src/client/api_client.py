@@ -77,6 +77,10 @@ class ApiClient:
         """Create new profile"""
         return self._request("POST", "/api/profiles", json=profile_data)
     
+    def create_profile(self, profile_data: Dict[str, Any]) -> Dict[Any, Any]:
+        """Create new profile"""
+        return self._request("POST", "/api/profiles", json=profile_data)
+    
     # Product operations  
     def get_products(self) -> List[Dict[Any, Any]]:
         """Get all products"""

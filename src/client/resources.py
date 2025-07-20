@@ -10,6 +10,7 @@ BASE_PATH = Path(__file__).parent
 
 # Пути к UI файлам
 UI_PATHS = {
+    "DIALOG_CREATE_PROFILE": str(BASE_PATH / "ui" / "dialog_create_profile.ui"),
 }
 
 # Пути к иконкам
