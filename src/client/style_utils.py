@@ -19,10 +19,13 @@ def load_styles_with_constants(qss_file_path: str) -> str:
         with open(qss_file_path, "r", encoding="utf-8") as style_file:
             qss_content = style_file.read()
         
-        # Replace color placeholders with actual values
+        # Replace color placeholders with actual values from COLORS
         for color_key, color_value in COLORS.items():
-            placeholder = f"${color_key}"
-            qss_content = qss_content.replace(placeholder, color_value)
+            # Поддерживаем два формата плейсхолдеров: {{COLOR_NAME}} и $COLOR_NAME
+            placeholder_curly = f"{{{{{color_key}}}}}"
+            placeholder_dollar = f"${color_key}"
+            qss_content = qss_content.replace(placeholder_curly, color_value)
+            qss_content = qss_content.replace(placeholder_dollar, color_value)
         
         return qss_content
     except Exception as e:
