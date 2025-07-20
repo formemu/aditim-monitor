@@ -13,6 +13,11 @@
   <property name="windowTitle">
    <string>ADITIM Monitor</string>
   </property>
+  <property name="windowIcon">
+   <iconset>
+    <normaloff>../resources/icons/aditim_logo.ico</normaloff>
+   </iconset>
+  </property>
   <widget class="QWidget" name="centralwidget">
    <layout class="QVBoxLayout" name="verticalLayout">
     <property name="spacing">
@@ -31,7 +36,7 @@
      <number>0</number>
     </property>
     <item>
-     <widget class="QStackedWidget" name="stackedWidget_content">
+     <widget class="QStackedWidget" name="stackedWidget_main">
       <property name="currentIndex">
        <number>0</number>
       </property>
