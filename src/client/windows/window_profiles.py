@@ -2,13 +2,14 @@
 Содержимое профилей для ADITIM Monitor Client
 """
 
-from PySide6.QtWidgets import QWidget, QMessageBox, QTableWidgetItem
-from PySide6.QtCore import QFile
+from PySide6.QtWidgets import QWidget, QMessageBox, QTableWidgetItem, QAbstractItemView
+from PySide6.QtCore import QFile, Qt
 from PySide6.QtUiTools import QUiLoader
 
-from ..constants import UI_PATHS_ABS as UI_PATHS
+from ..constants import UI_PATHS_ABS as UI_PATHS, get_style_path
 from ..widgets.dialog_create_profile import DialogCreateProfile
 from ..api_client import ApiClient
+from ..style_utils import load_styles_with_constants
 
 
 class ProfilesContent(QWidget):
@@ -32,6 +33,11 @@ class ProfilesContent(QWidget):
 
     def setup_ui(self):
         """Настройка UI компонентов после загрузки"""
+        # Применяем стили к виджету
+        style_path = get_style_path("MAIN")
+        style_sheet = load_styles_with_constants(style_path)
+        self.ui.setStyleSheet(style_sheet)
+        
         self.ui.pushButton_profile_add.clicked.connect(self.on_add_clicked)
         self.ui.pushButton_profile_edit.clicked.connect(self.on_edit_clicked)
         self.ui.pushButton_profile_delete.clicked.connect(self.on_delete_clicked)
@@ -39,6 +45,12 @@ class ProfilesContent(QWidget):
         self.ui.pushButton_autocad_open.clicked.connect(self.on_autocad_open_clicked)
         self.ui.tableWidget_profiles.itemSelectionChanged.connect(self.on_selection_changed)
         self.ui.lineEdit_search.textChanged.connect(self.on_search_changed)
+        
+        # Настройка режима выделения таблицы
+        self.ui.tableWidget_profiles.setSelectionBehavior(QAbstractItemView.SelectRows)
+        self.ui.tableWidget_profiles.setSelectionMode(QAbstractItemView.SingleSelection)
+        self.ui.tableWidget_profiles.setFocusPolicy(Qt.NoFocus)
+        
         
         # Настройка ширины колонок
         self.ui.tableWidget_profiles.setColumnWidth(0, 150)  # Артикул - фиксированная ширина
@@ -89,37 +101,19 @@ class ProfilesContent(QWidget):
             for row, profile in enumerate(profiles):
                 # Артикул
                 article_item = QTableWidgetItem(profile.get('article', ''))
+                article_item.setFlags(article_item.flags() & ~Qt.ItemIsEditable)
                 self.ui.tableWidget_profiles.setItem(row, 0, article_item)
                 
                 # Описание
                 description_item = QTableWidgetItem(profile.get('description', ''))
+                description_item.setFlags(description_item.flags() & ~Qt.ItemIsEditable)
                 self.ui.tableWidget_profiles.setItem(row, 1, description_item)
+            
+            # Убираем текущий активный элемент
+            self.ui.tableWidget_profiles.setCurrentItem(None)
                 
         except Exception as e:
             QMessageBox.warning(self, "Предупреждение", f"Не удалось загрузить профили с сервера: {e}")
-            # Загружаем тестовые данные в случае ошибки
-            self.load_sample_data()
-
-    def load_sample_data(self):
-        """Загружает тестовые данные (fallback)"""
-        sample_profiles = [
-            ("ПР-001-2024", "Стандартный оконный профиль"),
-            ("ПР-002-2024", "Усиленный профиль для промышленных объектов"), 
-            ("ПР-003-2024", "Энергосберегающий профиль"),
-            ("ПР-004-2024", "Декоративный профиль"),
-            ("ПР-005-2024", "Угловой профиль")
-        ]
-        
-        self.ui.tableWidget_profiles.setRowCount(len(sample_profiles))
-        
-        for row, (article, description) in enumerate(sample_profiles):
-            # Артикул
-            article_item = QTableWidgetItem(article)
-            self.ui.tableWidget_profiles.setItem(row, 0, article_item)
-            
-            # Описание
-            description_item = QTableWidgetItem(description)
-            self.ui.tableWidget_profiles.setItem(row, 1, description_item)
 
     def on_edit_clicked(self):
         """Редактирование профиля"""

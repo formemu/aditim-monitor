@@ -1,12 +1,22 @@
 /* ADITIM Monitor - Корпоративные стили */
 
 /* Основные настройки */
-* {
-    font-family: {{FONT_FAMILY_PRIMARY}};
-}
 
 QMainWindow {
     background-color: {{COLOR_PRIMARY_DARK}};
-    color: {{COLOR_TEXT_PRIMARY}};
+    color: white;
 }
+
+
+QTableWidget::item {
+    border: none;
+    outline: none;
+}
+
+QTableWidget::item:selected {
+    background-color: {{COLOR_PRIMARY_DARK}};
+    border: none;
+    outline: none;
+}
+
 
