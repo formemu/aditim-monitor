@@ -6,7 +6,7 @@ from PySide6.QtWidgets import QWidget, QMessageBox, QTableWidgetItem
 from PySide6.QtCore import QFile
 from PySide6.QtUiTools import QUiLoader
 
-from ..resources import UI_PATHS
+from ..constants import UI_PATHS_ABS as UI_PATHS
 
 
 class ProfilesContent(QWidget):

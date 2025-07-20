@@ -7,7 +7,7 @@ from PySide6.QtCore import QFile, Signal, Qt
 from PySide6.QtUiTools import QUiLoader
 from PySide6.QtGui import QPixmap
 
-from ..resources import UI_PATHS, ICON_PATHS
+from ..constants import UI_PATHS_ABS as UI_PATHS, ICON_PATHS_ABS as ICON_PATHS
 
 
 class HomePage(QWidget):

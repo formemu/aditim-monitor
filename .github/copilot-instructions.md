@@ -106,7 +106,7 @@ self.ui.label_status.setText("Готово")
 from PySide6.QtWidgets import QMainWindow, QMessageBox
 from PySide6.QtCore import QFile
 from PySide6.QtUiTools import QUiLoader
-from .resources import UI_PATHS
+from .constants import UI_PATHS_ABS as UI_PATHS
 
 class MainWindow(QMainWindow):
     """Главное окно приложения"""

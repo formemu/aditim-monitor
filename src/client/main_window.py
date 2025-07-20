@@ -6,7 +6,7 @@ from PySide6.QtWidgets import QMainWindow, QMessageBox, QVBoxLayout
 from PySide6.QtCore import QFile
 from PySide6.QtUiTools import QUiLoader
 
-from .resources import UI_PATHS
+from .constants import UI_PATHS_ABS as UI_PATHS
 from .widgets.home_page import HomePage
 from .windows.window_profiles import ProfilesContent
 
