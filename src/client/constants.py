@@ -4,37 +4,21 @@ Constants for ADITIM Monitor Client
 
 import os
 
-# API Configuration (поддержка VPN и внешнего подключения через переменные окружения)
-# Задайте переменную окружения ADITIM_API_URL, например: http://<host-ip>:8000
-API_BASE_URL = os.getenv('ADITIM_API_URL', 'http://127.0.0.1:8000') # Заменено localhost на 127.0.0.1 для совместимости с VPN
+API_BASE_URL = os.getenv('ADITIM_API_URL', 'http://127.0.0.1:8000')
 API_TIMEOUT = int(os.getenv('ADITIM_API_TIMEOUT', '30'))
 
 # UI Colors
 COLORS = {
+    "COLOR_LOGO": "#14426a",
     "COLOR_PRIMARY": "#2196F3",
-    "COLOR_SECONDARY": "#2196F3", 
-    "COLOR_SUCCESS": "#2196F3",
     "COLOR_ERROR": "#F44336",
     "COLOR_BACKGROUND": "#181B20",
-    "COLOR_SURFACE": "#23262B",
-    "COLOR_TEXT_PRIMARY": "#FFFFFF",
-    "COLOR_TEXT_SECONDARY": "#90CAF9"
 }
 
 # UI Fonts
 FONTS = {
-    "HEADER": ("Arial", 16, "bold"),
-    "BODY": ("Arial", 12, "normal"),
-    "SMALL": ("Arial", 10, "normal")
-}
-
-# UI Sizes
-SIZES = {
-    "MAIN_WINDOW_WIDTH": 1200,
-    "MAIN_WINDOW_HEIGHT": 800,
-    "BUTTON_HEIGHT": 32,
-    "ICON_SIZE": 24,
-    "MARGIN": 10
+    "FONT_TEXT_HEADER": ("Arial", 24, "bold"),
+    "FONT_TEXT": ("Arial", 12, "normal"),
 }
 
 # File Paths
@@ -66,13 +50,4 @@ PROFILE_EQUIPMENT = [
     "пальцы",
     "усреднитель",
     "кондуктор"
-]
-
-# Work Types
-WORK_TYPES = [
-    "новый инструмент",
-    "новый вариант", 
-    "добавить к существующему",
-    "переделать",
-    "доработка"
 ]

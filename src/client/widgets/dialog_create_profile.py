@@ -38,9 +38,6 @@ class DialogCreateProfile(QDialog):
         ui_file_path = "src/client/ui/dialog_create_profile.ui"
         ui_file = QFile(ui_file_path)
         
-        if not ui_file.open(QFile.ReadOnly):
-            raise FileNotFoundError(f"Не удалось открыть UI файл: {ui_file_path}")
-        
         loader = QUiLoader()
         self.ui = loader.load(ui_file, self)
         ui_file.close()

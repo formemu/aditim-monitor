@@ -15,8 +15,6 @@ from .main_window import MainWindow
 
 
 def main():
-    """Main application entry point"""
-    print("Starting ADITIM Monitor Client...")
     
     # Create application
     app = QApplication(sys.argv)

@@ -124,6 +124,7 @@ alembic upgrade head
 ## Code Style Conventions
 
 ### 🧱 General Design Principles
+- **UI-FIRST**: All user interface elements must be created using .ui files, not programmatically. Use Qt Designer for all layouts, widgets, and visual components. Code should only handle business logic, data binding, and event handling.
 - **SOLID**: Code should be open for extension, closed for modification. Separate responsibilities between classes
 - **DRY (Don't Repeat Yourself)**: Avoid logic duplication. Extract repeating fragments into separate methods or classes
 - **KISS (Keep It Simple, Stupid)**: Don't overcomplicate. Simple and clear code is priority
@@ -151,10 +152,73 @@ from PySide6.QtWidgets import QApplication, QWidget, QPushButton, QVBoxLayout
 ```
 Use explicit imports instead of `import *`
 
-#### 🏗️ Widget Creation
-- Initialize GUI in class `__init__`
-- Separate GUI logic into dedicated method (`setup_ui()`)
-- Signal connection logic in `connect_signals()`
+#### 🏗️ Widget Creation - UI-FIRST Approach
+- **ALL UI elements must be created in .ui files using Qt Designer**
+- Code should NEVER create widgets programmatically (no QPushButton(), QLabel(), etc. in code)
+- Use `QUiLoader` to load .ui files and `findChild()` to get references to elements
+- Only data binding, event handling, and business logic should be in code
+
+#### 🏷️ UI Element Naming Convention
+All UI elements in .ui files must follow the pattern: `widgettype_purpose`
+
+**Standard naming pattern:**
+- `btn_action` - Buttons (btn_create_profile, btn_delete_task, btn_save)
+- `label_content` - Labels (label_title, label_logo, label_info, label_status)  
+- `table_data` - Tables (table_tasks, table_profiles, table_products)
+- `edit_field` - Line edits (edit_article, edit_name, edit_deadline)
+- `combo_selection` - Combo boxes (combo_status, combo_department, combo_type)
+- `list_items` - List widgets (list_equipment, list_components, list_tasks)
+- `text_content` - Text edits (text_description, text_notes, text_details)
+- `check_option` - Check boxes (check_urgent, check_active, check_completed)
+- `radio_choice` - Radio buttons (radio_profile, radio_product, radio_new)
+- `spin_number` - Spin boxes (spin_quantity, spin_priority, spin_order)
+- `progress_status` - Progress bars (progress_loading, progress_completion)
+- `slider_value` - Sliders (slider_priority, slider_position)
+- `group_section` - Group boxes (group_details, group_equipment, group_settings)
+- `tab_page` - Tab widgets (tab_profiles, tab_products, tab_settings)
+- `scroll_area` - Scroll areas (scroll_content, scroll_list, scroll_details)
+- `frame_container` - Frames (frame_header, frame_content, frame_buttons)
+
+**Examples:**
+```
+✅ Good: btn_create_profile, label_task_status, table_active_tasks
+❌ Bad: createButton, taskStatusLabel, activeTasksTable
+❌ Bad: button1, label_1, tableWidget
+```
+
+#### 🔧 Working with UI Files
+**Loading UI files:**
+```python
+from PySide6.QtUiTools import QUiLoader
+from PySide6.QtCore import QFile
+
+def load_ui(self):
+    ui_file_path = UI_PATHS["DIALOG_NAME"]
+    ui_file = QFile(ui_file_path)
+    ui_file.open(QFile.ReadOnly)
+    
+    loader = QUiLoader()
+    self.ui = loader.load(ui_file, self)
+    ui_file.close()
+```
+
+**Finding UI elements:**
+```python
+# Get references by objectName (not name attribute)
+self.button = self.ui.findChild(QPushButton, "btn_save")
+self.table = self.ui.findChild(QTableWidget, "table_data")
+self.label = self.ui.findChild(QLabel, "label_status")
+
+# Always verify elements were found
+if not all([self.button, self.table, self.label]):
+    raise RuntimeError("UI elements not found")
+```
+
+**What should be in code vs UI:**
+- ✅ UI file: Widget structure, layouts, basic properties, object names
+- ✅ Code: Data binding, event handling, business logic, dynamic content
+- ❌ UI file: Dynamic content, complex logic
+- ❌ Code: Widget creation, layout setup, static styling
 
 #### 📣 Signals and Slots
 - Use `@Slot()` decorators for slots
@@ -220,30 +284,6 @@ PATHS = {
   - `QRunnable + QThreadPool`
   - `asyncqt + asyncio` (if applicable)
 - Don't block the main thread!
-
-### Style Guidelines
-
-#### Color Management
-- All colors used in QSS files must be defined in `constants.py` under the `COLORS` dictionary.
-- Use the `COLOR_` prefix for all color keys (e.g., `COLOR_PRIMARY`, `COLOR_BACKGROUND`).
-- Avoid hardcoding colors directly in QSS files.
-
-#### Example Usage
-```qss
-QPushButton {
-    background-color: COLORS["COLOR_PRIMARY"];
-    color: COLORS["COLOR_TEXT_PRIMARY"];
-}
-```
-
-#### File Organization
-- `constants.py`: Contains all color definitions.
-- `styles/main.qss`: Main application styles.
-- `styles/dialogs.qss`: Dialog-specific styles.
-
-#### Maintenance
-- Update `constants.py` for any color changes.
-- Ensure all QSS files reference colors from `constants.py`.
 
 ## Critical Implementation Notes
 
