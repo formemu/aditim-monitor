@@ -106,22 +106,7 @@
         </column>
         <column>
          <property name="text">
-          <string>Название</string>
-         </property>
-        </column>
-        <column>
-         <property name="text">
-          <string>Создан</string>
-         </property>
-        </column>
-        <column>
-         <property name="text">
-          <string>Изменен</string>
-         </property>
-        </column>
-        <column>
-         <property name="text">
-          <string>Статус</string>
+          <string>Описание</string>
          </property>
         </column>
        </widget>
@@ -138,9 +123,6 @@
         <property name="text">
          <string>Предварительный просмотр</string>
         </property>
-        <property name="styleSheet">
-         <string>font-size: 14px; font-weight: bold; padding: 5px;</string>
-        </property>
        </widget>
       </item>
       <item>
@@ -148,18 +130,12 @@
         <property name="text">
          <string>Артикул: -</string>
         </property>
-        <property name="styleSheet">
-         <string>font-size: 12px; padding: 3px;</string>
-        </property>
        </widget>
       </item>
       <item>
        <widget class="QLabel" name="label_profile_name">
         <property name="text">
          <string>Название: -</string>
-        </property>
-        <property name="styleSheet">
-         <string>font-size: 12px; padding: 3px;</string>
         </property>
        </widget>
       </item>
@@ -170,9 +146,6 @@
         </property>
         <property name="alignment">
          <set>Qt::AlignCenter</set>
-        </property>
-        <property name="styleSheet">
-         <string>border: 1px solid #ccc; min-height: 300px; background-color: #f9f9f9;</string>
         </property>
         <property name="minimumSize">
          <size>

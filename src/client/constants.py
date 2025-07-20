@@ -11,27 +11,32 @@ CLIENT_BASE_PATH = Path(__file__).parent
 API_BASE_URL = os.getenv('ADITIM_API_URL', 'http://127.0.0.1:8000')
 API_TIMEOUT = int(os.getenv('ADITIM_API_TIMEOUT', '30'))
 
-# UI Colors
+# UI Colors - ADITIM Corporate Style
 COLORS = {
-    "COLOR_LOGO": "#14426a",
-    "COLOR_PRIMARY": "#2196F3",
-    "COLOR_SECONDARY": "#FFC107",
-    "COLOR_SUCCESS": "#4CAF50",
-    "COLOR_ERROR": "#F44336",
-    "COLOR_WARNING": "#FF9800",
-    "COLOR_INFO": "#2196F3",
-    "COLOR_BACKGROUND": "#f5f5f5",
-    "COLOR_BACKGROUND_MAIN": "#262a35",
-    "COLOR_MENU_BUTTON": "#14426a",
-    "COLOR_TEXT_PRIMARY": "#333333",
-    "COLOR_TEXT_SECONDARY": "#666666",
-    "COLOR_BORDER": "#666666",
+    # Основные корпоративные цвета ADITIM
+    "COLOR_PRIMARY": "#14426a",        # Основной синий ADITIM (логотип, акценты)
+    "COLOR_PRIMARY_LIGHT": "#1a5580",  # Светлый вариант основного
+    "COLOR_PRIMARY_DARK": "#262a35",   # Темный вариант основного
+    "COLOR_SECONDARY": "#f8f9fa",      # Светло-серый (фон карточек)
+    
+
 }
 
-# UI Fonts
+# UI Fonts - Современная типографика
 FONTS = {
-    "FONT_TEXT_HEADER": ("Arial", 24, "bold"),
-    "FONT_TEXT": ("Arial", 12, "normal"),
+    "FONT_FAMILY_PRIMARY": "Segoe UI, system-ui, sans-serif",
+    "FONT_FAMILY_SECONDARY": "Roboto, Arial, sans-serif", 
+    "FONT_SIZE_HUGE": "28px",
+    "FONT_SIZE_LARGE": "24px",
+    "FONT_SIZE_MEDIUM": "18px",
+    "FONT_SIZE_NORMAL": "16px",
+    "FONT_SIZE_SMALL": "14px",
+    "FONT_SIZE_TINY": "12px",
+    "FONT_WEIGHT_LIGHT": "300",
+    "FONT_WEIGHT_NORMAL": "400",
+    "FONT_WEIGHT_MEDIUM": "500",
+    "FONT_WEIGHT_BOLD": "600",
+    "FONT_WEIGHT_EXTRA_BOLD": "700",
 }
 
 # File Paths
@@ -67,13 +72,6 @@ STYLE_PATHS = {
     "DIALOGS": "resources/styles/dialogs_template.qss"
 }
 
-# Task Statuses
-TASK_STATUSES = [
-    {"id": 1, "name": "Новая"},
-    {"id": 2, "name": "В работе"},
-    {"id": 3, "name": "Выполнена"},
-    {"id": 4, "name": "Отменена"}
-]
 
 # Update intervals
 UPDATE_INTERVAL_MS = 5000  # 5 seconds

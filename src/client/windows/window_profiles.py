@@ -35,6 +35,10 @@ class ProfilesContent(QWidget):
         self.ui.pushButton_autocad_open.clicked.connect(self.on_autocad_open_clicked)
         self.ui.tableWidget_profiles.itemSelectionChanged.connect(self.on_selection_changed)
         self.ui.lineEdit_search.textChanged.connect(self.on_search_changed)
+        
+        # Настройка ширины колонок
+        self.ui.tableWidget_profiles.setColumnWidth(0, 150)  # Артикул - фиксированная ширина
+        self.ui.tableWidget_profiles.horizontalHeader().setStretchLastSection(True)  # Описание - растягивается
 
     def on_add_clicked(self):
         """Добавление нового профиля"""
