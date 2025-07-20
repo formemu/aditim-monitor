@@ -7,8 +7,8 @@ from PySide6.QtCore import QFile
 from PySide6.QtUiTools import QUiLoader
 
 from .resources import UI_PATHS
-from .widgets import HomePage
-from .windows import ProfilesContent
+from .widgets.home_page import HomePage
+from .windows.window_profiles import ProfilesContent
 
 
 class MainWindow(QMainWindow):
@@ -57,6 +57,7 @@ class MainWindow(QMainWindow):
         self.ui.action_home.triggered.connect(self.show_home)
         self.ui.action_profiles.triggered.connect(self.show_profiles)
         self.ui.action_products.triggered.connect(self.show_products)
+        self.ui.action_blanks.triggered.connect(self.show_blanks)
         self.ui.action_tasks.triggered.connect(self.show_tasks)
         self.ui.action_settings.triggered.connect(self.show_settings)
         self.ui.action_reports.triggered.connect(self.show_reports)
@@ -64,6 +65,7 @@ class MainWindow(QMainWindow):
         # Подключаем сигналы домашней страницы
         self.home_page.profiles_requested.connect(self.show_profiles)
         self.home_page.products_requested.connect(self.show_products)
+        self.home_page.blanks_requested.connect(self.show_blanks)
         self.home_page.tasks_requested.connect(self.show_tasks)
         self.home_page.settings_requested.connect(self.show_settings)
         self.home_page.reports_requested.connect(self.show_reports)
@@ -81,6 +83,10 @@ class MainWindow(QMainWindow):
     def show_products(self):
         """Показать изделия"""
         QMessageBox.information(self, "Изделия", "Окно изделий (в разработке)")
+
+    def show_blanks(self):
+        """Показать заготовки"""
+        QMessageBox.information(self, "Заготовки", "Окно заготовок (в разработке)")
 
     def show_tasks(self):
         """Показать задачи"""

@@ -180,7 +180,8 @@ COLORS = {
     "COLOR_SECONDARY": "#FFC107", 
     "COLOR_SUCCESS": "#4CAF50",
     "COLOR_ERROR": "#F44336",
-    "COLOR_BACKGROUND": "#f5f5f5"
+    "COLOR_BACKGROUND": "#f5f5f5",
+    "COLOR_BACKGROUND_MAIN": "#262a35"
 }
 
 # В QSS файле используйте плейсхолдеры

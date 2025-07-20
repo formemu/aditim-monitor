@@ -13,6 +13,9 @@
   <property name="windowTitle">
    <string>ADITIM Monitor</string>
   </property>
+  <property name="styleSheet">
+   <string>QMainWindow { background-color: #262a35; }</string>
+  </property>
   <widget class="QWidget" name="centralwidget">
    <layout class="QVBoxLayout" name="verticalLayout_main">
     <property name="spacing">
@@ -56,6 +59,7 @@
     <addaction name="separator"/>
     <addaction name="action_profiles"/>
     <addaction name="action_products"/>
+    <addaction name="action_blanks"/>
     <addaction name="action_tasks"/>
     <addaction name="separator"/>
     <addaction name="action_settings"/>
@@ -77,6 +81,11 @@
   <action name="action_products">
    <property name="text">
     <string>📦 Изделия</string>
+   </property>
+  </action>
+  <action name="action_blanks">
+   <property name="text">
+    <string>🔲 Заготовки</string>
    </property>
   </action>
   <action name="action_tasks">

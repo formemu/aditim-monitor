@@ -3,10 +3,11 @@
 """
 
 from PySide6.QtWidgets import QWidget
-from PySide6.QtCore import QFile, Signal
+from PySide6.QtCore import QFile, Signal, Qt
 from PySide6.QtUiTools import QUiLoader
+from PySide6.QtGui import QPixmap
 
-from ..resources import UI_PATHS
+from ..resources import UI_PATHS, ICON_PATHS
 
 
 class HomePage(QWidget):
@@ -15,6 +16,7 @@ class HomePage(QWidget):
     # Сигналы для навигации
     profiles_requested = Signal()
     products_requested = Signal()
+    blanks_requested = Signal()
     tasks_requested = Signal()
     settings_requested = Signal()
     reports_requested = Signal()
@@ -35,8 +37,37 @@ class HomePage(QWidget):
 
     def setup_ui(self):
         """Настройка UI компонентов после загрузки"""
+        # Загрузка и установка логотипа
+        self.load_logo()
+        
+        # Подключение кнопок
         self.ui.pushButton_profiles_open.clicked.connect(self.profiles_requested.emit)
         self.ui.pushButton_products_open.clicked.connect(self.products_requested.emit)
+        self.ui.pushButton_blanks_open.clicked.connect(self.blanks_requested.emit)
         self.ui.pushButton_tasks_open.clicked.connect(self.tasks_requested.emit)
         self.ui.pushButton_settings_open.clicked.connect(self.settings_requested.emit)
         self.ui.pushButton_reports_open.clicked.connect(self.reports_requested.emit)
+
+    def load_logo(self):
+        """Загрузка и установка логотипа"""
+        try:
+            # Попробуем загрузить логотип
+            logo_path = ICON_PATHS["LOGO_JPG"]
+            pixmap = QPixmap(logo_path)
+            
+            if not pixmap.isNull():
+                # Масштабируем логотип с сохранением пропорций (увеличиваем размер на 20%)
+                scaled_pixmap = pixmap.scaled(
+                    480, 192,  # увеличенные размеры на 20%
+                    Qt.KeepAspectRatio,
+                    Qt.SmoothTransformation
+                )
+                self.ui.label_logo.setPixmap(scaled_pixmap)
+                self.ui.label_logo.setText("")  # Убираем текст-заглушку
+            else:
+                # Если логотип не загрузился, оставляем текст
+                self.ui.label_logo.setText("ADITIM Monitor")
+                
+        except Exception as e:
+            print(f"Ошибка загрузки логотипа: {e}")
+            self.ui.label_logo.setText("ADITIM Monitor")
