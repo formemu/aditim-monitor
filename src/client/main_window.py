@@ -37,30 +37,35 @@ class MainWindow(QMainWindow):
 
     def setup_content(self):
         """Создание виджетов содержимого"""
+        # Очищаем stackedWidget от placeholder-ов
+        while self.ui.stackedWidget_content.count() > 0:
+            widget = self.ui.stackedWidget_content.widget(0)
+            self.ui.stackedWidget_content.removeWidget(widget)
+            widget.deleteLater()
+        
         # Создаем домашнюю страницу
         self.home_page = HomePage()
-        layout = QVBoxLayout(self.home_page)
-        layout.addWidget(self.home_page.ui)
         
-        # Временно закомментируем ProfilesContent для диагностики
-        # self.profiles_content = ProfilesContent()
-        # layout = QVBoxLayout(self.profiles_content)
-        # layout.addWidget(self.profiles_content.ui)
+        # Создаем страницу профилей
+        self.profiles_content = ProfilesContent()
         
         # Добавляем в стек
-        self.ui.stackedWidget_content.addWidget(self.home_page)
-        # self.ui.stackedWidget_content.addWidget(self.profiles_content)
+        self.ui.stackedWidget_content.addWidget(self.home_page.ui)
+        self.ui.stackedWidget_content.addWidget(self.profiles_content.ui)
+        
+        # Устанавливаем домашнюю страницу активной
+        self.ui.stackedWidget_content.setCurrentWidget(self.home_page.ui)
 
     def setup_ui(self):
         """Настройка UI компонентов после загрузки"""
-        # Временно отключаем действия меню до восстановления полного UI
-        # self.ui.action_home.triggered.connect(self.show_home)
-        # self.ui.action_profiles.triggered.connect(self.show_profiles)
-        # self.ui.action_products.triggered.connect(self.show_products)
-        # self.ui.action_blanks.triggered.connect(self.show_blanks)
-        # self.ui.action_tasks.triggered.connect(self.show_tasks)
-        # self.ui.action_settings.triggered.connect(self.show_settings)
-        # self.ui.action_reports.triggered.connect(self.show_reports)
+        # Подключаем действия меню навигации
+        self.ui.action_home.triggered.connect(self.show_home)
+        self.ui.action_profiles.triggered.connect(self.show_profiles)
+        self.ui.action_products.triggered.connect(self.show_products)
+        self.ui.action_blanks.triggered.connect(self.show_blanks)
+        self.ui.action_tasks.triggered.connect(self.show_tasks)
+        self.ui.action_settings.triggered.connect(self.show_settings)
+        self.ui.action_reports.triggered.connect(self.show_reports)
         
         # Подключаем сигналы домашней страницы
         self.home_page.profiles_requested.connect(self.show_profiles)
@@ -72,15 +77,13 @@ class MainWindow(QMainWindow):
 
     def show_home(self):
         """Показать домашнюю страницу"""
-        self.ui.stackedWidget_content.setCurrentWidget(self.home_page)
+        self.ui.stackedWidget_content.setCurrentWidget(self.home_page.ui)
         self.setWindowTitle("ADITIM Monitor")
 
     def show_profiles(self):
         """Показать профили"""
-        # Временно закомментируем для диагностики
-        # self.ui.stackedWidget_content.setCurrentWidget(self.profiles_content)
-        # self.setWindowTitle("ADITIM Monitor - Профили")
-        QMessageBox.information(self, "Профили", "Профили (в разработке)")
+        self.ui.stackedWidget_content.setCurrentWidget(self.profiles_content.ui)
+        self.setWindowTitle("ADITIM Monitor - Профили")
 
     def show_products(self):
         """Показать изделия"""
