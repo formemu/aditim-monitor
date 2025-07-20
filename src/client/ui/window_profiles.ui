@@ -1,0 +1,228 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>ProfilesContent</class>
+ <widget class="QWidget" name="ProfilesContent">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>1200</width>
+    <height>800</height>
+   </rect>
+  </property>
+   <layout class="QHBoxLayout" name="horizontalLayout_main">
+    <item>
+     <layout class="QVBoxLayout" name="verticalLayout_left">
+      <item>
+       <layout class="QHBoxLayout" name="horizontalLayout_toolbar">
+        <item>
+         <widget class="QPushButton" name="pushButton_profile_add">
+          <property name="text">
+           <string>Добавить</string>
+          </property>
+          <property name="minimumSize">
+           <size>
+            <width>100</width>
+            <height>35</height>
+           </size>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QPushButton" name="pushButton_profile_edit">
+          <property name="text">
+           <string>Редактировать</string>
+          </property>
+          <property name="minimumSize">
+           <size>
+            <width>100</width>
+            <height>35</height>
+           </size>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QPushButton" name="pushButton_profile_delete">
+          <property name="text">
+           <string>Удалить</string>
+          </property>
+          <property name="minimumSize">
+           <size>
+            <width>100</width>
+            <height>35</height>
+           </size>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <spacer name="horizontalSpacer_toolbar">
+          <property name="orientation">
+           <enum>Qt::Horizontal</enum>
+          </property>
+          <property name="sizeHint" stdset="0">
+           <size>
+            <width>40</width>
+            <height>20</height>
+           </size>
+          </property>
+         </spacer>
+        </item>
+        <item>
+         <widget class="QLineEdit" name="lineEdit_search">
+          <property name="placeholderText">
+           <string>Поиск по артикулу...</string>
+          </property>
+          <property name="minimumSize">
+           <size>
+            <width>200</width>
+            <height>35</height>
+           </size>
+          </property>
+         </widget>
+        </item>
+       </layout>
+      </item>
+      <item>
+       <widget class="QTableWidget" name="tableWidget_profiles">
+        <property name="minimumSize">
+         <size>
+          <width>700</width>
+          <height>0</height>
+         </size>
+        </property>
+        <property name="alternatingRowColors">
+         <bool>true</bool>
+        </property>
+        <property name="selectionBehavior">
+         <enum>QAbstractItemView::SelectRows</enum>
+        </property>
+        <property name="sortingEnabled">
+         <bool>true</bool>
+        </property>
+        <column>
+         <property name="text">
+          <string>Артикул</string>
+         </property>
+        </column>
+        <column>
+         <property name="text">
+          <string>Название</string>
+         </property>
+        </column>
+        <column>
+         <property name="text">
+          <string>Создан</string>
+         </property>
+        </column>
+        <column>
+         <property name="text">
+          <string>Изменен</string>
+         </property>
+        </column>
+        <column>
+         <property name="text">
+          <string>Статус</string>
+         </property>
+        </column>
+       </widget>
+      </item>
+     </layout>
+    </item>
+    <item>
+     <layout class="QVBoxLayout" name="verticalLayout_right">
+      <property name="sizeConstraint">
+       <enum>QLayout::SetMinimumSize</enum>
+      </property>
+      <item>
+       <widget class="QLabel" name="label_preview_title">
+        <property name="text">
+         <string>Предварительный просмотр</string>
+        </property>
+        <property name="styleSheet">
+         <string>font-size: 14px; font-weight: bold; padding: 5px;</string>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QLabel" name="label_profile_article">
+        <property name="text">
+         <string>Артикул: -</string>
+        </property>
+        <property name="styleSheet">
+         <string>font-size: 12px; padding: 3px;</string>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QLabel" name="label_profile_name">
+        <property name="text">
+         <string>Название: -</string>
+        </property>
+        <property name="styleSheet">
+         <string>font-size: 12px; padding: 3px;</string>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QLabel" name="label_sketch">
+        <property name="text">
+         <string>Эскиз</string>
+        </property>
+        <property name="alignment">
+         <set>Qt::AlignCenter</set>
+        </property>
+        <property name="styleSheet">
+         <string>border: 1px solid #ccc; min-height: 300px; background-color: #f9f9f9;</string>
+        </property>
+        <property name="minimumSize">
+         <size>
+          <width>400</width>
+          <height>300</height>
+         </size>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <layout class="QHBoxLayout" name="horizontalLayout_files">
+        <item>
+         <widget class="QPushButton" name="pushButton_sketch_open">
+          <property name="text">
+           <string>Открыть эскиз</string>
+          </property>
+          <property name="enabled">
+           <bool>false</bool>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QPushButton" name="pushButton_autocad_open">
+          <property name="text">
+           <string>Открыть в AutoCAD</string>
+          </property>
+          <property name="enabled">
+           <bool>false</bool>
+          </property>
+         </widget>
+        </item>
+       </layout>
+      </item>
+      <item>
+       <spacer name="verticalSpacer_bottom">
+        <property name="orientation">
+         <enum>Qt::Vertical</enum>
+        </property>
+        <property name="sizeHint" stdset="0">
+         <size>
+          <width>20</width>
+          <height>40</height>
+         </size>
+        </property>
+       </spacer>
+      </item>
+     </layout>
+    </item>
+   </layout>
+  </widget>
+ <resources/>
+ <connections/>
+</ui>

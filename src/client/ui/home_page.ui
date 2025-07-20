@@ -1,0 +1,180 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>HomePage</class>
+ <widget class="QWidget" name="HomePage">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>600</width>
+    <height>400</height>
+   </rect>
+  </property>
+  <layout class="QVBoxLayout" name="verticalLayout">
+   <item>
+    <spacer name="verticalSpacer_top">
+     <property name="orientation">
+      <enum>Qt::Vertical</enum>
+     </property>
+     <property name="sizeHint" stdset="0">
+      <size>
+       <width>20</width>
+       <height>40</height>
+      </size>
+     </property>
+    </spacer>
+   </item>
+   <item>
+    <widget class="QLabel" name="label_title">
+     <property name="text">
+      <string>ADITIM Monitor</string>
+     </property>
+     <property name="alignment">
+      <set>Qt::AlignCenter</set>
+     </property>
+     <property name="styleSheet">
+      <string>font-size: 28px; font-weight: bold; color: #2c3e50; margin-bottom: 20px;</string>
+     </property>
+    </widget>
+   </item>
+   <item>
+    <layout class="QHBoxLayout" name="horizontalLayout_main">
+     <item>
+      <spacer name="horizontalSpacer_left">
+       <property name="orientation">
+        <enum>Qt::Horizontal</enum>
+       </property>
+      </spacer>
+     </item>
+     <item>
+      <layout class="QVBoxLayout" name="verticalLayout_buttons">
+       <item>
+        <widget class="QPushButton" name="pushButton_profiles_open">
+         <property name="text">
+          <string>🏗️ ПРОФИЛИ</string>
+         </property>
+         <property name="minimumSize">
+          <size>
+           <width>300</width>
+           <height>80</height>
+          </size>
+         </property>
+         <property name="styleSheet">
+          <string>font-size: 18px; font-weight: bold; padding: 15px; background-color: #3498db; color: white; border-radius: 10px;</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QLabel" name="label_profiles_desc">
+         <property name="text">
+          <string>Основная работа с профилями</string>
+         </property>
+         <property name="alignment">
+          <set>Qt::AlignCenter</set>
+         </property>
+         <property name="styleSheet">
+          <string>font-size: 12px; color: #7f8c8d; margin-bottom: 20px;</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <layout class="QHBoxLayout" name="horizontalLayout_secondary">
+         <item>
+          <widget class="QPushButton" name="pushButton_products_open">
+           <property name="text">
+            <string>📦 Изделия</string>
+           </property>
+           <property name="minimumSize">
+            <size>
+             <width>140</width>
+             <height>50</height>
+            </size>
+           </property>
+           <property name="styleSheet">
+            <string>font-size: 14px; padding: 10px; background-color: #95a5a6; color: white; border-radius: 8px;</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QPushButton" name="pushButton_tasks_open">
+           <property name="text">
+            <string>📝 Задачи</string>
+           </property>
+           <property name="minimumSize">
+            <size>
+             <width>140</width>
+             <height>50</height>
+            </size>
+           </property>
+           <property name="styleSheet">
+            <string>font-size: 14px; padding: 10px; background-color: #95a5a6; color: white; border-radius: 8px;</string>
+           </property>
+          </widget>
+         </item>
+        </layout>
+       </item>
+       <item>
+        <layout class="QHBoxLayout" name="horizontalLayout_additional">
+         <item>
+          <widget class="QPushButton" name="pushButton_settings_open">
+           <property name="text">
+            <string>⚙️ Настройки</string>
+           </property>
+           <property name="minimumSize">
+            <size>
+             <width>140</width>
+             <height>40</height>
+            </size>
+           </property>
+           <property name="styleSheet">
+            <string>font-size: 12px; padding: 8px; background-color: #bdc3c7; color: #2c3e50; border-radius: 6px;</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QPushButton" name="pushButton_reports_open">
+           <property name="text">
+            <string>📊 Отчеты</string>
+           </property>
+           <property name="minimumSize">
+            <size>
+             <width>140</width>
+             <height>40</height>
+            </size>
+           </property>
+           <property name="styleSheet">
+            <string>font-size: 12px; padding: 8px; background-color: #bdc3c7; color: #2c3e50; border-radius: 6px;</string>
+           </property>
+          </widget>
+         </item>
+        </layout>
+       </item>
+      </layout>
+     </item>
+     <item>
+      <spacer name="horizontalSpacer_right">
+       <property name="orientation">
+        <enum>Qt::Horizontal</enum>
+       </property>
+      </spacer>
+     </item>
+    </layout>
+   </item>
+   <item>
+    <spacer name="verticalSpacer_bottom">
+     <property name="orientation">
+      <enum>Qt::Vertical</enum>
+     </property>
+     <property name="sizeHint" stdset="0">
+      <size>
+       <width>20</width>
+       <height>40</height>
+      </size>
+     </property>
+    </spacer>
+   </item>
+  </layout>
+ </widget>
+ <resources/>
+ <connections/>
+</ui>

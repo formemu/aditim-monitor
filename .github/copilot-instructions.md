@@ -1,294 +1,233 @@
-<!-- Use this file to provide workspace-specific custom instructions to Copilot. For more details, visit https://code.visualstudio.com/docs/copilot/copilot-customization#_use-a-githubcopilotinstructionsmd-file -->
+<!-- Используйте этот файл для предоставления пользовательских инструкций для Copilot, специфичных для рабочей области. Для получения дополнительной информации посетите https://code.visualstudio.com/docs/copilot/copilot-customization#_use-a-githubcopilotinstructionsmd-file -->
 
-# ADITIM Monitor - AI Coding Agent Instructions
+# ADITIM Monitor - Инструкции для ИИ-агента программирования
 
-## Project Overview
+## Соглашения стиля кода
 
-ADITIM Monitor is a client-server task management system for metalworking workshop. The system tracks production tasks for creating profiles/tools and other manufacturing work, allowing managers to create tasks and workers to view prioritized task queues.
+### 🧱 Общие принципы дизайна
+- **UI-FIRST**: Все элементы пользовательского интерфейса должны создаваться с использованием .ui файлов, а не программно. Используйте Qt Designer для всех макетов, виджетов и визуальных компонентов. Код должен обрабатывать только бизнес-логику, привязку данных и обработку событий.
+- **SOLID**: Код должен быть открыт для расширения, закрыт для модификации. Разделяйте ответственность между классами
+- **DRY (Don't Repeat Yourself)**: Избегайте дублирования логики. Выносите повторяющиеся фрагменты в отдельные методы или классы
+- **KISS (Keep It Simple, Stupid)**: Не усложняйте. Простой и понятный код - приоритет
 
-## Client-Server Architecture
+### Стандарты Python
+- **Инструменты**: Используйте `black`, `flake8`, `mypy` для форматирования и проверки кода
+- **Отступы**: 4 пробела
+- **Соглашения именования**:
+  - Классы: CamelCase (`TaskManager`, `ProfileDialog`)
+  - Функции и переменные: snake_case (`get_task_list`, `current_status`)
+  - Константы: UPPER_SNAKE_CASE (`MAX_ACTIVE_TASKS`, `DEFAULT_STATUS`)
+- **Длина строки**: Максимум 79 символов
+- **Пустые строки**:
+  - Одна пустая строка между методами
+  - Две пустые строки между классами
+- **Docstrings**: Добавляйте docstring к каждому классу и публичному методу
+- **Аннотации типов**: Обязательны для всех функций
 
-### Server Component (`src/server/`)
-- **FastAPI Application** (`src/server/main.py`): REST API server with SQLAlchemy models
-- **Database Models** (`src/server/models/`): SQLAlchemy declarative models for tasks, profiles, products
-- **API Routes** (`src/server/api/`): CRUD operations for tasks, directories, and status management
-- **Database** (`aditim.db`): SQLite database with tables for tasks, products, profiles, directories
+### 🔧 Паттерны PySide6
 
-### Client Component (`src/client/`)
-- **PySide6 Application** (`src/client/main.py`): Desktop GUI application
-- **UI Forms** (`src/client/ui/`): Qt Designer .ui files for task dialogs and main windows
-- **HTTP Client** (`src/client/api_client.py`): httpx-based communication with server
-- **Task Management** (`src/client/widgets/`): Custom widgets for drag-drop task reordering
-
-## Key Database Schema
-
-### Core Entities
-```python
-# Task model with two types: profile tools and other work
-Task: id, id_product, id_profile, equipment, deadline, position, id_type_work, id_status, id_departament
-
-# Profile tools (extrusion tools with 7 standard equipment types)
-Profile: id, article, sketch
-ProfileComponent: id, name, id_profile
-
-# Products (other manufacturing work with custom equipment)
-Product: id, name, id_departament, sketch
-ProductComponent: id, name, id_product
-
-# Directory tables
-DirQueueStatus: id, name  # (Новая, В работе, Выполнена, Отменена)
-DirTypeWork: id, name # (Новый инструмент, новый вариант, добавить к существующему, переделать, доработка)
-DirDepartament: id, name
-DirComponent: id, name
-```
-
-## Task Types & Business Logic
-
-### Profile Tasks (Tab 1: "Инструмент на экструзию")
-- Fixed equipment types: плиты 1-4, пальцы, усреднитель, кондуктор
-- Work types: новый инструмент, новый вариант, добавить к существующему, переделать, доработка
-- Example: "Профиль 1322214.1 - плиты 1-4, версия 2"
-
-### Product Tasks (Tab 2: "Другое")  
-- Custom equipment list (user-defined components)
-- Flexible naming and quantity
-- Department assignment required
-
-### Priority & Queue Management
-- Tasks ordered by `position` field (queue position)
-- Drag-drop reordering in PySide6 interface updates position values
-- Active tasks (≤10) displayed on main worker screen
-- Full task management in separate manager window
-
-## API Patterns & Endpoints
-
-### RESTful Structure
-```
-GET /api/tasks/                    # Get tasks with status filter
-POST /api/tasks/                   # Create new task
-PUT /api/tasks/{id}               # Update task (including status)
-PUT /api/tasks/{id}/position      # Update task position (drag-drop)
-GET /api/directories/statuses/     # Get status options
-GET /api/directories/departments/  # Get department options
-```
-
-### Request/Response Patterns
-- Use Pydantic schemas for validation: `TaskCreate`, `TaskUpdate`, `TaskResponse`
-- Equipment stored as JSON field or separate junction table
-- Position updates should recalculate other task positions
-
-## PySide6 UI Patterns
-
-### Main Application Structure
-- **Worker View**: QTableWidget with status filter, max 10 active tasks, drag-drop reordering
-- **Manager View**: Separate QDialog with full task CRUD, create/edit task dialogs
-- **Task Dialog**: QTabWidget with profile/product tabs (`dialogtask.ui`)
-
-### UI Components
-- Use QComboBox for departments, work types, status selection
-- QCheckBox group for profile equipment selection
-- QListWidget for product equipment with add/remove/edit buttons
-- QDateEdit for deadlines
-- QRadioButton group for profile work types
-
-### Drag-Drop Implementation
-```python
-# Enable drag-drop in QTableWidget for position reordering
-table.setDragDropMode(QAbstractItemView.DragDropMode.InternalMove)
-# Override dropEvent to call API for position updates
-```
-
-## Development Workflows
-
-### Running Server
-```bash
-cd src/server
-python main.py  # Starts FastAPI on localhost:8000
-```
-
-### Running Client
-```bash
-cd src/client  
-python main.py  # Starts PySide6 application
-```
-
-### Database Operations
-```bash
-# SQLAlchemy models auto-create tables
-# Use Alembic for schema migrations if needed
-alembic init alembic
-alembic revision --autogenerate -m "Initial"
-alembic upgrade head
-```
-
-## Code Style Conventions
-
-### 🧱 General Design Principles
-- **UI-FIRST**: All user interface elements must be created using .ui files, not programmatically. Use Qt Designer for all layouts, widgets, and visual components. Code should only handle business logic, data binding, and event handling.
-- **SOLID**: Code should be open for extension, closed for modification. Separate responsibilities between classes
-- **DRY (Don't Repeat Yourself)**: Avoid logic duplication. Extract repeating fragments into separate methods or classes
-- **KISS (Keep It Simple, Stupid)**: Don't overcomplicate. Simple and clear code is priority
-
-### Python Standards
-- **Tools**: Use `black`, `flake8`, `mypy` for code formatting and linting
-- **Indentation**: 4 spaces
-- **Naming Conventions**:
-  - Classes: CamelCase (`TaskManager`, `ProfileDialog`)
-  - Functions and variables: snake_case (`get_task_list`, `current_status`)
-  - Constants: UPPER_SNAKE_CASE (`MAX_ACTIVE_TASKS`, `DEFAULT_STATUS`)
-- **Line length**: Maximum 79 characters
-- **Empty lines**:
-  - One empty line between methods
-  - Two empty lines between classes
-- **Docstrings**: Add docstring to every class and public method
-- **Type hints**: Required for all functions
-
-### 🔧 PySide6 Patterns
-
-#### 📦 Imports
+#### 📦 Импорты
 ```python
 from PySide6.QtCore import Qt, Signal, Slot
 from PySide6.QtWidgets import QApplication, QWidget, QPushButton, QVBoxLayout
 ```
-Use explicit imports instead of `import *`
+Используйте явные импорты вместо `import *`
 
-#### 🏗️ Widget Creation - UI-FIRST Approach
-- **ALL UI elements must be created in .ui files using Qt Designer**
-- Code should NEVER create widgets programmatically (no QPushButton(), QLabel(), etc. in code)
-- Use `QUiLoader` to load .ui files and `findChild()` to get references to elements
-- Only data binding, event handling, and business logic should be in code
+#### 🏗️ Создание виджетов - подход UI-FIRST
+- **ВСЕ UI элементы должны создаваться в .ui файлах с помощью Qt Designer**
+- Код НЕ должен создавать виджеты программно (никаких QPushButton(), QLabel() и т.д. в коде)
+- Используйте `QUiLoader` для загрузки .ui файлов и прямой доступ к элементам
+- Только привязка данных, обработка событий и бизнес-логика должны быть в коде
 
-#### 🏷️ UI Element Naming Convention
-All UI elements in .ui files must follow the pattern: `widgettype_purpose`
+#### 🏷️ Соглашения именования UI элементов
+Все UI элементы в .ui файлах должны следовать стандарту Qt Designer: `widgetType_context_action`
 
-**Standard naming pattern:**
-- `btn_action` - Buttons (btn_create_profile, btn_delete_task, btn_save)
-- `label_content` - Labels (label_title, label_logo, label_info, label_status)  
-- `table_data` - Tables (table_tasks, table_profiles, table_products)
-- `edit_field` - Line edits (edit_article, edit_name, edit_deadline)
-- `combo_selection` - Combo boxes (combo_status, combo_department, combo_type)
-- `list_items` - List widgets (list_equipment, list_components, list_tasks)
-- `text_content` - Text edits (text_description, text_notes, text_details)
-- `check_option` - Check boxes (check_urgent, check_active, check_completed)
-- `radio_choice` - Radio buttons (radio_profile, radio_product, radio_new)
-- `spin_number` - Spin boxes (spin_quantity, spin_priority, spin_order)
-- `progress_status` - Progress bars (progress_loading, progress_completion)
-- `slider_value` - Sliders (slider_priority, slider_position)
-- `group_section` - Group boxes (group_details, group_equipment, group_settings)
-- `tab_page` - Tab widgets (tab_profiles, tab_products, tab_settings)
-- `scroll_area` - Scroll areas (scroll_content, scroll_list, scroll_details)
-- `frame_container` - Frames (frame_header, frame_content, frame_buttons)
+**Стандартный паттерн именования:**
+- `pushButton_context_action` - Кнопки (pushButton_task_add, pushButton_profile_delete, pushButton_save)
+- `label_context` - Метки (label_title, label_logo, label_status, label_info)  
+- `tableWidget_context` - Таблицы (tableWidget_tasks, tableWidget_profiles, tableWidget_products)
+- `lineEdit_context` - Поля ввода (lineEdit_article, lineEdit_name, lineEdit_deadline)
+- `comboBox_context` - Выпадающие списки (comboBox_status, comboBox_department, comboBox_type)
+- `listWidget_context` - Списки (listWidget_equipment, listWidget_components, listWidget_tasks)
+- `textEdit_context` - Текстовые поля (textEdit_description, textEdit_notes, textEdit_details)
+- `checkBox_context` - Флажки (checkBox_urgent, checkBox_active, checkBox_completed)
+- `radioButton_context` - Радиокнопки (radioButton_profile, radioButton_product, radioButton_new)
+- `spinBox_context` - Счетчики (spinBox_quantity, spinBox_priority, spinBox_order)
+- `progressBar_context` - Индикаторы прогресса (progressBar_loading, progressBar_completion)
+- `horizontalSlider_context` - Ползунки (horizontalSlider_priority, horizontalSlider_position)
+- `groupBox_context` - Группы (groupBox_details, groupBox_equipment, groupBox_settings)
+- `tabWidget_context` - Вкладки (tabWidget_profiles, tabWidget_products, tabWidget_settings)
+- `scrollArea_context` - Области прокрутки (scrollArea_content, scrollArea_list, scrollArea_details)
+- `frame_context` - Фреймы (frame_header, frame_content, frame_buttons)
 
-**Examples:**
+**Примеры:**
 ```
-✅ Good: btn_create_profile, label_task_status, table_active_tasks
-❌ Bad: createButton, taskStatusLabel, activeTasksTable
-❌ Bad: button1, label_1, tableWidget
+✅ Правильно: pushButton_task_add, label_status, tableWidget_active_tasks
+❌ Неправильно: createButton, taskStatusLabel, activeTasksTable
+❌ Неправильно: pushButton, label, tableWidget
 ```
 
-#### 🔧 Working with UI Files
-**Loading UI files:**
+#### 🔧 Работа с UI файлами
+**Загрузка UI файлов:**
 ```python
 from PySide6.QtUiTools import QUiLoader
 from PySide6.QtCore import QFile
 
 def load_ui(self):
-    ui_file_path = UI_PATHS["DIALOG_NAME"]
-    ui_file = QFile(ui_file_path)
+    ui_file = QFile(UI_PATHS["DIALOG_NAME"])
     ui_file.open(QFile.ReadOnly)
     
     loader = QUiLoader()
-    self.ui = loader.load(ui_file, self)
+    self.ui = loader.load(ui_file)
     ui_file.close()
 ```
 
-**Finding UI elements:**
+**Доступ к UI элементам:**
 ```python
-# Get references by objectName (not name attribute)
-self.button = self.ui.findChild(QPushButton, "btn_save")
-self.table = self.ui.findChild(QTableWidget, "table_data")
-self.label = self.ui.findChild(QLabel, "label_status")
+# Прямой доступ к элементам через их objectName
+self.ui.pushButton_task_save.clicked.connect(self.save_task)
+self.ui.tableWidget_tasks.itemSelectionChanged.connect(self.on_selection_changed)
+self.ui.label_status.setText("Готово")
 
-# Always verify elements were found
-if not all([self.button, self.table, self.label]):
-    raise RuntimeError("UI elements not found")
+# НЕ используйте findChild() - обращайтесь напрямую
+# ❌ Неправильно: self.ui.findChild(QPushButton, "pushButton_task_save")
+# ✅ Правильно: self.ui.pushButton_task_save
 ```
 
-**What should be in code vs UI:**
-- ✅ UI file: Widget structure, layouts, basic properties, object names
-- ✅ Code: Data binding, event handling, business logic, dynamic content
-- ❌ UI file: Dynamic content, complex logic
-- ❌ Code: Widget creation, layout setup, static styling
+**Что должно быть в коде vs UI:**
+- ✅ UI файл: Структура виджетов, макеты, базовые свойства, objectName
+- ✅ Код: Привязка данных, обработка событий, бизнес-логика, динамический контент
+- ❌ UI файл: Динамический контент, сложная логика
+- ❌ Код: Создание виджетов, настройка макетов, статическая стилизация
 
-#### 📣 Signals and Slots
-- Use `@Slot()` decorators for slots
-- Use typed signals when possible: `Signal(str)` instead of `Signal()`
-- Avoid "magic" connections like `connectSlotsByName`
-- Connect events via `connect` (e.g., `self.button.clicked.connect(self.on_button_clicked)`)
-- Disconnect signals when destroying objects
-- Avoid anonymous lambdas where not necessary
+#### 🏠 Паттерн главного окна (обязательный стандарт)
+**ЭТАЛОННАЯ структура для всех главных окон (проверено и работает):**
+```python
+from PySide6.QtWidgets import QMainWindow, QMessageBox
+from PySide6.QtCore import QFile
+from PySide6.QtUiTools import QUiLoader
+from .resources import UI_PATHS
 
-#### 🧰 Resources Usage
-- Use `.qrc` files for images and other resources
-- Import them via `import qrc_resources` after compilation
+class MainWindow(QMainWindow):
+    """Главное окно приложения"""
+    
+    def __init__(self):
+        super().__init__()
+        self.load_ui()
+        self.setup_ui()
 
-#### Design and Styles
-- Use QSS instead of hardcoded styles in code
-- Create separate style files: `resources/styles/main.qss`, `resources/styles/dialogs.qss`
-- Store file paths in constants: `MAIN_STYLE_PATH = "resources/styles/main.qss"`
-- Load styles via `self.setStyleSheet()` using path constants
-- Extract colors, sizes, fonts into constants when not defined in QSS:
+    def load_ui(self):
+        """Загрузка UI из файла"""
+        ui_file = QFile(UI_PATHS["MAIN_WINDOW"])
+        ui_file.open(QFile.ReadOnly)
+        
+        loader = QUiLoader()
+        self.ui = loader.load(ui_file)
+        ui_file.close()
+
+        self.setWindowTitle(self.ui.windowTitle())
+        self.setGeometry(self.ui.geometry())
+        self.setMenuBar(self.ui.menubar)
+        self.setStatusBar(self.ui.statusbar)
+        self.setCentralWidget(self.ui.centralwidget)
+
+    def setup_ui(self):
+        """Настройка UI компонентов после загрузки"""
+        self.ui.pushButton_test.clicked.connect(self.on_test_clicked)
+
+    def on_test_clicked(self):
+        """Обработка нажатия тестовой кнопки"""
+        QMessageBox.information(self, "Тест", "Главное окно работает!")
+```
+
+**Принципы этого паттерна:**
+- ✅ Максимальная простота - никаких проверок и лишнего кода
+- ✅ Прямой доступ к элементам без `findChild()`
+- ✅ Один метод `load_ui()` выполняет всю загрузку и настройку
+- ✅ Все свойства переносятся из UI файла напрямую
+- ❌ НЕ добавляйте `hasattr()`, `if not`, отладочные `print()`
+- ❌ НЕ разбивайте на множество методов если код простой
+
+**ВАЖНО:** Этот паттерн проверен и является максимально эффективным. Не усложняйте его!
+
+#### 📣 Сигналы и слоты
+- Используйте декораторы `@Slot()` для слотов
+- Используйте типизированные сигналы: `Signal(str)` вместо `Signal()`
+- Избегайте "магических" подключений типа `connectSlotsByName`
+- Подключайте события через `connect` (например, `self.button.clicked.connect(self.on_button_clicked)`)
+- Отключайте сигналы при уничтожении объектов
+- Избегайте анонимных лямбд где это не нужно
+
+#### 🧰 Использование ресурсов
+- Используйте `.qrc` файлы для изображений и других ресурсов
+- Импортируйте их через `import qrc_resources` после компиляции
+
+#### Дизайн и стили
+- Используйте QSS вместо стилей, заданных в коде
+- Создавайте отдельные файлы стилей: `resources/styles/main.qss`, `resources/styles/dialogs.qss`
+- Храните пути к файлам в константах: `MAIN_STYLE_PATH = "resources/styles/main.qss"`
+- Загружайте стили через `self.setStyleSheet()` используя константы путей
+- **ВСЕ ЦВЕТА ДОЛЖНЫ БЫТЬ ОПРЕДЕЛЕНЫ В `constants.py`** в словаре `COLORS`
+- **В QSS файлах НЕ используйте прямые значения цветов** - только ссылки на константы
+- Используйте префикс `COLOR_` для всех цветовых констант (например, `COLOR_PRIMARY`, `COLOR_BACKGROUND`)
+- Обрабатывайте подстановку констант в QSS через `style_utils.py`
+
+**Пример работы с цветами:**
 ```python
 # constants.py
 COLORS = {
-    "PRIMARY": "#2196F3",
-    "SECONDARY": "#FFC107", 
-    "SUCCESS": "#4CAF50",
-    "ERROR": "#F44336"
+    "COLOR_PRIMARY": "#2196F3",
+    "COLOR_SECONDARY": "#FFC107", 
+    "COLOR_SUCCESS": "#4CAF50",
+    "COLOR_ERROR": "#F44336",
+    "COLOR_BACKGROUND": "#f5f5f5"
 }
 
-FONTS = {
-    "HEADER": ("Arial", 16, "bold"),
-    "BODY": ("Arial", 12, "normal"),
-    "SMALL": ("Arial", 10, "normal")
+# В QSS файле используйте плейсхолдеры
+# main_template.qss
+QPushButton {
+    background-color: {{COLOR_PRIMARY}};
+    color: white;
 }
 
-SIZES = {
-    "BUTTON_HEIGHT": 32,
-    "ICON_SIZE": 24,
-    "MARGIN": 10
+QMainWindow {
+    background-color: {{COLOR_BACKGROUND}};
 }
 
-PATHS = {
-    "MAIN_STYLE": "resources/styles/main.qss",
-    "DIALOG_STYLE": "resources/styles/dialogs.qss", 
-    "ICONS": "resources/icons/",
-    "IMAGES": "resources/images/"
-}
+# style_utils.py обрабатывает подстановку
+def load_styles_with_constants(qss_file_path):
+    with open(qss_file_path, 'r', encoding='utf-8') as file:
+        stylesheet = file.read()
+    
+    # Замена констант из COLORS
+    for color_name, color_value in COLORS.items():
+        stylesheet = stylesheet.replace(f"{{{{{color_name}}}}}", color_value)
+    
+    return stylesheet
 ```
 
-#### 🧑‍💻 OOP Practices
-- All widgets should be part of a class, not global
-- Use inheritance when necessary
-- Use `super()` for calling parent methods
-- Prefer composition over inheritance
+#### 🧑‍💻 Практики ООП
+- Все виджеты должны быть частью класса, а не глобальными
+- Используйте наследование когда необходимо
+- Используйте `super()` для вызова методов родителя
+- Предпочитайте композицию наследованию
 
-#### 🧽 Qt Memory Management
-- Qt automatically manages memory through parent-child system
-- Ensure all widgets are added to parent container or layout
-- Avoid memory leaks through improper signal/slot usage
+#### 🧽 Управление памятью Qt
+- Qt автоматически управляет памятью через систему родитель-потомок
+- Убедитесь что все виджеты добавлены в родительский контейнер или макет
+- Избегайте утечек памяти через неправильное использование сигналов/слотов
 
-#### 🧬 Asynchronous Operations
-- For long operations use:
+#### 🧬 Асинхронные операции
+- Для длительных операций используйте:
   - `QThread`
   - `QRunnable + QThreadPool`
-  - `asyncqt + asyncio` (if applicable)
-- Don't block the main thread!
+  - `asyncqt + asyncio` (если применимо)
+- Не блокируйте главный поток!
 
-## Critical Implementation Notes
+## Критические замечания по реализации
 
-- Equipment for profiles: store as bit flags or JSON for 7 standard types
-- Task position: implement as integer sequence, recalculate on reorder
-- Status filtering: use query parameters, not separate endpoints
-- UI responsiveness: use QThread for API calls to prevent freezing
-- Russian locale: ensure proper UTF-8 encoding in database and API
+- Оборудование для профилей: хранить как битовые флаги или JSON для 7 стандартных типов
+- Позиция задачи: реализовать как целочисленную последовательность, пересчитывать при переупорядочивании
+- Фильтрация статусов: использовать параметры запроса, а не отдельные эндпоинты
+- Отзывчивость UI: использовать QThread для API вызовов чтобы предотвратить зависание
+- Русская локаль: обеспечить правильную UTF-8 кодировку в базе данных и API

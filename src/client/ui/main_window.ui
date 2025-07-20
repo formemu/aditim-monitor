@@ -1,0 +1,100 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>MainWindow</class>
+ <widget class="QMainWindow" name="MainWindow">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>600</width>
+    <height>500</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>ADITIM Monitor</string>
+  </property>
+  <widget class="QWidget" name="centralwidget">
+   <layout class="QVBoxLayout" name="verticalLayout_main">
+    <property name="spacing">
+     <number>0</number>
+    </property>
+    <property name="leftMargin">
+     <number>0</number>
+    </property>
+    <property name="topMargin">
+     <number>0</number>
+    </property>
+    <property name="rightMargin">
+     <number>0</number>
+    </property>
+    <property name="bottomMargin">
+     <number>0</number>
+    </property>
+    <item>
+     <widget class="QStackedWidget" name="stackedWidget_content">
+      <property name="currentIndex">
+       <number>0</number>
+      </property>
+     </widget>
+    </item>
+   </layout>
+  </widget>
+  <widget class="QMenuBar" name="menubar">
+   <property name="geometry">
+    <rect>
+     <x>0</x>
+     <y>0</y>
+     <width>600</width>
+     <height>22</height>
+    </rect>
+   </property>
+   <widget class="QMenu" name="menu_navigation">
+    <property name="title">
+     <string>Навигация</string>
+    </property>
+    <addaction name="action_home"/>
+    <addaction name="separator"/>
+    <addaction name="action_profiles"/>
+    <addaction name="action_products"/>
+    <addaction name="action_tasks"/>
+    <addaction name="separator"/>
+    <addaction name="action_settings"/>
+    <addaction name="action_reports"/>
+   </widget>
+   <addaction name="menu_navigation"/>
+  </widget>
+  <widget class="QStatusBar" name="statusbar"/>
+  <action name="action_home">
+   <property name="text">
+    <string>🏠 Главная</string>
+   </property>
+  </action>
+  <action name="action_profiles">
+   <property name="text">
+    <string>🏗️ Профили</string>
+   </property>
+  </action>
+  <action name="action_products">
+   <property name="text">
+    <string>📦 Изделия</string>
+   </property>
+  </action>
+  <action name="action_tasks">
+   <property name="text">
+    <string>📝 Задачи</string>
+   </property>
+  </action>
+  <action name="action_settings">
+   <property name="text">
+    <string>⚙️ Настройки</string>
+   </property>
+  </action>
+  <action name="action_reports">
+   <property name="text">
+    <string>📊 Отчеты</string>
+   </property>
+  </action>
+ </widget>
+ <resources/>
+ <connections/>
+</ui>
