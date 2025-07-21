@@ -9,7 +9,7 @@ import base64
 
 from ..database import get_db
 from ..models.products import Product, Profile
-from ..models.profile_tools import ProductComponent
+from ..models.profile_tools import ProductComponent, ProfileTool
 from ..schemas.products import (
     ProductCreate, ProductUpdate, ProductResponse,
     ProfileCreate, ProfileUpdate, ProfileResponse,
@@ -106,3 +106,41 @@ def create_product_component(
     db.commit()
     db.refresh(db_component)
     return db_component
+
+
+# Profile Tools
+@router.get("/profile-tools", response_model=List[dict])
+def get_profile_tools(db: Session = Depends(get_db)):
+    """Get all profile tools with profile information"""
+    tools = db.query(ProfileTool).all()
+    result = []
+    for tool in tools:
+        result.append({
+            "id": tool.id,
+            "profile_id": tool.profile_id,
+            "profile_article": tool.profile.article if tool.profile else "Неизвестно",
+            "profile_description": tool.profile.description if tool.profile else "",
+            "dimension": tool.dimension.dimension if tool.dimension else "Неизвестно",
+            "description": tool.description or "",
+            "components_count": len(tool.components)
+        })
+    return result
+
+
+@router.get("/profile-tools/{tool_id}/components", response_model=List[dict])
+def get_profile_tool_components(tool_id: int, db: Session = Depends(get_db)):
+    """Get components of a profile tool"""
+    tool = db.query(ProfileTool).filter(ProfileTool.id == tool_id).first()
+    if not tool:
+        raise HTTPException(status_code=404, detail="Profile tool not found")
+    
+    result = []
+    for component in tool.components:
+        result.append({
+            "id": component.id,
+            "component_type": component.component_type.name if component.component_type else "Неизвестно",
+            "variant": component.variant,
+            "description": component.description or "",
+            "status": component.status.name if component.status else "Неизвестно"
+        })
+    return result

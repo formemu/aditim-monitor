@@ -2,35 +2,44 @@
 Утилиты для асинхронных операций в Qt приложении
 """
 
-from PySide6.QtCore import QThread, QObject, Signal
+from PySide6.QtCore import QRunnable, QObject, Signal, QThreadPool
 from typing import Callable, Any
 
 
-class AsyncWorker(QObject):
-    """Рабочий класс для выполнения асинхронных операций"""
-    
-    # Сигналы для результатов
+class WorkerSignals(QObject):
+    """Сигналы для рабочего класса"""
     finished = Signal(object)  # Успешное завершение с результатом
     error = Signal(Exception)  # Ошибка выполнения
+
+
+class AsyncWorker(QRunnable):
+    """Рабочий класс для выполнения асинхронных операций"""
     
-    def __init__(self, func: Callable, *args, **kwargs):
+    def __init__(self, func: Callable, on_success: Callable = None, on_error: Callable = None, *args, **kwargs):
         super().__init__()
         self.func = func
         self.args = args
         self.kwargs = kwargs
+        self.signals = WorkerSignals()
+        
+        # Подключаем callbacks
+        if on_success:
+            self.signals.finished.connect(on_success)
+        if on_error:
+            self.signals.error.connect(on_error)
     
     def run(self):
         """Выполнение функции в рабочем потоке"""
         try:
             result = self.func(*self.args, **self.kwargs)
-            self.finished.emit(result)
+            self.signals.finished.emit(result)
         except Exception as e:
-            self.error.emit(e)
+            self.signals.error.emit(e)
 
 
 def run_async(func: Callable, on_success: Callable = None, on_error: Callable = None, *args, **kwargs):
     """
-    Запускает функцию асинхронно в отдельном потоке
+    Запускает функцию асинхронно в пуле потоков
     
     Args:
         func: Функция для выполнения
@@ -39,33 +48,12 @@ def run_async(func: Callable, on_success: Callable = None, on_error: Callable = 
         *args, **kwargs: Аргументы для функции
     
     Returns:
-        tuple: (thread, worker) для управления выполнением
+        worker: объект worker для управления выполнением
     """
-    # Создаем поток и рабочий объект
-    thread = QThread()
-    worker = AsyncWorker(func, *args, **kwargs)
+    # Создаем worker
+    worker = AsyncWorker(func, on_success, on_error, *args, **kwargs)
     
-    # Перемещаем worker в поток
-    worker.moveToThread(thread)
+    # Запускаем в пуле потоков
+    QThreadPool.globalInstance().start(worker)
     
-    # Подключаем сигналы
-    thread.started.connect(worker.run)
-    
-    if on_success:
-        worker.finished.connect(on_success)
-    if on_error:
-        worker.error.connect(on_error)
-    
-    # Правильная очистка ресурсов
-    def cleanup():
-        worker.deleteLater()
-        thread.quit()
-        thread.deleteLater()
-    
-    worker.finished.connect(cleanup)
-    worker.error.connect(cleanup)
-    
-    # Запускаем поток
-    thread.start()
-    
-    return thread, worker
+    return worker

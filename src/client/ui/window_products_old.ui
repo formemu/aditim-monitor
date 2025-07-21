@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <ui version="4.0">
- <class>ProfilesContent</class>
- <widget class="QWidget" name="ProfilesContent">
+ <class>ProductsContent</class>
+ <widget class="QWidget" name="ProductsContent">
   <property name="geometry">
    <rect>
     <x>0</x>
@@ -16,7 +16,7 @@
      <item>
       <layout class="QHBoxLayout" name="horizontalLayout_toolbar">
        <item>
-        <widget class="QPushButton" name="pushButton_profile_add">
+        <widget class="QPushButton" name="pushButton_product_add">
          <property name="minimumSize">
           <size>
            <width>100</width>
@@ -29,7 +29,7 @@
         </widget>
        </item>
        <item>
-        <widget class="QPushButton" name="pushButton_profile_edit">
+        <widget class="QPushButton" name="pushButton_product_edit">
          <property name="minimumSize">
           <size>
            <width>100</width>
@@ -42,7 +42,7 @@
         </widget>
        </item>
        <item>
-        <widget class="QPushButton" name="pushButton_profile_delete">
+        <widget class="QPushButton" name="pushButton_product_delete">
          <property name="minimumSize">
           <size>
            <width>100</width>
@@ -76,14 +76,14 @@
           </size>
          </property>
          <property name="placeholderText">
-          <string>Поиск по артикулу...</string>
+          <string>Поиск по названию...</string>
          </property>
         </widget>
        </item>
       </layout>
      </item>
      <item>
-      <widget class="QTableWidget" name="tableWidget_profiles">
+      <widget class="QTableWidget" name="tableWidget_products">
        <property name="minimumSize">
         <size>
          <width>700</width>
@@ -101,7 +101,17 @@
        </property>
        <column>
         <property name="text">
+         <string>Название</string>
+        </property>
+       </column>
+       <column>
+        <property name="text">
          <string>Артикул</string>
+        </property>
+       </column>
+       <column>
+        <property name="text">
+         <string>Департамент</string>
         </property>
        </column>
        <column>
@@ -121,26 +131,33 @@
      <item>
       <widget class="QLabel" name="label_preview_title">
        <property name="text">
-        <string>Предварительный просмотр</string>
+        <string>Информация об изделии</string>
        </property>
       </widget>
      </item>
      <item>
-      <widget class="QLabel" name="label_profile_article">
+      <widget class="QLabel" name="label_product_name">
+       <property name="text">
+        <string>Название: -</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QLabel" name="label_product_article">
        <property name="text">
         <string>Артикул: -</string>
        </property>
       </widget>
      </item>
      <item>
-      <widget class="QLabel" name="label_profile_description">
+      <widget class="QLabel" name="label_product_description">
        <property name="text">
         <string>Описание: -</string>
        </property>
       </widget>
      </item>
      <item>
-      <widget class="QLabel" name="label_sketch">
+      <widget class="QLabel" name="label_image">
        <property name="minimumSize">
         <size>
          <width>400</width>
@@ -148,7 +165,7 @@
         </size>
        </property>
        <property name="text">
-        <string>Эскиз</string>
+        <string>Изображение</string>
        </property>
        <property name="alignment">
         <set>Qt::AlignmentFlag::AlignCenter</set>
@@ -156,24 +173,24 @@
       </widget>
      </item>
      <item>
-      <layout class="QHBoxLayout" name="horizontalLayout_files">
+      <layout class="QHBoxLayout" name="horizontalLayout_actions">
        <item>
-        <widget class="QPushButton" name="pushButton_sketch_open">
+        <widget class="QPushButton" name="pushButton_view_details">
          <property name="enabled">
           <bool>false</bool>
          </property>
          <property name="text">
-          <string>Открыть эскиз</string>
+          <string>Подробности</string>
          </property>
         </widget>
        </item>
        <item>
-        <widget class="QPushButton" name="pushButton_autocad_open">
+        <widget class="QPushButton" name="pushButton_create_task">
          <property name="enabled">
           <bool>false</bool>
          </property>
          <property name="text">
-          <string>Открыть в AutoCAD</string>
+          <string>Создать задачу</string>
          </property>
         </widget>
        </item>

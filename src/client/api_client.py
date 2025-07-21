@@ -89,3 +89,20 @@ class ApiClient:
     def create_product(self, product_data: Dict[str, Any]) -> Dict[Any, Any]:
         """Create new product"""
         return self._request("POST", "/api/products", json=product_data)
+    
+    def get_product_components(self, product_id: int) -> List[Dict[Any, Any]]:
+        """Get components of a product"""
+        return self._request("GET", f"/api/products/{product_id}/components")
+    
+    def create_product_component(self, product_id: int, component_data: Dict[str, Any]) -> Dict[Any, Any]:
+        """Create new product component"""
+        return self._request("POST", f"/api/products/{product_id}/components", json=component_data)
+    
+    # Profile Tools operations
+    def get_profile_tools(self) -> List[Dict[Any, Any]]:
+        """Get all profile tools"""
+        return self._request("GET", "/api/profile-tools")
+    
+    def get_profile_tool_components(self, tool_id: int) -> List[Dict[Any, Any]]:
+        """Get components of a profile tool"""
+        return self._request("GET", f"/api/profile-tools/{tool_id}/components")

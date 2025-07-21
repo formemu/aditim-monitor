@@ -186,12 +186,12 @@ class ProfilesContent(QWidget):
             article = self.ui.tableWidget_profiles.item(row, 0).text()
             description = self.ui.tableWidget_profiles.item(row, 1).text() if self.ui.tableWidget_profiles.item(row, 1) else ""
             self.ui.label_profile_article.setText(f"Артикул: {article}")
-            self.ui.label_profile_name.setText(f"Описание: {description}")
+            self.ui.label_profile_description.setText(f"Описание: {description}")
         else:
             self.ui.pushButton_sketch_open.setEnabled(False)
             self.ui.pushButton_autocad_open.setEnabled(False)
             self.ui.label_profile_article.setText("Артикул: -")
-            self.ui.label_profile_name.setText("Описание: -")
+            self.ui.label_profile_description.setText("Описание: -")
 
     def on_search_changed(self, text):
         """Поиск по артикулу"""

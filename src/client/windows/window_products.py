@@ -1,5 +1,5 @@
 """
-Содержимое изделий для ADITIM Monitor Client
+Содержимое изделий для ADITIM Monitor Client с вкладками и компонентами
 """
 
 from PySide6.QtWidgets import QWidget, QMessageBox, QTableWidgetItem, QAbstractItemView
@@ -13,16 +13,20 @@ from ..async_utils import run_async
 
 
 class ProductsContent(QWidget):
-    """Виджет содержимого изделий"""
+    """Виджет содержимого изделий с вкладками"""
     
     def __init__(self, api_client: ApiClient = None):
         super().__init__()
         self.api_client = api_client or ApiClient()
         self.departments = {}  # Словарь для кеширования департаментов
+        self.profiles = {}  # Словарь для кеширования профилей
+        self.current_product_id = None  # ID текущего выбранного изделия
+        self.current_tool_id = None  # ID текущего выбранного инструмента профиля
         self.load_ui()
         self.setup_ui()
         self.load_departments()
-        self.load_products_from_server()
+        self.load_profiles()
+        self.load_data()
 
     def load_ui(self):
         """Загрузка UI из файла"""
@@ -40,30 +44,59 @@ class ProductsContent(QWidget):
         style_sheet = load_styles_with_constants(style_path)
         self.ui.setStyleSheet(style_sheet)
         
-        # Подключение кнопок
-        self.ui.pushButton_product_add.clicked.connect(self.on_add_clicked)
-        self.ui.pushButton_product_edit.clicked.connect(self.on_edit_clicked)
-        self.ui.pushButton_product_delete.clicked.connect(self.on_delete_clicked)
-        self.ui.pushButton_view_details.clicked.connect(self.on_view_details_clicked)
-        self.ui.pushButton_create_task.clicked.connect(self.on_create_task_clicked)
-        self.ui.tableWidget_products.itemSelectionChanged.connect(self.on_selection_changed)
-        self.ui.lineEdit_search.textChanged.connect(self.on_search_changed)
+        # Подключение кнопок для инструментов профилей
+        self.ui.pushButton_profile_tool_add.clicked.connect(self.on_profile_tool_add_clicked)
+        self.ui.pushButton_profile_tool_edit.clicked.connect(self.on_profile_tool_edit_clicked)
+        self.ui.pushButton_profile_tool_delete.clicked.connect(self.on_profile_tool_delete_clicked)
+        self.ui.tableWidget_profile_tools.itemSelectionChanged.connect(self.on_profile_tool_selection_changed)
+        self.ui.lineEdit_search_profile_tools.textChanged.connect(self.on_profile_tools_search_changed)
         
-        # Настройка режима выделения таблицы
-        self.ui.tableWidget_products.setSelectionBehavior(QAbstractItemView.SelectRows)
-        self.ui.tableWidget_products.setSelectionMode(QAbstractItemView.SingleSelection)
-        self.ui.tableWidget_products.setFocusPolicy(Qt.NoFocus)
+        # Подключение кнопок для изделий
+        self.ui.pushButton_product_add.clicked.connect(self.on_product_add_clicked)
+        self.ui.pushButton_product_edit.clicked.connect(self.on_product_edit_clicked)
+        self.ui.pushButton_product_delete.clicked.connect(self.on_product_delete_clicked)
+        self.ui.tableWidget_products.itemSelectionChanged.connect(self.on_product_selection_changed)
+        self.ui.lineEdit_search_products.textChanged.connect(self.on_products_search_changed)
         
-        # Настройка ширины колонок
-        self.ui.tableWidget_products.setColumnWidth(0, 180)  # Название
-        self.ui.tableWidget_products.setColumnWidth(1, 120)  # Артикул  
-        self.ui.tableWidget_products.setColumnWidth(2, 150)  # Департамент
-        self.ui.tableWidget_products.horizontalHeader().setStretchLastSection(True)  # Описание - растягивается
+        # Подключение кнопок для компонентов
+        self.ui.pushButton_component_add.clicked.connect(self.on_component_add_clicked)
+        self.ui.pushButton_component_edit.clicked.connect(self.on_component_edit_clicked)
+        self.ui.pushButton_component_delete.clicked.connect(self.on_component_delete_clicked)
+        self.ui.tableWidget_components.itemSelectionChanged.connect(self.on_component_selection_changed)
+        
+        # Настройка таблиц
+        self.setup_tables()
         
         # Настройка автоматического обновления каждые 5 секунд
         self.update_timer = QTimer()
-        self.update_timer.timeout.connect(self.load_products_async)
+        self.update_timer.timeout.connect(self.load_data_async)
         self.update_timer.start(5000)  # 5000 мс = 5 секунд
+
+    def setup_tables(self):
+        """Настройка параметров таблиц"""
+        # Таблица инструментов профилей
+        self.ui.tableWidget_profile_tools.setSelectionBehavior(QAbstractItemView.SelectRows)
+        self.ui.tableWidget_profile_tools.setSelectionMode(QAbstractItemView.SingleSelection)
+        self.ui.tableWidget_profile_tools.setFocusPolicy(Qt.NoFocus)
+        self.ui.tableWidget_profile_tools.setColumnWidth(0, 200)  # Название
+        self.ui.tableWidget_profile_tools.setColumnWidth(1, 120)  # Профиль
+        self.ui.tableWidget_profile_tools.setColumnWidth(2, 150)  # Департамент
+        self.ui.tableWidget_profile_tools.horizontalHeader().setStretchLastSection(True)  # Описание
+        
+        # Таблица изделий
+        self.ui.tableWidget_products.setSelectionBehavior(QAbstractItemView.SelectRows)
+        self.ui.tableWidget_products.setSelectionMode(QAbstractItemView.SingleSelection)
+        self.ui.tableWidget_products.setFocusPolicy(Qt.NoFocus)
+        self.ui.tableWidget_products.setColumnWidth(0, 200)  # Название
+        self.ui.tableWidget_products.setColumnWidth(1, 150)  # Департамент
+        self.ui.tableWidget_products.horizontalHeader().setStretchLastSection(True)  # Описание
+        
+        # Таблица компонентов
+        self.ui.tableWidget_components.setSelectionBehavior(QAbstractItemView.SelectRows)
+        self.ui.tableWidget_components.setSelectionMode(QAbstractItemView.SingleSelection)
+        self.ui.tableWidget_components.setFocusPolicy(Qt.NoFocus)
+        self.ui.tableWidget_components.setColumnWidth(0, 300)  # Название
+        self.ui.tableWidget_components.horizontalHeader().setStretchLastSection(True)  # Количество
 
     def load_departments(self):
         """Загружает справочник департаментов"""
@@ -73,6 +106,60 @@ class ProductsContent(QWidget):
         except Exception as e:
             print(f"Ошибка загрузки департаментов: {e}")
             self.departments = {}
+
+    def load_profiles(self):
+        """Загружает справочник профилей"""
+        try:
+            profiles = self.api_client.get_profiles()
+            self.profiles = {profile['id']: profile['article'] for profile in profiles}
+        except Exception as e:
+            print(f"Ошибка загрузки профилей: {e}")
+            self.profiles = {}
+
+    def load_data(self):
+        """Загружает все данные с сервера"""
+        self.load_profile_tools_from_server()
+        self.load_products_from_server()
+
+    def load_profile_tools_from_server(self):
+        """Загружает инструменты профилей с сервера"""
+        try:
+            tools = self.api_client.get_profile_tools()
+            
+            # Очищаем таблицу
+            self.ui.tableWidget_profile_tools.setRowCount(0)
+            
+            # Заполняем таблицу данными с сервера
+            self.ui.tableWidget_profile_tools.setRowCount(len(tools))
+            
+            for row, tool in enumerate(tools):
+                # Название (размерность + артикул профиля)
+                name = f"{tool.get('dimension', 'Неизвестно')} - {tool.get('profile_article', 'Неизвестно')}"
+                name_item = QTableWidgetItem(name)
+                name_item.setFlags(name_item.flags() & ~Qt.ItemIsEditable)
+                name_item.setData(Qt.UserRole, tool.get('id'))  # Сохраняем ID инструмента
+                self.ui.tableWidget_profile_tools.setItem(row, 0, name_item)
+                
+                # Профиль
+                profile_item = QTableWidgetItem(tool.get('profile_article', 'Неизвестно'))
+                profile_item.setFlags(profile_item.flags() & ~Qt.ItemIsEditable)
+                self.ui.tableWidget_profile_tools.setItem(row, 1, profile_item)
+                
+                # Департамент (пока не реализовано в API)
+                dept_item = QTableWidgetItem("Экструзия")  # Временно
+                dept_item.setFlags(dept_item.flags() & ~Qt.ItemIsEditable)
+                self.ui.tableWidget_profile_tools.setItem(row, 2, dept_item)
+                
+                # Описание
+                description_item = QTableWidgetItem(tool.get('description', ''))
+                description_item.setFlags(description_item.flags() & ~Qt.ItemIsEditable)
+                self.ui.tableWidget_profile_tools.setItem(row, 3, description_item)
+            
+            # Убираем текущий активный элемент
+            self.ui.tableWidget_profile_tools.setCurrentItem(None)
+                
+        except Exception as e:
+            QMessageBox.warning(self, "Предупреждение", f"Не удалось загрузить инструменты профилей с сервера: {e}")
 
     def load_products_from_server(self):
         """Загружает изделия с сервера"""
@@ -89,24 +176,20 @@ class ProductsContent(QWidget):
                 # Название
                 name_item = QTableWidgetItem(product.get('name', ''))
                 name_item.setFlags(name_item.flags() & ~Qt.ItemIsEditable)
+                name_item.setData(Qt.UserRole, product.get('id'))  # Сохраняем ID изделия
                 self.ui.tableWidget_products.setItem(row, 0, name_item)
-                
-                # Артикул
-                article_item = QTableWidgetItem(product.get('article', ''))
-                article_item.setFlags(article_item.flags() & ~Qt.ItemIsEditable)
-                self.ui.tableWidget_products.setItem(row, 1, article_item)
                 
                 # Департамент
                 dept_id = product.get('id_departament', 0)
                 dept_name = self.departments.get(dept_id, f"ID: {dept_id}")
                 dept_item = QTableWidgetItem(dept_name)
                 dept_item.setFlags(dept_item.flags() & ~Qt.ItemIsEditable)
-                self.ui.tableWidget_products.setItem(row, 2, dept_item)
+                self.ui.tableWidget_products.setItem(row, 1, dept_item)
                 
                 # Описание
                 description_item = QTableWidgetItem(product.get('description', ''))
                 description_item.setFlags(description_item.flags() & ~Qt.ItemIsEditable)
-                self.ui.tableWidget_products.setItem(row, 3, description_item)
+                self.ui.tableWidget_products.setItem(row, 2, description_item)
             
             # Убираем текущий активный элемент
             self.ui.tableWidget_products.setCurrentItem(None)
@@ -114,105 +197,255 @@ class ProductsContent(QWidget):
         except Exception as e:
             QMessageBox.warning(self, "Предупреждение", f"Не удалось загрузить изделия с сервера: {e}")
 
-    def load_products_async(self):
-        """Асинхронная загрузка изделий с сервера"""
+    def load_components(self, item_type: str, item_id: int):
+        """Загружает компоненты для выбранного элемента"""
+        try:
+            if item_type == "product":
+                components = self.api_client.get_product_components(item_id)
+                self.ui.label_selected_item.setText(f"Изделие ID: {item_id}")
+            elif item_type == "profile_tool":
+                components = self.api_client.get_profile_tool_components(item_id)
+                self.ui.label_selected_item.setText(f"Инструмент ID: {item_id}")
+            else:
+                return
+            
+            # Очищаем таблицу компонентов
+            self.ui.tableWidget_components.setRowCount(0)
+            
+            if not components:
+                self.ui.label_component_description.setText("Описание: -")
+                return
+            
+            # Заполняем таблицу компонентов
+            self.ui.tableWidget_components.setRowCount(len(components))
+            
+            for row, component in enumerate(components):
+                if item_type == "product":
+                    # Для изделий
+                    name_item = QTableWidgetItem(component.get('component_name', ''))
+                    quantity_item = QTableWidgetItem(str(component.get('quantity', 1)))
+                else:
+                    # Для инструментов профилей
+                    comp_type = component.get('component_type', '')
+                    variant = component.get('variant')
+                    name = f"{comp_type}" + (f" (вариант {variant})" if variant else "")
+                    name_item = QTableWidgetItem(name)
+                    quantity_item = QTableWidgetItem(component.get('status', ''))
+                
+                name_item.setFlags(name_item.flags() & ~Qt.ItemIsEditable)
+                name_item.setData(Qt.UserRole, component.get('id'))  # Сохраняем ID компонента
+                quantity_item.setFlags(quantity_item.flags() & ~Qt.ItemIsEditable)
+                
+                self.ui.tableWidget_components.setItem(row, 0, name_item)
+                self.ui.tableWidget_components.setItem(row, 1, quantity_item)
+            
+            # Включаем кнопки управления компонентами
+            self.ui.pushButton_component_add.setEnabled(True)
+            
+        except Exception as e:
+            QMessageBox.warning(self, "Предупреждение", f"Не удалось загрузить компоненты: {e}")
+
+    def load_data_async(self):
+        """Асинхронная загрузка данных с сервера"""
+        run_async(
+            self.api_client.get_profile_tools,
+            on_success=self.on_profile_tools_loaded,
+            on_error=self.on_data_load_error
+        )
         run_async(
             self.api_client.get_products,
             on_success=self.on_products_loaded,
-            on_error=self.on_products_load_error
+            on_error=self.on_data_load_error
         )
+
+    def on_profile_tools_loaded(self, tools):
+        """Обработчик успешной загрузки инструментов профилей"""
+        try:
+            # Повторяем логику load_profile_tools_from_server
+            self.ui.tableWidget_profile_tools.setRowCount(0)
+            self.ui.tableWidget_profile_tools.setRowCount(len(tools))
+            
+            for row, tool in enumerate(tools):
+                name = f"{tool.get('dimension', 'Неизвестно')} - {tool.get('profile_article', 'Неизвестно')}"
+                name_item = QTableWidgetItem(name)
+                name_item.setFlags(name_item.flags() & ~Qt.ItemIsEditable)
+                name_item.setData(Qt.UserRole, tool.get('id'))
+                self.ui.tableWidget_profile_tools.setItem(row, 0, name_item)
+                
+                profile_item = QTableWidgetItem(tool.get('profile_article', 'Неизвестно'))
+                profile_item.setFlags(profile_item.flags() & ~Qt.ItemIsEditable)
+                self.ui.tableWidget_profile_tools.setItem(row, 1, profile_item)
+                
+                dept_item = QTableWidgetItem("Экструзия")
+                dept_item.setFlags(dept_item.flags() & ~Qt.ItemIsEditable)
+                self.ui.tableWidget_profile_tools.setItem(row, 2, dept_item)
+                
+                description_item = QTableWidgetItem(tool.get('description', ''))
+                description_item.setFlags(description_item.flags() & ~Qt.ItemIsEditable)
+                self.ui.tableWidget_profile_tools.setItem(row, 3, description_item)
+        except Exception as e:
+            print(f"Ошибка обновления таблицы инструментов: {e}")
 
     def on_products_loaded(self, products):
         """Обработчик успешной загрузки изделий"""
         try:
-            # Очищаем таблицу
+            # Повторяем логику load_products_from_server
             self.ui.tableWidget_products.setRowCount(0)
-            
-            # Заполняем таблицу данными с сервера
             self.ui.tableWidget_products.setRowCount(len(products))
             
             for row, product in enumerate(products):
-                # Название
                 name_item = QTableWidgetItem(product.get('name', ''))
                 name_item.setFlags(name_item.flags() & ~Qt.ItemIsEditable)
+                name_item.setData(Qt.UserRole, product.get('id'))
                 self.ui.tableWidget_products.setItem(row, 0, name_item)
                 
-                # Артикул
-                article_item = QTableWidgetItem(product.get('article', ''))
-                article_item.setFlags(article_item.flags() & ~Qt.ItemIsEditable)
-                self.ui.tableWidget_products.setItem(row, 1, article_item)
-                
-                # Департамент
                 dept_id = product.get('id_departament', 0)
                 dept_name = self.departments.get(dept_id, f"ID: {dept_id}")
                 dept_item = QTableWidgetItem(dept_name)
                 dept_item.setFlags(dept_item.flags() & ~Qt.ItemIsEditable)
-                self.ui.tableWidget_products.setItem(row, 2, dept_item)
+                self.ui.tableWidget_products.setItem(row, 1, dept_item)
                 
-                # Описание
                 description_item = QTableWidgetItem(product.get('description', ''))
                 description_item.setFlags(description_item.flags() & ~Qt.ItemIsEditable)
-                self.ui.tableWidget_products.setItem(row, 3, description_item)
-            
-            # Убираем текущий активный элемент
-            self.ui.tableWidget_products.setCurrentItem(None)
-                
+                self.ui.tableWidget_products.setItem(row, 2, description_item)
         except Exception as e:
-            print(f"Ошибка обновления UI изделий: {e}")
+            print(f"Ошибка обновления таблицы изделий: {e}")
 
-    def on_products_load_error(self, error):
-        """Обработчик ошибки загрузки изделий"""
-        print(f"Ошибка загрузки изделий: {error}")
+    def on_data_load_error(self, error):
+        """Обработчик ошибки загрузки данных"""
+        print(f"Ошибка загрузки данных: {error}")
 
-    def on_add_clicked(self):
-        """Добавление нового изделия"""
-        QMessageBox.information(self, "Добавить", "Создание нового изделия")
+    # Обработчики событий для инструментов профилей
+    def on_profile_tool_selection_changed(self):
+        """Обработчик изменения выделения в таблице инструментов профилей"""
+        selected_items = self.ui.tableWidget_profile_tools.selectedItems()
+        if selected_items:
+            row = selected_items[0].row()
+            tool_id = self.ui.tableWidget_profile_tools.item(row, 0).data(Qt.UserRole)
+            self.current_tool_id = tool_id
+            self.current_product_id = None  # Сброс выбора изделия
+            
+            # Сброс выделения в таблице изделий
+            self.ui.tableWidget_products.setCurrentItem(None)
+            
+            # Загружаем компоненты инструмента
+            self.load_components("profile_tool", tool_id)
+        else:
+            self.current_tool_id = None
+            self.clear_components()
 
-    def on_edit_clicked(self):
-        """Редактирование изделия"""
-        QMessageBox.information(self, "Редактировать", "Редактирование изделия")
+    def on_profile_tool_add_clicked(self):
+        """Обработчик кнопки добавления инструмента профиля"""
+        QMessageBox.information(self, "Информация", "Функция будет реализована позже")
 
-    def on_delete_clicked(self):
-        """Удаление изделия"""
-        QMessageBox.information(self, "Удалить", "Удаление изделия")
+    def on_profile_tool_edit_clicked(self):
+        """Обработчик кнопки редактирования инструмента профиля"""
+        QMessageBox.information(self, "Информация", "Функция будет реализована позже")
 
-    def on_view_details_clicked(self):
-        """Просмотр подробностей изделия"""
-        QMessageBox.information(self, "Подробности", "Просмотр подробной информации об изделии")
+    def on_profile_tool_delete_clicked(self):
+        """Обработчик кнопки удаления инструмента профиля"""
+        QMessageBox.information(self, "Информация", "Функция будет реализована позже")
 
-    def on_create_task_clicked(self):
-        """Создание задачи для изделия"""
-        QMessageBox.information(self, "Создать задачу", "Создание новой задачи для изделия")
+    def on_profile_tools_search_changed(self, text):
+        """Обработчик изменения поиска для инструментов профилей"""
+        # Простая фильтрация по названию
+        for row in range(self.ui.tableWidget_profile_tools.rowCount()):
+            item = self.ui.tableWidget_profile_tools.item(row, 0)
+            if item:
+                visible = text.lower() in item.text().lower()
+                self.ui.tableWidget_profile_tools.setRowHidden(row, not visible)
 
-    def on_selection_changed(self):
-        """Изменение выбранного изделия"""
+    # Обработчики событий для изделий
+    def on_product_selection_changed(self):
+        """Обработчик изменения выделения в таблице изделий"""
         selected_items = self.ui.tableWidget_products.selectedItems()
         if selected_items:
-            self.ui.pushButton_view_details.setEnabled(True)
-            self.ui.pushButton_create_task.setEnabled(True)
-            
-            # Обновляем информацию в панели предварительного просмотра
             row = selected_items[0].row()
-            name = self.ui.tableWidget_products.item(row, 0).text() if self.ui.tableWidget_products.item(row, 0) else ""
-            article = self.ui.tableWidget_products.item(row, 1).text() if self.ui.tableWidget_products.item(row, 1) else ""
-            department = self.ui.tableWidget_products.item(row, 2).text() if self.ui.tableWidget_products.item(row, 2) else ""
-            description = self.ui.tableWidget_products.item(row, 3).text() if self.ui.tableWidget_products.item(row, 3) else ""
+            product_id = self.ui.tableWidget_products.item(row, 0).data(Qt.UserRole)
+            self.current_product_id = product_id
+            self.current_tool_id = None  # Сброс выбора инструмента
             
-            self.ui.label_product_name.setText(f"Название: {name}")
-            self.ui.label_product_article.setText(f"Артикул: {article}")
-            self.ui.label_product_description.setText(f"Описание: {description}")
+            # Сброс выделения в таблице инструментов
+            self.ui.tableWidget_profile_tools.setCurrentItem(None)
+            
+            # Загружаем компоненты изделия
+            self.load_components("product", product_id)
         else:
-            self.ui.pushButton_view_details.setEnabled(False)
-            self.ui.pushButton_create_task.setEnabled(False)
-            self.ui.label_product_name.setText("Название: -")
-            self.ui.label_product_article.setText("Артикул: -")
-            self.ui.label_product_description.setText("Описание: -")
+            self.current_product_id = None
+            self.clear_components()
 
-    def on_search_changed(self, text):
-        """Поиск по названию изделия"""
+    def on_product_add_clicked(self):
+        """Обработчик кнопки добавления изделия"""
+        QMessageBox.information(self, "Информация", "Функция будет реализована позже")
+
+    def on_product_edit_clicked(self):
+        """Обработчик кнопки редактирования изделия"""
+        QMessageBox.information(self, "Информация", "Функция будет реализована позже")
+
+    def on_product_delete_clicked(self):
+        """Обработчик кнопки удаления изделия"""
+        QMessageBox.information(self, "Информация", "Функция будет реализована позже")
+
+    def on_products_search_changed(self, text):
+        """Обработчик изменения поиска для изделий"""
         # Простая фильтрация по названию
         for row in range(self.ui.tableWidget_products.rowCount()):
-            item = self.ui.tableWidget_products.item(row, 0)  # Название в первой колонке
+            item = self.ui.tableWidget_products.item(row, 0)
             if item:
                 visible = text.lower() in item.text().lower()
                 self.ui.tableWidget_products.setRowHidden(row, not visible)
+
+    # Обработчики событий для компонентов
+    def on_component_selection_changed(self):
+        """Обработчик изменения выделения в таблице компонентов"""
+        selected_items = self.ui.tableWidget_components.selectedItems()
+        if selected_items:
+            row = selected_items[0].row()
+            component_id = self.ui.tableWidget_components.item(row, 0).data(Qt.UserRole)
+            
+            # Показываем описание компонента (если есть)
+            if self.current_product_id:
+                try:
+                    components = self.api_client.get_product_components(self.current_product_id)
+                    component = next((c for c in components if c.get('id') == component_id), None)
+                    if component:
+                        self.ui.label_component_description.setText(f"Описание: {component.get('description', '-')}")
+                except:
+                    pass
+            elif self.current_tool_id:
+                try:
+                    components = self.api_client.get_profile_tool_components(self.current_tool_id)
+                    component = next((c for c in components if c.get('id') == component_id), None)
+                    if component:
+                        self.ui.label_component_description.setText(f"Описание: {component.get('description', '-')}")
+                except:
+                    pass
+            
+            # Включаем кнопки редактирования и удаления
+            self.ui.pushButton_component_edit.setEnabled(True)
+            self.ui.pushButton_component_delete.setEnabled(True)
+        else:
+            self.ui.label_component_description.setText("Описание: -")
+            self.ui.pushButton_component_edit.setEnabled(False)
+            self.ui.pushButton_component_delete.setEnabled(False)
+
+    def on_component_add_clicked(self):
+        """Обработчик кнопки добавления компонента"""
+        QMessageBox.information(self, "Информация", "Функция будет реализована позже")
+
+    def on_component_edit_clicked(self):
+        """Обработчик кнопки редактирования компонента"""
+        QMessageBox.information(self, "Информация", "Функция будет реализована позже")
+
+    def on_component_delete_clicked(self):
+        """Обработчик кнопки удаления компонента"""
+        QMessageBox.information(self, "Информация", "Функция будет реализована позже")
+
+    def clear_components(self):
+        """Очищает панель компонентов"""
+        self.ui.tableWidget_components.setRowCount(0)
+        self.ui.label_selected_item.setText("Выберите изделие")
+        self.ui.label_component_description.setText("Описание: -")
+        self.ui.pushButton_component_add.setEnabled(False)
+        self.ui.pushButton_component_edit.setEnabled(False)
+        self.ui.pushButton_component_delete.setEnabled(False)
