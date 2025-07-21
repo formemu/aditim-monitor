@@ -118,8 +118,30 @@ class DialogCreateProfile(QDialog):
                 )
                 return
             
-            # Масштабируем изображение до 100x100
-            scaled_pixmap = pixmap.scaled(100, 100, Qt.KeepAspectRatio)
+            # Проверяем корректность изображения
+            if pixmap.width() <= 0 or pixmap.height() <= 0:
+                QMessageBox.warning(
+                    self,
+                    "Ошибка",
+                    "Некорректное изображение в буфере обмена"
+                )
+                return
+            
+            # Масштабируем изображение до 100x100 с плавной трансформацией
+            scaled_pixmap = pixmap.scaled(
+                100, 100, 
+                Qt.KeepAspectRatio, 
+                Qt.SmoothTransformation
+            )
+            
+            # Проверяем корректность масштабированного изображения
+            if scaled_pixmap.isNull() or scaled_pixmap.width() <= 0:
+                QMessageBox.warning(
+                    self,
+                    "Ошибка",
+                    "Не удалось обработать изображение"
+                )
+                return
             
             # Отображаем изображение в label
             self.ui.label_image.setPixmap(scaled_pixmap)
@@ -143,16 +165,33 @@ class DialogCreateProfile(QDialog):
 
     def pixmap_to_base64(self, pixmap: QPixmap) -> str:
         """Конвертирует QPixmap в base64 строку"""
-        # Сохраняем pixmap в байтовый буфер
-        buffer = QBuffer()
-        buffer.open(QBuffer.WriteOnly)
-        pixmap.save(buffer, "PNG")
-        
-        # Конвертируем в base64
-        image_data = buffer.data().data()
-        base64_data = base64.b64encode(image_data).decode('utf-8')
-        
-        return f"data:image/png;base64,{base64_data}"
+        try:
+            # Проверяем корректность pixmap
+            if pixmap.isNull() or pixmap.width() <= 0 or pixmap.height() <= 0:
+                raise ValueError("Некорректный QPixmap")
+            
+            # Сохраняем pixmap в байтовый буфер
+            buffer = QBuffer()
+            buffer.open(QBuffer.WriteOnly)
+            
+            # Используем качество 85 для оптимизации размера
+            success = pixmap.save(buffer, "PNG", 85)
+            if not success:
+                raise ValueError("Не удалось сохранить изображение в буфер")
+            
+            # Конвертируем в base64
+            image_data = buffer.data().data()
+            if not image_data:
+                raise ValueError("Пустые данные изображения")
+                
+            base64_data = base64.b64encode(image_data).decode('utf-8')
+            buffer.close()
+            
+            return f"data:image/png;base64,{base64_data}"
+            
+        except Exception as e:
+            print(f"Ошибка конвертации pixmap в base64: {e}")
+            return ""
 
     def get_profile_data(self) -> Optional[Dict[str, Any]]:
         """Возвращает данные профиля без валидации (для предварительного просмотра)"""

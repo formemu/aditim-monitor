@@ -2,6 +2,7 @@
 Домашняя страница (заставка) для ADITIM Monitor Client
 """
 
+import os
 from PySide6.QtWidgets import QWidget
 from PySide6.QtCore import QFile, Signal, Qt
 from PySide6.QtUiTools import QUiLoader
@@ -61,22 +62,35 @@ class HomePage(QWidget):
     def load_logo(self):
         """Загрузка и установка логотипа"""
         try:
-            # Попробуем загрузить логотип
-            logo_path = ICON_PATHS["LOGO_JPG"]
-            pixmap = QPixmap(logo_path)
+            # Сначала пробуем PNG, затем JPG
+            for logo_key in ["LOGO_PNG", "LOGO_JPG"]:
+                logo_path = ICON_PATHS[logo_key]
+                
+                # Проверяем существование файла
+                if not os.path.exists(logo_path):
+                    continue
+                    
+                pixmap = QPixmap(logo_path)
+                
+                if not pixmap.isNull() and pixmap.width() > 0 and pixmap.height() > 0:
+                    # Ограничиваем максимальные размеры для предотвращения ошибок памяти
+                    max_width, max_height = 400, 160
+                    
+                    # Масштабируем логотип с сохранением пропорций
+                    scaled_pixmap = pixmap.scaled(
+                        max_width, max_height,
+                        Qt.KeepAspectRatio,
+                        Qt.SmoothTransformation
+                    )
+                    
+                    # Проверяем корректность масштабированного изображения
+                    if not scaled_pixmap.isNull():
+                        self.ui.label_logo.setPixmap(scaled_pixmap)
+                        self.ui.label_logo.setText("")  # Убираем текст-заглушку
+                        return  # Успешно загрузили
             
-            if not pixmap.isNull():
-                # Масштабируем логотип с сохранением пропорций (увеличиваем размер на 20%)
-                scaled_pixmap = pixmap.scaled(
-                    480, 192,  # увеличенные размеры на 20%
-                    Qt.KeepAspectRatio,
-                    Qt.SmoothTransformation
-                )
-                self.ui.label_logo.setPixmap(scaled_pixmap)
-                self.ui.label_logo.setText("")  # Убираем текст-заглушку
-            else:
-                # Если логотип не загрузился, оставляем текст
-                self.ui.label_logo.setText("ADITIM Monitor")
+            # Если ни один логотип не загрузился, оставляем текст
+            self.ui.label_logo.setText("ADITIM Monitor")
                 
         except Exception as e:
             print(f"Ошибка загрузки логотипа: {e}")
