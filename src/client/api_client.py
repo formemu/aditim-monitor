@@ -106,3 +106,36 @@ class ApiClient:
     def get_profile_tool_components(self, tool_id: int) -> List[Dict[Any, Any]]:
         """Get components of a profile tool"""
         return self._request("GET", f"/api/profile-tools/{tool_id}/components")
+    
+    # References operations (новые методы для справочников)
+    def get_component_types(self) -> List[Dict[Any, Any]]:
+        """Get all component types from dir_component_types"""
+        try:
+            return self._request("GET", "/api/directories/component-types")
+        except Exception as e:
+            print(f"API method get_component_types not implemented: {e}")
+            return []
+    
+    def get_profile_dimensions(self, profile_id: int) -> List[str]:
+        """Get available dimensions for a profile"""
+        try:
+            return self._request("GET", f"/api/profiles/{profile_id}/dimensions")
+        except Exception as e:
+            print(f"API method get_profile_dimensions not implemented: {e}")
+            return ['40x20', '50x30', '60x40', '25x15']  # Default dimensions
+    
+    def get_profile_sketch(self, profile_id: int) -> Dict[str, Any]:
+        """Get profile sketch data"""
+        try:
+            return self._request("GET", f"/api/profiles/{profile_id}/sketch")
+        except Exception as e:
+            print(f"API method get_profile_sketch not implemented: {e}")
+            return {}
+    
+    def create_profile_tool(self, tool_data: Dict[str, Any]) -> Dict[Any, Any]:
+        """Create new profile tool"""
+        return self._request("POST", "/api/profile-tools", json=tool_data)
+    
+    def create_profile_tool_component(self, tool_id: int, component_data: Dict[str, Any]) -> Dict[Any, Any]:
+        """Create new profile tool component"""
+        return self._request("POST", f"/api/profile-tools/{tool_id}/components", json=component_data)

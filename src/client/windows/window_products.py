@@ -10,6 +10,7 @@ from ..constants import UI_PATHS_ABS as UI_PATHS, get_style_path
 from ..api_client import ApiClient
 from ..style_utils import load_styles_with_constants
 from ..async_utils import run_async
+from ..references_manager import references_manager
 
 
 class ProductsContent(QWidget):
@@ -18,8 +19,8 @@ class ProductsContent(QWidget):
     def __init__(self, api_client: ApiClient = None):
         super().__init__()
         self.api_client = api_client or ApiClient()
-        self.departments = {}  # Словарь для кеширования департаментов
-        self.profiles = {}  # Словарь для кеширования профилей
+        
+        # Больше не нужно кэшировать справочники - используем references_manager
         self.current_product_id = None  # ID текущего выбранного изделия
         self.current_tool_id = None  # ID текущего выбранного инструмента профиля
         
@@ -29,8 +30,9 @@ class ProductsContent(QWidget):
         
         self.load_ui()
         self.setup_ui()
-        self.load_departments()
-        self.load_profiles()
+        # Убираем загрузку справочников - они уже загружены в references_manager
+        # self.load_departments()
+        # self.load_profiles()
         # Не загружаем данные сразу, пусть таймер сработает при первой активации
 
     def load_ui(self):
@@ -104,24 +106,6 @@ class ProductsContent(QWidget):
         self.ui.tableWidget_components.setFocusPolicy(Qt.NoFocus)
         self.ui.tableWidget_components.setColumnWidth(0, 300)  # Название
         self.ui.tableWidget_components.horizontalHeader().setStretchLastSection(True)  # Количество
-
-    def load_departments(self):
-        """Загружает справочник департаментов"""
-        try:
-            departments = self.api_client.get_departments()
-            self.departments = {dept['id']: dept['name'] for dept in departments}
-        except Exception as e:
-            print(f"Ошибка загрузки департаментов: {e}")
-            self.departments = {}
-
-    def load_profiles(self):
-        """Загружает справочник профилей"""
-        try:
-            profiles = self.api_client.get_profiles()
-            self.profiles = {profile['id']: profile['article'] for profile in profiles}
-        except Exception as e:
-            print(f"Ошибка загрузки профилей: {e}")
-            self.profiles = {}
 
     def refresh_data(self):
         """Публичный метод для принудительного обновления данных"""
@@ -224,9 +208,9 @@ class ProductsContent(QWidget):
             name_item.setData(Qt.UserRole, product.get('id'))  # Сохраняем ID изделия
             self.ui.tableWidget_products.setItem(row, 0, name_item)
             
-            # Департамент
+            # Департамент (используем references_manager)
             dept_id = product.get('id_departament', 0)
-            dept_name = self.departments.get(dept_id, f"ID: {dept_id}")
+            dept_name = references_manager.get_department_name(dept_id)
             dept_item = QTableWidgetItem(dept_name)
             dept_item.setFlags(dept_item.flags() & ~Qt.ItemIsEditable)
             self.ui.tableWidget_products.setItem(row, 1, dept_item)
