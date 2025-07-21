@@ -100,17 +100,7 @@
          </property>
          <column>
           <property name="text">
-           <string>Название</string>
-          </property>
-         </column>
-         <column>
-          <property name="text">
            <string>Профиль</string>
-          </property>
-         </column>
-         <column>
-          <property name="text">
-           <string>Департамент</string>
           </property>
          </column>
          <column>

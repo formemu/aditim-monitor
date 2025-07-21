@@ -90,31 +90,65 @@ class MainWindow(QMainWindow):
 
     def show_home(self):
         """Показать домашнюю страницу"""
+        # Останавливаем все таймеры
+        self.profiles_content.stop_auto_refresh()
+        self.products_content.stop_auto_refresh()
+        
         self.ui.stackedWidget_content.setCurrentWidget(self.home_page.ui)
         self.setWindowTitle("ADITIM Monitor")
 
     def show_profiles(self):
         """Показать профили"""
+        # Останавливаем таймеры других окон
+        self.products_content.stop_auto_refresh()
+        
+        # Активируем окно профилей
         self.ui.stackedWidget_content.setCurrentWidget(self.profiles_content.ui)
         self.setWindowTitle("ADITIM Monitor - Профили")
+        
+        # Запускаем таймер для профилей
+        self.profiles_content.start_auto_refresh()
 
     def show_products(self):
         """Показать изделия"""
+        # Останавливаем таймеры других окон
+        self.profiles_content.stop_auto_refresh()
+        
+        # Активируем окно изделий
         self.ui.stackedWidget_content.setCurrentWidget(self.products_content.ui)
         self.setWindowTitle("ADITIM Monitor - Изделия")
+        
+        # Запускаем таймер для изделий
+        self.products_content.start_auto_refresh()
 
     def show_blanks(self):
         """Показать заготовки"""
+        # Останавливаем все таймеры
+        self.profiles_content.stop_auto_refresh()
+        self.products_content.stop_auto_refresh()
+        
         QMessageBox.information(self, "Заготовки", "Окно заготовок (в разработке)")
 
     def show_tasks(self):
         """Показать задачи"""
+        # Останавливаем все таймеры
+        self.profiles_content.stop_auto_refresh()
+        self.products_content.stop_auto_refresh()
+        
         QMessageBox.information(self, "Задачи", "Окно задач (в разработке)")
 
     def show_settings(self):
         """Показать настройки"""
+        # Останавливаем все таймеры
+        self.profiles_content.stop_auto_refresh()
+        self.products_content.stop_auto_refresh()
+        
         QMessageBox.information(self, "Настройки", "Настройки (в разработке)")
 
     def show_reports(self):
         """Показать отчеты"""
+        # Останавливаем все таймеры
+        self.profiles_content.stop_auto_refresh()
+        self.products_content.stop_auto_refresh()
+        
         QMessageBox.information(self, "Отчеты", "Отчеты (в разработке)")

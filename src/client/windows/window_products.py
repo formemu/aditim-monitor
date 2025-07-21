@@ -22,11 +22,16 @@ class ProductsContent(QWidget):
         self.profiles = {}  # Словарь для кеширования профилей
         self.current_product_id = None  # ID текущего выбранного изделия
         self.current_tool_id = None  # ID текущего выбранного инструмента профиля
+        
+        # Кэш данных для предотвращения ненужных обновлений
+        self.current_tools_data = None  # Изначально None для принудительной загрузки
+        self.current_products_data = None
+        
         self.load_ui()
         self.setup_ui()
         self.load_departments()
         self.load_profiles()
-        self.load_data()
+        # Не загружаем данные сразу, пусть таймер сработает при первой активации
 
     def load_ui(self):
         """Загрузка UI из файла"""
@@ -64,23 +69,25 @@ class ProductsContent(QWidget):
         self.ui.pushButton_component_delete.clicked.connect(self.on_component_delete_clicked)
         self.ui.tableWidget_components.itemSelectionChanged.connect(self.on_component_selection_changed)
         
+        # Подключение сигнала переключения вкладок
+        self.ui.tabWidget_products.currentChanged.connect(self.on_tab_changed)
+        
         # Настройка таблиц
         self.setup_tables()
         
-        # Настройка автоматического обновления каждые 5 секунд
+        # Настройка автоматического обновления каждые 5 секунд с умной проверкой
         self.update_timer = QTimer()
-        self.update_timer.timeout.connect(self.load_data_async)
-        self.update_timer.start(5000)  # 5000 мс = 5 секунд
+        self.update_timer.timeout.connect(self.load_current_tab_data_async)
+        # НЕ запускаем таймер сразу, он будет запущен при активации окна
+        # self.update_timer.start(5000)  # 5000 мс = 5 секунд
 
     def setup_tables(self):
         """Настройка параметров таблиц"""
-        # Таблица инструментов профилей
+        # Таблица инструментов профилей (убраны ненужные колонки)
         self.ui.tableWidget_profile_tools.setSelectionBehavior(QAbstractItemView.SelectRows)
         self.ui.tableWidget_profile_tools.setSelectionMode(QAbstractItemView.SingleSelection)
         self.ui.tableWidget_profile_tools.setFocusPolicy(Qt.NoFocus)
-        self.ui.tableWidget_profile_tools.setColumnWidth(0, 200)  # Название
-        self.ui.tableWidget_profile_tools.setColumnWidth(1, 120)  # Профиль
-        self.ui.tableWidget_profile_tools.setColumnWidth(2, 150)  # Департамент
+        self.ui.tableWidget_profile_tools.setColumnWidth(0, 200)  # Профиль
         self.ui.tableWidget_profile_tools.horizontalHeader().setStretchLastSection(True)  # Описание
         
         # Таблица изделий
@@ -116,6 +123,12 @@ class ProductsContent(QWidget):
             print(f"Ошибка загрузки профилей: {e}")
             self.profiles = {}
 
+    def refresh_data(self):
+        """Публичный метод для принудительного обновления данных"""
+        self.current_tools_data = []  # Сбрасываем кэш
+        self.current_products_data = []
+        self.load_data()
+
     def load_data(self):
         """Загружает все данные с сервера"""
         self.load_profile_tools_from_server()
@@ -125,77 +138,107 @@ class ProductsContent(QWidget):
         """Загружает инструменты профилей с сервера"""
         try:
             tools = self.api_client.get_profile_tools()
-            
-            # Очищаем таблицу
-            self.ui.tableWidget_profile_tools.setRowCount(0)
-            
-            # Заполняем таблицу данными с сервера
-            self.ui.tableWidget_profile_tools.setRowCount(len(tools))
-            
-            for row, tool in enumerate(tools):
-                # Название (размерность + артикул профиля)
-                name = f"{tool.get('dimension', 'Неизвестно')} - {tool.get('profile_article', 'Неизвестно')}"
-                name_item = QTableWidgetItem(name)
-                name_item.setFlags(name_item.flags() & ~Qt.ItemIsEditable)
-                name_item.setData(Qt.UserRole, tool.get('id'))  # Сохраняем ID инструмента
-                self.ui.tableWidget_profile_tools.setItem(row, 0, name_item)
-                
-                # Профиль
-                profile_item = QTableWidgetItem(tool.get('profile_article', 'Неизвестно'))
-                profile_item.setFlags(profile_item.flags() & ~Qt.ItemIsEditable)
-                self.ui.tableWidget_profile_tools.setItem(row, 1, profile_item)
-                
-                # Департамент (пока не реализовано в API)
-                dept_item = QTableWidgetItem("Экструзия")  # Временно
-                dept_item.setFlags(dept_item.flags() & ~Qt.ItemIsEditable)
-                self.ui.tableWidget_profile_tools.setItem(row, 2, dept_item)
-                
-                # Описание
-                description_item = QTableWidgetItem(tool.get('description', ''))
-                description_item.setFlags(description_item.flags() & ~Qt.ItemIsEditable)
-                self.ui.tableWidget_profile_tools.setItem(row, 3, description_item)
-            
-            # Убираем текущий активный элемент
-            self.ui.tableWidget_profile_tools.setCurrentItem(None)
+            self.update_tools_table(tools)
                 
         except Exception as e:
             QMessageBox.warning(self, "Предупреждение", f"Не удалось загрузить инструменты профилей с сервера: {e}")
+
+    def update_tools_table(self, tools):
+        """Обновляет таблицу инструментов с проверкой изменений"""
+        # Проверяем если таблица пустая - обновляем принудительно
+        is_table_empty = self.ui.tableWidget_profile_tools.rowCount() == 0
+        
+        # Сравниваем новые данные с кэшем (None означает первую загрузку)
+        if self.current_tools_data is not None and tools == self.current_tools_data and not is_table_empty:
+            return  # Данные не изменились и таблица не пустая, не обновляем
+        
+        # Сохраняем текущее выделение
+        current_selection = None
+        selected_items = self.ui.tableWidget_profile_tools.selectedItems()
+        if selected_items:
+            current_selection = selected_items[0].row()
+        
+        # Обновляем кэш
+        self.current_tools_data = tools
+        
+        # Очищаем таблицу
+        self.ui.tableWidget_profile_tools.setRowCount(0)
+        
+        # Заполняем таблицу данными с сервера (убраны названия и департамент)
+        self.ui.tableWidget_profile_tools.setRowCount(len(tools))
+        
+        for row, tool in enumerate(tools):
+            # Профиль (размерность + артикул профиля)
+            profile_text = f"{tool.get('dimension', 'Неизвестно')} - {tool.get('profile_article', 'Неизвестно')}"
+            profile_item = QTableWidgetItem(profile_text)
+            profile_item.setFlags(profile_item.flags() & ~Qt.ItemIsEditable)
+            profile_item.setData(Qt.UserRole, tool.get('id'))  # Сохраняем ID инструмента
+            self.ui.tableWidget_profile_tools.setItem(row, 0, profile_item)
+            
+            # Описание
+            description_item = QTableWidgetItem(tool.get('description', ''))
+            description_item.setFlags(description_item.flags() & ~Qt.ItemIsEditable)
+            self.ui.tableWidget_profile_tools.setItem(row, 1, description_item)
+        
+        # Восстанавливаем выделение если возможно
+        if current_selection is not None and current_selection < len(tools):
+            self.ui.tableWidget_profile_tools.selectRow(current_selection)
 
     def load_products_from_server(self):
         """Загружает изделия с сервера"""
         try:
             products = self.api_client.get_products()
-            
-            # Очищаем таблицу
-            self.ui.tableWidget_products.setRowCount(0)
-            
-            # Заполняем таблицу данными с сервера
-            self.ui.tableWidget_products.setRowCount(len(products))
-            
-            for row, product in enumerate(products):
-                # Название
-                name_item = QTableWidgetItem(product.get('name', ''))
-                name_item.setFlags(name_item.flags() & ~Qt.ItemIsEditable)
-                name_item.setData(Qt.UserRole, product.get('id'))  # Сохраняем ID изделия
-                self.ui.tableWidget_products.setItem(row, 0, name_item)
-                
-                # Департамент
-                dept_id = product.get('id_departament', 0)
-                dept_name = self.departments.get(dept_id, f"ID: {dept_id}")
-                dept_item = QTableWidgetItem(dept_name)
-                dept_item.setFlags(dept_item.flags() & ~Qt.ItemIsEditable)
-                self.ui.tableWidget_products.setItem(row, 1, dept_item)
-                
-                # Описание
-                description_item = QTableWidgetItem(product.get('description', ''))
-                description_item.setFlags(description_item.flags() & ~Qt.ItemIsEditable)
-                self.ui.tableWidget_products.setItem(row, 2, description_item)
-            
-            # Убираем текущий активный элемент
-            self.ui.tableWidget_products.setCurrentItem(None)
+            self.update_products_table(products)
                 
         except Exception as e:
             QMessageBox.warning(self, "Предупреждение", f"Не удалось загрузить изделия с сервера: {e}")
+
+    def update_products_table(self, products):
+        """Обновляет таблицу изделий с проверкой изменений"""
+        # Проверяем если таблица пустая - обновляем принудительно
+        is_table_empty = self.ui.tableWidget_products.rowCount() == 0
+        
+        # Сравниваем новые данные с кэшем (None означает первую загрузку)
+        if self.current_products_data is not None and products == self.current_products_data and not is_table_empty:
+            return  # Данные не изменились и таблица не пустая, не обновляем
+        
+        # Сохраняем текущее выделение
+        current_selection = None
+        selected_items = self.ui.tableWidget_products.selectedItems()
+        if selected_items:
+            current_selection = selected_items[0].row()
+        
+        # Обновляем кэш
+        self.current_products_data = products
+        
+        # Очищаем таблицу
+        self.ui.tableWidget_products.setRowCount(0)
+        
+        # Заполняем таблицу данными с сервера
+        self.ui.tableWidget_products.setRowCount(len(products))
+        
+        for row, product in enumerate(products):
+            # Название
+            name_item = QTableWidgetItem(product.get('name', ''))
+            name_item.setFlags(name_item.flags() & ~Qt.ItemIsEditable)
+            name_item.setData(Qt.UserRole, product.get('id'))  # Сохраняем ID изделия
+            self.ui.tableWidget_products.setItem(row, 0, name_item)
+            
+            # Департамент
+            dept_id = product.get('id_departament', 0)
+            dept_name = self.departments.get(dept_id, f"ID: {dept_id}")
+            dept_item = QTableWidgetItem(dept_name)
+            dept_item.setFlags(dept_item.flags() & ~Qt.ItemIsEditable)
+            self.ui.tableWidget_products.setItem(row, 1, dept_item)
+            
+            # Описание
+            description_item = QTableWidgetItem(product.get('description', ''))
+            description_item.setFlags(description_item.flags() & ~Qt.ItemIsEditable)
+            self.ui.tableWidget_products.setItem(row, 2, description_item)
+        
+        # Восстанавливаем выделение если возможно
+        if current_selection is not None and current_selection < len(products):
+            self.ui.tableWidget_products.selectRow(current_selection)
 
     def load_components(self, item_type: str, item_id: int):
         """Загружает компоненты для выбранного элемента"""
@@ -258,56 +301,47 @@ class ProductsContent(QWidget):
             on_error=self.on_data_load_error
         )
 
+    def load_current_tab_data_async(self):
+        """Контекстно-зависимая загрузка данных для активной вкладки"""
+        # Проверяем что виджет и окно доступны
+        if not hasattr(self, 'ui') or not self.ui:
+            return
+            
+        current_tab_index = self.ui.tabWidget_products.currentIndex()
+        
+        # 0 - Инструменты профилей, 1 - Изделия
+        if current_tab_index == 0:
+            # Загружаем только инструменты профилей
+            try:
+                tools = self.api_client.get_profile_tools()
+                self.on_profile_tools_loaded(tools)
+            except Exception as e:
+                self.on_data_load_error(e)
+        elif current_tab_index == 1:
+            # Загружаем только изделия
+            try:
+                products = self.api_client.get_products()
+                self.on_products_loaded(products)
+            except Exception as e:
+                self.on_data_load_error(e)
+
+    def on_tab_changed(self, index):
+        """Обработчик смены вкладки"""
+        # При смене вкладки не загружаем данные автоматически
+        # Данные будут загружены только по таймеру для активной вкладки
+        pass
+
     def on_profile_tools_loaded(self, tools):
         """Обработчик успешной загрузки инструментов профилей"""
         try:
-            # Повторяем логику load_profile_tools_from_server
-            self.ui.tableWidget_profile_tools.setRowCount(0)
-            self.ui.tableWidget_profile_tools.setRowCount(len(tools))
-            
-            for row, tool in enumerate(tools):
-                name = f"{tool.get('dimension', 'Неизвестно')} - {tool.get('profile_article', 'Неизвестно')}"
-                name_item = QTableWidgetItem(name)
-                name_item.setFlags(name_item.flags() & ~Qt.ItemIsEditable)
-                name_item.setData(Qt.UserRole, tool.get('id'))
-                self.ui.tableWidget_profile_tools.setItem(row, 0, name_item)
-                
-                profile_item = QTableWidgetItem(tool.get('profile_article', 'Неизвестно'))
-                profile_item.setFlags(profile_item.flags() & ~Qt.ItemIsEditable)
-                self.ui.tableWidget_profile_tools.setItem(row, 1, profile_item)
-                
-                dept_item = QTableWidgetItem("Экструзия")
-                dept_item.setFlags(dept_item.flags() & ~Qt.ItemIsEditable)
-                self.ui.tableWidget_profile_tools.setItem(row, 2, dept_item)
-                
-                description_item = QTableWidgetItem(tool.get('description', ''))
-                description_item.setFlags(description_item.flags() & ~Qt.ItemIsEditable)
-                self.ui.tableWidget_profile_tools.setItem(row, 3, description_item)
+            self.update_tools_table(tools)
         except Exception as e:
             print(f"Ошибка обновления таблицы инструментов: {e}")
 
     def on_products_loaded(self, products):
         """Обработчик успешной загрузки изделий"""
         try:
-            # Повторяем логику load_products_from_server
-            self.ui.tableWidget_products.setRowCount(0)
-            self.ui.tableWidget_products.setRowCount(len(products))
-            
-            for row, product in enumerate(products):
-                name_item = QTableWidgetItem(product.get('name', ''))
-                name_item.setFlags(name_item.flags() & ~Qt.ItemIsEditable)
-                name_item.setData(Qt.UserRole, product.get('id'))
-                self.ui.tableWidget_products.setItem(row, 0, name_item)
-                
-                dept_id = product.get('id_departament', 0)
-                dept_name = self.departments.get(dept_id, f"ID: {dept_id}")
-                dept_item = QTableWidgetItem(dept_name)
-                dept_item.setFlags(dept_item.flags() & ~Qt.ItemIsEditable)
-                self.ui.tableWidget_products.setItem(row, 1, dept_item)
-                
-                description_item = QTableWidgetItem(product.get('description', ''))
-                description_item.setFlags(description_item.flags() & ~Qt.ItemIsEditable)
-                self.ui.tableWidget_products.setItem(row, 2, description_item)
+            self.update_products_table(products)
         except Exception as e:
             print(f"Ошибка обновления таблицы изделий: {e}")
 
@@ -449,3 +483,15 @@ class ProductsContent(QWidget):
         self.ui.pushButton_component_add.setEnabled(False)
         self.ui.pushButton_component_edit.setEnabled(False)
         self.ui.pushButton_component_delete.setEnabled(False)
+
+    def start_auto_refresh(self):
+        """Запускает автоматическое обновление данных"""
+        if not self.update_timer.isActive():
+            self.update_timer.start(5000)  # 5 секунд
+            # Сразу загружаем данные при активации
+            self.load_current_tab_data_async()
+
+    def stop_auto_refresh(self):
+        """Останавливает автоматическое обновление данных"""
+        if self.update_timer.isActive():
+            self.update_timer.stop()

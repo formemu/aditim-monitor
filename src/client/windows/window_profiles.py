@@ -19,9 +19,11 @@ class ProfilesContent(QWidget):
     def __init__(self, api_client: ApiClient = None):
         super().__init__()
         self.api_client = api_client or ApiClient()
+        self.current_profiles_data = None  # Кэш данных профилей (None для первой загрузки)
+        self.selected_row = None  # Запоминаем выбранную строку
         self.load_ui()
         self.setup_ui()
-        self.load_profiles_from_server()
+        # Не загружаем сразу, пусть таймер сработает первый раз
 
     def load_ui(self):
         """Загрузка UI из файла"""
@@ -57,10 +59,11 @@ class ProfilesContent(QWidget):
         self.ui.tableWidget_profiles.setColumnWidth(0, 150)  # Артикул - фиксированная ширина
         self.ui.tableWidget_profiles.horizontalHeader().setStretchLastSection(True)  # Описание - растягивается
         
-        # Настройка автоматического обновления каждые 5 секунд
+        # Настройка автоматического обновления каждые 5 секунд с умной проверкой
         self.update_timer = QTimer()
         self.update_timer.timeout.connect(self.load_profiles_async)
-        self.update_timer.start(5000)  # 5000 мс = 5 секунд
+        # НЕ запускаем таймер сразу, он будет запущен при активации окна
+        # self.update_timer.start(5000)  # 5000 мс = 5 секунд
 
     def on_add_clicked(self):
         """Добавление нового профиля"""
@@ -80,7 +83,8 @@ class ProfilesContent(QWidget):
     def on_profile_created(self, profile_data):
         """Обработчик успешного создания профиля"""
         try:
-            # Перезагружаем список профилей с сервера
+            # Принудительно перезагружаем список профилей с сервера
+            self.current_profiles_data = []  # Сбрасываем кэш для принудительного обновления
             self.load_profiles_from_server()
             
             # Находим и выделяем новый профиль в таблице
@@ -93,65 +97,72 @@ class ProfilesContent(QWidget):
         except Exception as e:
             QMessageBox.warning(self, "Предупреждение", f"Профиль создан, но не удалось обновить список: {e}")
 
+    def refresh_data(self):
+        """Публичный метод для принудительного обновления данных"""
+        self.current_profiles_data = []  # Сбрасываем кэш
+        self.load_profiles_from_server()
+
     def load_profiles_from_server(self):
         """Загружает профили с сервера"""
         try:
             profiles = self.api_client.get_profiles()
-            
-            # Очищаем таблицу
-            self.ui.tableWidget_profiles.setRowCount(0)
-            
-            # Заполняем таблицу данными с сервера
-            self.ui.tableWidget_profiles.setRowCount(len(profiles))
-            
-            for row, profile in enumerate(profiles):
-                # Артикул
-                article_item = QTableWidgetItem(profile.get('article', ''))
-                article_item.setFlags(article_item.flags() & ~Qt.ItemIsEditable)
-                self.ui.tableWidget_profiles.setItem(row, 0, article_item)
-                
-                # Описание
-                description_item = QTableWidgetItem(profile.get('description', ''))
-                description_item.setFlags(description_item.flags() & ~Qt.ItemIsEditable)
-                self.ui.tableWidget_profiles.setItem(row, 1, description_item)
-            
-            # Убираем текущий активный элемент
-            self.ui.tableWidget_profiles.setCurrentItem(None)
+            self.update_profiles_table(profiles)
                 
         except Exception as e:
             QMessageBox.warning(self, "Предупреждение", f"Не удалось загрузить профили с сервера: {e}")
 
+    def update_profiles_table(self, profiles):
+        """Обновляет таблицу профилей с проверкой изменений"""
+        # Проверяем если таблица пустая - обновляем принудительно
+        is_table_empty = self.ui.tableWidget_profiles.rowCount() == 0
+        
+        # Сравниваем новые данные с кэшем (None означает первую загрузку)
+        if self.current_profiles_data is not None and profiles == self.current_profiles_data and not is_table_empty:
+            return  # Данные не изменились и таблица не пустая, не обновляем
+        
+        # Сохраняем текущее выделение
+        current_selection = None
+        selected_items = self.ui.tableWidget_profiles.selectedItems()
+        if selected_items:
+            current_selection = selected_items[0].row()
+        
+        # Обновляем кэш
+        self.current_profiles_data = profiles
+        
+        # Очищаем таблицу
+        self.ui.tableWidget_profiles.setRowCount(0)
+        
+        # Заполняем таблицу данными с сервера
+        self.ui.tableWidget_profiles.setRowCount(len(profiles))
+        
+        for row, profile in enumerate(profiles):
+            # Артикул
+            article_item = QTableWidgetItem(profile.get('article', ''))
+            article_item.setFlags(article_item.flags() & ~Qt.ItemIsEditable)
+            self.ui.tableWidget_profiles.setItem(row, 0, article_item)
+            
+            # Описание
+            description_item = QTableWidgetItem(profile.get('description', ''))
+            description_item.setFlags(description_item.flags() & ~Qt.ItemIsEditable)
+            self.ui.tableWidget_profiles.setItem(row, 1, description_item)
+        
+        # Восстанавливаем выделение если возможно
+        if current_selection is not None and current_selection < len(profiles):
+            self.ui.tableWidget_profiles.selectRow(current_selection)
+            self.selected_row = current_selection
+
     def load_profiles_async(self):
         """Асинхронная загрузка профилей с сервера"""
-        run_async(
-            self.api_client.get_profiles,
-            on_success=self.on_profiles_loaded,
-            on_error=self.on_profiles_load_error
-        )
+        try:
+            profiles = self.api_client.get_profiles()
+            self.on_profiles_loaded(profiles)
+        except Exception as e:
+            self.on_profiles_load_error(e)
 
     def on_profiles_loaded(self, profiles):
         """Обработчик успешной загрузки профилей"""
         try:
-            # Очищаем таблицу
-            self.ui.tableWidget_profiles.setRowCount(0)
-            
-            # Заполняем таблицу данными с сервера
-            self.ui.tableWidget_profiles.setRowCount(len(profiles))
-            
-            for row, profile in enumerate(profiles):
-                # Артикул
-                article_item = QTableWidgetItem(profile.get('article', ''))
-                article_item.setFlags(article_item.flags() & ~Qt.ItemIsEditable)
-                self.ui.tableWidget_profiles.setItem(row, 0, article_item)
-                
-                # Описание
-                description_item = QTableWidgetItem(profile.get('description', ''))
-                description_item.setFlags(description_item.flags() & ~Qt.ItemIsEditable)
-                self.ui.tableWidget_profiles.setItem(row, 1, description_item)
-            
-            # Убираем текущий активный элемент
-            self.ui.tableWidget_profiles.setCurrentItem(None)
-                
+            self.update_profiles_table(profiles)
         except Exception as e:
             print(f"Ошибка обновления UI: {e}")
 
@@ -179,15 +190,18 @@ class ProfilesContent(QWidget):
         """Изменение выбранного профиля"""
         selected_items = self.ui.tableWidget_profiles.selectedItems()
         if selected_items:
+            row = selected_items[0].row()
+            self.selected_row = row  # Запоминаем выбранную строку
+            
             self.ui.pushButton_sketch_open.setEnabled(True)
             self.ui.pushButton_autocad_open.setEnabled(True)
             # Обновляем информацию в панели предварительного просмотра
-            row = selected_items[0].row()
             article = self.ui.tableWidget_profiles.item(row, 0).text()
             description = self.ui.tableWidget_profiles.item(row, 1).text() if self.ui.tableWidget_profiles.item(row, 1) else ""
             self.ui.label_profile_article.setText(f"Артикул: {article}")
             self.ui.label_profile_description.setText(f"Описание: {description}")
         else:
+            self.selected_row = None
             self.ui.pushButton_sketch_open.setEnabled(False)
             self.ui.pushButton_autocad_open.setEnabled(False)
             self.ui.label_profile_article.setText("Артикул: -")
@@ -201,3 +215,15 @@ class ProfilesContent(QWidget):
             if item:
                 visible = text.lower() in item.text().lower()
                 self.ui.tableWidget_profiles.setRowHidden(row, not visible)
+
+    def start_auto_refresh(self):
+        """Запускает автоматическое обновление данных"""
+        if not self.update_timer.isActive():
+            self.update_timer.start(5000)  # 5 секунд
+            # Сразу загружаем данные при активации
+            self.load_profiles_async()
+
+    def stop_auto_refresh(self):
+        """Останавливает автоматическое обновление данных"""
+        if self.update_timer.isActive():
+            self.update_timer.stop()
