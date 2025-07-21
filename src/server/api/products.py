@@ -8,12 +8,12 @@ from sqlalchemy.orm import Session
 import base64
 
 from ..database import get_db
-from ..models.products import Product, Profile, ProductComponent, ProfileComponent
+from ..models.products import Product, Profile
+from ..models.profile_tools import ProductComponent
 from ..schemas.products import (
     ProductCreate, ProductUpdate, ProductResponse,
     ProfileCreate, ProfileUpdate, ProfileResponse,
-    ProductComponentCreate, ProductComponentResponse,
-    ProfileComponentCreate, ProfileComponentResponse
+    ProductComponentCreate, ProductComponentResponse
 )
 
 router = APIRouter(prefix="/api", tags=["products", "profiles"])
@@ -90,7 +90,7 @@ def get_profile(profile_id: int, db: Session = Depends(get_db)):
 @router.get("/products/{product_id}/components", response_model=List[ProductComponentResponse])
 def get_product_components(product_id: int, db: Session = Depends(get_db)):
     """Get all components for a product"""
-    return db.query(ProductComponent).filter(ProductComponent.id_product == product_id).all()
+    return db.query(ProductComponent).filter(ProductComponent.product_id == product_id).all()
 
 
 @router.post("/products/{product_id}/components", response_model=ProductComponentResponse)
@@ -100,30 +100,8 @@ def create_product_component(
     db: Session = Depends(get_db)
 ):
     """Create a new product component"""
-    component.id_product = product_id
+    component.product_id = product_id
     db_component = ProductComponent(**component.dict())
-    db.add(db_component)
-    db.commit()
-    db.refresh(db_component)
-    return db_component
-
-
-# Profile Components
-@router.get("/profiles/{profile_id}/components", response_model=List[ProfileComponentResponse])
-def get_profile_components(profile_id: int, db: Session = Depends(get_db)):
-    """Get all components for a profile"""
-    return db.query(ProfileComponent).filter(ProfileComponent.id_profile == profile_id).all()
-
-
-@router.post("/profiles/{profile_id}/components", response_model=ProfileComponentResponse)
-def create_profile_component(
-    profile_id: int, 
-    component: ProfileComponentCreate, 
-    db: Session = Depends(get_db)
-):
-    """Create a new profile component"""
-    component.id_profile = profile_id
-    db_component = ProfileComponent(**component.dict())
     db.add(db_component)
     db.commit()
     db.refresh(db_component)

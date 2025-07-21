@@ -41,6 +41,7 @@ UI_PATHS = {
     "MAIN_WINDOW": "ui/main_window.ui",
     "HOME_PAGE": "ui/home_page.ui", 
     "PROFILES_CONTENT": "ui/window_profiles.ui",
+    "PRODUCTS_CONTENT": "ui/window_products.ui",
     "DIALOG_CREATE_PROFILE": "ui/dialog_create_profile.ui",
     "DIALOG_TASK": "ui/dialogtask.ui"
 }

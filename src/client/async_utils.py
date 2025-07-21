@@ -60,7 +60,6 @@ def run_async(func: Callable, on_success: Callable = None, on_error: Callable = 
     def cleanup():
         worker.deleteLater()
         thread.quit()
-        thread.wait()  # Ждем завершения потока
         thread.deleteLater()
     
     worker.finished.connect(cleanup)

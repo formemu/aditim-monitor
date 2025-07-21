@@ -9,8 +9,9 @@ import base64
 
 class ProductBase(BaseModel):
     name: str
+    article: Optional[str] = None
+    description: Optional[str] = None
     id_departament: int
-    sketch: Optional[str] = None
 
 
 class ProductCreate(ProductBase):
@@ -19,8 +20,9 @@ class ProductCreate(ProductBase):
 
 class ProductUpdate(BaseModel):
     name: Optional[str] = None
+    article: Optional[str] = None
+    description: Optional[str] = None
     id_departament: Optional[int] = None
-    sketch: Optional[str] = None
 
 
 class ProductResponse(ProductBase):
@@ -65,8 +67,9 @@ class ProfileResponse(ProfileBase):
 
 
 class ProductComponentBase(BaseModel):
-    name: str
-    id_product: int
+    component_name: str
+    description: Optional[str] = None
+    quantity: int = 1
 
 
 class ProductComponentCreate(ProductComponentBase):
@@ -75,22 +78,7 @@ class ProductComponentCreate(ProductComponentBase):
 
 class ProductComponentResponse(ProductComponentBase):
     id: int
-    
-    class Config:
-        from_attributes = True
-
-
-class ProfileComponentBase(BaseModel):
-    name: str
-    id_profile: int
-
-
-class ProfileComponentCreate(ProfileComponentBase):
-    pass
-
-
-class ProfileComponentResponse(ProfileComponentBase):
-    id: int
+    product_id: int
     
     class Config:
         from_attributes = True

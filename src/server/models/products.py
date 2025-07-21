@@ -8,39 +8,24 @@ from ..database import Base
 
 
 class Product(Base):
-    __tablename__ = "product"
+    __tablename__ = "products"
     id = Column(Integer, primary_key=True, index=True)
     name = Column(String, nullable=False)
+    article = Column(String, nullable=True)
+    description = Column(Text, nullable=True)
     id_departament = Column(Integer, ForeignKey("dir_departament.id"), nullable=False)
-    sketch = Column(Text, nullable=True)
     
-    # Relationships
+    # Связи
     departament = relationship("DirDepartament", backref="products")
-
-
-class ProductComponent(Base):
-    __tablename__ = "product_component"
-    id = Column(Integer, primary_key=True, index=True)
-    name = Column(String, nullable=False)
-    id_product = Column(Integer, ForeignKey("product.id"), nullable=False)
-    
-    # Relationships
-    product = relationship("Product", backref="components")
+    components = relationship("ProductComponent", back_populates="product", cascade="all, delete-orphan")
 
 
 class Profile(Base):
-    __tablename__ = "profile"
+    __tablename__ = "profiles"
     id = Column(Integer, primary_key=True, index=True)
     article = Column(String, nullable=False, unique=True)
-    description = Column(String, nullable=True)  # Описание профиля
-    sketch = Column(LargeBinary, nullable=True)  # Бинарные данные изображения
-
-
-class ProfileComponent(Base):
-    __tablename__ = "profile_component"
-    id = Column(Integer, primary_key=True, index=True)
-    name = Column(String, nullable=False)
-    id_profile = Column(Integer, ForeignKey("profile.id"), nullable=False)
+    description = Column(String, nullable=True)
+    sketch = Column(LargeBinary, nullable=True)
     
-    # Relationships
-    profile = relationship("Profile", backref="components")
+    # Связи
+    tools = relationship("ProfileTool", back_populates="profile", cascade="all, delete-orphan")
