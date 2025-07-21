@@ -10,7 +10,6 @@
     <height>446</height>
    </rect>
   </property>
-
   <layout class="QVBoxLayout" name="verticalLayout">
    <item>
     <spacer name="verticalSpacer_top">
@@ -54,7 +53,6 @@
          <height>96</height>
         </size>
        </property>
-
        <property name="text">
         <string>ЛОГОТИП</string>
        </property>
@@ -103,9 +101,8 @@
            <height>96</height>
           </size>
          </property>
-
          <property name="text">
-          <string>🏗️ ПРОФИЛИ</string>
+          <string>ПРОФИЛИ</string>
          </property>
         </widget>
        </item>
@@ -120,7 +117,7 @@
             </size>
            </property>
            <property name="text">
-            <string>📦 Изделия</string>
+            <string>Изделия</string>
            </property>
           </widget>
          </item>
@@ -133,7 +130,7 @@
             </size>
            </property>
            <property name="text">
-            <string>� Заготовки</string>
+            <string>Заготовки</string>
            </property>
           </widget>
          </item>
@@ -163,7 +160,7 @@
             </size>
            </property>
            <property name="text">
-            <string>📝 Задачи</string>
+            <string>Задачи</string>
            </property>
           </widget>
          </item>
@@ -193,7 +190,7 @@
             </size>
            </property>
            <property name="text">
-            <string>⚙️ Настройки</string>
+            <string>Настройки</string>
            </property>
           </widget>
          </item>
@@ -206,7 +203,7 @@
             </size>
            </property>
            <property name="text">
-            <string>📊 Отчеты</string>
+            <string>Отчеты</string>
            </property>
           </widget>
          </item>

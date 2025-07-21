@@ -6,8 +6,6 @@ QMainWindow {
     background-color: {{COLOR_PRIMARY_DARK}};
     color: white;
 }
-
-
 QTableWidget::item {
     border: none;
     outline: none;

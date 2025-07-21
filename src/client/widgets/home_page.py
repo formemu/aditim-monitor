@@ -7,7 +7,8 @@ from PySide6.QtCore import QFile, Signal, Qt
 from PySide6.QtUiTools import QUiLoader
 from PySide6.QtGui import QPixmap
 
-from ..constants import UI_PATHS_ABS as UI_PATHS, ICON_PATHS_ABS as ICON_PATHS
+from ..constants import UI_PATHS_ABS as UI_PATHS, ICON_PATHS_ABS as ICON_PATHS, get_style_path
+from ..style_utils import load_styles_with_constants
 
 
 class HomePage(QWidget):
@@ -40,6 +41,9 @@ class HomePage(QWidget):
         # Загрузка и установка логотипа
         self.load_logo()
         
+        # Применяем стили главной страницы
+        self.apply_home_page_styles()
+        
         # Подключение кнопок
         self.ui.pushButton_profiles_open.clicked.connect(self.profiles_requested.emit)
         self.ui.pushButton_products_open.clicked.connect(self.products_requested.emit)
@@ -47,6 +51,12 @@ class HomePage(QWidget):
         self.ui.pushButton_tasks_open.clicked.connect(self.tasks_requested.emit)
         self.ui.pushButton_settings_open.clicked.connect(self.settings_requested.emit)
         self.ui.pushButton_reports_open.clicked.connect(self.reports_requested.emit)
+
+    def apply_home_page_styles(self):
+        """Применяет стили к главной странице"""
+        style_path = get_style_path("HOME_PAGE")
+        style_sheet = load_styles_with_constants(style_path)
+        self.ui.setStyleSheet(style_sheet)
 
     def load_logo(self):
         """Загрузка и установка логотипа"""

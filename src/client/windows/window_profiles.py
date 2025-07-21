@@ -3,13 +3,14 @@
 """
 
 from PySide6.QtWidgets import QWidget, QMessageBox, QTableWidgetItem, QAbstractItemView
-from PySide6.QtCore import QFile, Qt
+from PySide6.QtCore import QFile, Qt, QTimer
 from PySide6.QtUiTools import QUiLoader
 
 from ..constants import UI_PATHS_ABS as UI_PATHS, get_style_path
 from ..widgets.dialog_create_profile import DialogCreateProfile
 from ..api_client import ApiClient
 from ..style_utils import load_styles_with_constants
+from ..async_utils import run_async
 
 
 class ProfilesContent(QWidget):
@@ -55,6 +56,11 @@ class ProfilesContent(QWidget):
         # Настройка ширины колонок
         self.ui.tableWidget_profiles.setColumnWidth(0, 150)  # Артикул - фиксированная ширина
         self.ui.tableWidget_profiles.horizontalHeader().setStretchLastSection(True)  # Описание - растягивается
+        
+        # Настройка автоматического обновления каждые 5 секунд
+        self.update_timer = QTimer()
+        self.update_timer.timeout.connect(self.load_profiles_async)
+        self.update_timer.start(5000)  # 5000 мс = 5 секунд
 
     def on_add_clicked(self):
         """Добавление нового профиля"""
@@ -114,6 +120,44 @@ class ProfilesContent(QWidget):
                 
         except Exception as e:
             QMessageBox.warning(self, "Предупреждение", f"Не удалось загрузить профили с сервера: {e}")
+
+    def load_profiles_async(self):
+        """Асинхронная загрузка профилей с сервера"""
+        run_async(
+            self.api_client.get_profiles,
+            on_success=self.on_profiles_loaded,
+            on_error=self.on_profiles_load_error
+        )
+
+    def on_profiles_loaded(self, profiles):
+        """Обработчик успешной загрузки профилей"""
+        try:
+            # Очищаем таблицу
+            self.ui.tableWidget_profiles.setRowCount(0)
+            
+            # Заполняем таблицу данными с сервера
+            self.ui.tableWidget_profiles.setRowCount(len(profiles))
+            
+            for row, profile in enumerate(profiles):
+                # Артикул
+                article_item = QTableWidgetItem(profile.get('article', ''))
+                article_item.setFlags(article_item.flags() & ~Qt.ItemIsEditable)
+                self.ui.tableWidget_profiles.setItem(row, 0, article_item)
+                
+                # Описание
+                description_item = QTableWidgetItem(profile.get('description', ''))
+                description_item.setFlags(description_item.flags() & ~Qt.ItemIsEditable)
+                self.ui.tableWidget_profiles.setItem(row, 1, description_item)
+            
+            # Убираем текущий активный элемент
+            self.ui.tableWidget_profiles.setCurrentItem(None)
+                
+        except Exception as e:
+            print(f"Ошибка обновления UI: {e}")
+
+    def on_profiles_load_error(self, error):
+        """Обработчик ошибки загрузки профилей"""
+        print(f"Ошибка загрузки профилей: {error}")
 
     def on_edit_clicked(self):
         """Редактирование профиля"""

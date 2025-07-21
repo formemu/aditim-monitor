@@ -24,19 +24,10 @@ COLORS = {
 FONTS = {
     "FONT_FAMILY_PRIMARY": "Segoe UI, system-ui, sans-serif",
     "FONT_FAMILY_SECONDARY": "Roboto, Arial, sans-serif", 
-    "FONT_SIZE_HUGE": "28px",
     "FONT_SIZE_LARGE": "24px",
     "FONT_SIZE_MEDIUM": "18px",
-    "FONT_SIZE_NORMAL": "16px",
     "FONT_SIZE_SMALL": "14px",
-    "FONT_SIZE_TINY": "12px",
-    "FONT_WEIGHT_LIGHT": "300",
-    "FONT_WEIGHT_NORMAL": "400",
-    "FONT_WEIGHT_MEDIUM": "500",
-    "FONT_WEIGHT_BOLD": "600",
-    "FONT_WEIGHT_EXTRA_BOLD": "700",
 }
-
 # File Paths
 PATHS = {
     "MAIN_STYLE": "src/client/resources/styles/main.qss",
@@ -67,7 +58,8 @@ ICON_PATHS = {
 # Style Paths (относительные пути от client директории)
 STYLE_PATHS = {
     "MAIN": "resources/styles/main_template.qss",
-    "DIALOGS": "resources/styles/dialogs_template.qss"
+    "DIALOGS": "resources/styles/dialogs_template.qss",
+    "HOME_PAGE": "resources/styles/home_page_template.qss"
 }
 
 
