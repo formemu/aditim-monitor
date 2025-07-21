@@ -9,7 +9,7 @@ from sqlalchemy.orm import Session
 from ..database import get_db
 from ..models.tasks import Task
 from ..models.products import Product, Profile
-from ..models.directories import DirDepartament, DirTypeWork, DirQueueStatus
+from ..models.directories import DirDepartament, DirQueueStatus
 from ..schemas.tasks import TaskCreate, TaskUpdate, TaskResponse
 
 router = APIRouter(prefix="/api/tasks", tags=["tasks"])

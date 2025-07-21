@@ -8,13 +8,13 @@ from datetime import date
 sys.path.insert(0, str(Path(__file__).parent / "src"))
 
 from server.database import SessionLocal, engine, Base
-from server.models.directories import DirDepartament, DirTypeWork, DirQueueStatus
+from server.models.directories import DirDepartament, DirQueueStatus
 from server.models.products import Profile, Product
 from server.models.profile_tools import (
     ToolDimension, ComponentType, ComponentStatus, 
     ProfileTool, ProfileToolComponent, ProductComponent
 )
-from server.models.tasks import Task
+from server.models.tasks import Task, TaskComponent
 
 # Create tables
 Base.metadata.create_all(bind=engine)
@@ -32,22 +32,11 @@ def init_db():
         # Add departments
         departments = [
             DirDepartament(name="Цех металлообработки"),
-            DirDepartament(name="Инструментальный цех"), 
-            DirDepartament(name="Сборочный цех")
+            DirDepartament(name="Цех экструзии"), 
+            DirDepartament(name="Лаборатория")
         ]
         for dept in departments:
             db.add(dept)
-        
-        # Add work types
-        work_types = [
-            DirTypeWork(name="новый инструмент"),
-            DirTypeWork(name="новый вариант"),
-            DirTypeWork(name="добавить к существующему"),
-            DirTypeWork(name="переделать"),
-            DirTypeWork(name="доработка")
-        ]
-        for wt in work_types:
-            db.add(wt)
         
         # Add statuses
         statuses = [
@@ -61,9 +50,7 @@ def init_db():
         
         # Add tool dimensions
         tool_dimensions = [
-            ToolDimension(dimension="250x190(250x130)", description="Стандартная размерность для средних профилей"),
-            ToolDimension(dimension="300x200(300x150)", description="Большая размерность для крупных профилей"),
-            ToolDimension(dimension="200x150(200x100)", description="Малая размерность для небольших профилей")
+            ToolDimension(dimension="250x190(250x130)", description="250x190x45 (2 плиты) 250x190x48 (1 плита) 250x130x56 (1 плита)")
         ]
         for dim in tool_dimensions:
             db.add(dim)
@@ -97,18 +84,16 @@ def init_db():
         
         # Add test profiles
         profiles = [
-            Profile(article="П-001", description="Профиль для оконных рам"),
-            Profile(article="П-002", description="Профиль для дверных коробок"),
-            Profile(article="П-003", description="Профиль для вентиляционных решеток")
+            Profile(article="1634447.1", description="Профиль для оконных рам"),
+            Profile(article="1540096.0", description="Профиль для дверных коробок"),
+            Profile(article="1641645", description="Профиль для вентиляционных решеток")
         ]
         for profile in profiles:
             db.add(profile)
         
         # Add test products
         products = [
-            Product(name="Деталь А", article="ДТ-001", description="Металлическая деталь для станка", id_departament=1),
-            Product(name="Корпус", article="КР-002", description="Корпус электрического шкафа", id_departament=2),
-            Product(name="Фланец", article="ФЛ-003", description="Соединительный фланец", id_departament=1)
+            Product(name="Фланец", description="Соединительный фланец", id_departament=1)
         ]
         for product in products:
             db.add(product)
@@ -117,9 +102,9 @@ def init_db():
         
         # Add test profile tools
         profile_tools = [
-            ProfileTool(profile_id=1, dimension_id=1, description="Инструмент для профиля П-001"),
-            ProfileTool(profile_id=2, dimension_id=2, description="Инструмент для профиля П-002"),
-            ProfileTool(profile_id=3, dimension_id=1, description="Инструмент для профиля П-003")
+            ProfileTool(profile_id=1, dimension_id=1, description="Инструмент для профиля 1634447.1"),
+            ProfileTool(profile_id=2, dimension_id=1, description="Инструмент для профиля 1540096.0"),
+            ProfileTool(profile_id=3, dimension_id=1, description="Инструмент для профиля 1641645")
         ]
         for tool in profile_tools:
             db.add(tool)
@@ -128,24 +113,22 @@ def init_db():
         
         # Add test profile tool components
         tool_components = [
-            # Компоненты для первого инструмента
-            ProfileToolComponent(tool_id=1, component_type_id=1, variant=1, description="Плита 1 для инструмента П-001", status_id=4),
-            ProfileToolComponent(tool_id=1, component_type_id=2, variant=1, description="Плита 2 для инструмента П-001", status_id=4),
-            ProfileToolComponent(tool_id=1, component_type_id=5, variant=1, description="Пальцы для инструмента П-001", status_id=3),
+            # Компоненты для первого инструмента (1634447.1)
+            ProfileToolComponent(tool_id=1, component_type_id=1, variant=1, description="Плита 1 для инструмента 1634447.1", status_id=4),
+            ProfileToolComponent(tool_id=1, component_type_id=2, variant=1, description="Плита 2 для инструмента 1634447.1", status_id=4),
+            ProfileToolComponent(tool_id=1, component_type_id=5, variant=1, description="Пальцы для инструмента 1634447.1", status_id=3),
             
-            # Компоненты для второго инструмента
-            ProfileToolComponent(tool_id=2, component_type_id=1, variant=1, description="Плита 1 для инструмента П-002", status_id=2),
-            ProfileToolComponent(tool_id=2, component_type_id=3, variant=2, description="Плита 3 вариант 2 для инструмента П-002", status_id=1),
+            # Компоненты для второго инструмента (1540096.0)
+            ProfileToolComponent(tool_id=2, component_type_id=1, variant=1, description="Плита 1 для инструмента 1540096.0", status_id=2),
+            ProfileToolComponent(tool_id=2, component_type_id=3, variant=2, description="Плита 3 вариант 2 для инструмента 1540096.0", status_id=1),
         ]
         for component in tool_components:
             db.add(component)
         
         # Add test product components
         product_components = [
-            ProductComponent(product_id=1, component_name="Болт М10", description="Крепежный болт", quantity=4),
-            ProductComponent(product_id=1, component_name="Шайба", description="Плоская шайба", quantity=4),
-            ProductComponent(product_id=2, component_name="Дверца", description="Передняя дверца", quantity=1),
-            ProductComponent(product_id=2, component_name="Петля", description="Петля для дверцы", quantity=2),
+            ProductComponent(product_id=1, component_name="Основная часть", description="Основная часть фланца", quantity=1),
+            ProductComponent(product_id=1, component_name="Ответная часть", description="Ответная часть фланца", quantity=1),
         ]
         for comp in product_components:
             db.add(comp)
@@ -157,33 +140,47 @@ def init_db():
             Task(
                 id_profile=1,
                 id_departament=1,
-                equipment="плиты 1",
                 deadline=date(2025, 1, 25),
                 position=1,
-                id_type_work=1,
-                id_status=1
+                id_status=2
             ),
             Task(
                 id_profile=2,
                 id_departament=1,
-                equipment="пальцы",
                 deadline=date(2025, 1, 30),
                 position=2,
-                id_type_work=2,
                 id_status=2
             ),
             Task(
                 id_product=1,
-                id_departament=2,
-                equipment="станок ЧПУ",
+                id_departament=1,
                 deadline=date(2025, 2, 5),
                 position=3,
-                id_type_work=1,
                 id_status=1
             )
         ]
         for task in tasks:
             db.add(task)
+        
+        db.commit()
+        
+        # Add test task components
+        task_components = [
+            # Компоненты для первой задачи (профиль 1634447.1) - ссылки на реальные компоненты инструмента
+            TaskComponent(task_id=1, profile_tool_component_id=1, description="Плита 1 для профиля 1634447.1"),  # Плита 1, вариант 1
+            TaskComponent(task_id=1, profile_tool_component_id=2, description="Плита 2 для профиля 1634447.1"),  # Плита 2, вариант 1
+            TaskComponent(task_id=1, profile_tool_component_id=3, description="Пальцы для профиля 1634447.1"),   # Пальцы, вариант 1
+            
+            # Компоненты для второй задачи (профиль 1540096.0) - ссылка на компонент инструмента
+            TaskComponent(task_id=2, profile_tool_component_id=4, description="Плита 1 для профиля 1540096.0"),  # Плита 1, вариант 1
+            TaskComponent(task_id=2, profile_tool_component_id=5, description="Плита 3 для профиля 1540096.0"),  # Плита 3, вариант 2
+            
+            # Компоненты для третьей задачи (изделие "Фланец") - ссылки на компоненты изделия
+            TaskComponent(task_id=3, product_component_id=1, description="Основная часть фланца"),
+            TaskComponent(task_id=3, product_component_id=2, description="Ответная часть фланца"),
+        ]
+        for tc in task_components:
+            db.add(tc)
         
         db.commit()
         print("Database initialized with test data")

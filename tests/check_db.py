@@ -18,7 +18,7 @@ try:
     from src.server.database import engine, Base
     from src.server.models.tasks import Task
     from src.server.models.products import Product, Profile
-    from src.server.models.directories import DirDepartament, DirQueueStatus, DirTypeWork
+    from src.server.models.directories import DirDepartament, DirQueueStatus
 except ImportError as e:
     print(f"Error importing modules: {e}")
     print("Make sure you're running from the project root directory")
@@ -72,8 +72,7 @@ def get_table_stats(session):
     try:
         stats['directories'] = {
             'departments': session.query(DirDepartament).count(),
-            'statuses': session.query(DirQueueStatus).count(),
-            'work_types': session.query(DirTypeWork).count()
+            'statuses': session.query(DirQueueStatus).count()
         }
     except Exception as e:
         stats['directories'] = {'error': str(e)}

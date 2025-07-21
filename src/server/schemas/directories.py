@@ -29,9 +29,5 @@ class StatusResponse(DirectoryResponse):
     pass
 
 
-class TypeWorkResponse(DirectoryResponse):
-    pass
-
-
 class ComponentResponse(DirectoryResponse):
     pass

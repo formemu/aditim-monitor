@@ -7,8 +7,8 @@ from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 
 from ..database import get_db
-from ..models.directories import DirDepartament, DirQueueStatus, DirTypeWork, DirComponent
-from ..schemas.directories import DepartamentResponse, StatusResponse, TypeWorkResponse, ComponentResponse
+from ..models.directories import DirDepartament, DirQueueStatus, DirComponent
+from ..schemas.directories import DepartamentResponse, StatusResponse, ComponentResponse
 
 router = APIRouter(prefix="/api/directories", tags=["directories"], redirect_slashes=False)
 
@@ -23,12 +23,6 @@ def get_departments(db: Session = Depends(get_db)):
 def get_statuses(db: Session = Depends(get_db)):
     """Get all queue statuses"""
     return db.query(DirQueueStatus).all()
-
-
-@router.get("/work_types", response_model=List[TypeWorkResponse])
-def get_work_types(db: Session = Depends(get_db)):
-    """Get all work types"""
-    return db.query(DirTypeWork).all()
 
 
 @router.get("/components", response_model=List[ComponentResponse])

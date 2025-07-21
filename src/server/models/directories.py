@@ -22,9 +22,3 @@ class DirQueueStatus(Base):
     __tablename__ = "dir_queue_status"
     id = Column(Integer, primary_key=True, index=True)
     name = Column(String, nullable=True)
-
-
-class DirTypeWork(Base):
-    __tablename__ = "dir_type_work"
-    id = Column(Integer, primary_key=True, index=True)
-    name = Column(String, nullable=True)
