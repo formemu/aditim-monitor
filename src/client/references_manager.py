@@ -1,3 +1,5 @@
+"""ПЕРЕРАБОТАТЬ"""
+
 """
 Менеджер справочников для ADITIM Monitor Client
 Загружает все справочники один раз при запуске и предоставляет к ним доступ
@@ -93,7 +95,7 @@ class ReferencesManager:
     def _load_profiles_sync(self):
         """Синхронная загрузка профилей"""
         try:
-            profiles = self.api_client.get_profiles()
+            profiles = self.api_client.get_profile()
             self._profiles = {
                 profile['id']: {
                     'article': profile['article'],
@@ -109,7 +111,7 @@ class ReferencesManager:
     async def _load_profiles(self):
         """Загружает справочник профилей"""
         try:
-            profiles = self.api_client.get_profiles()
+            profiles = self.api_client.get_profile()
             self._profiles = {
                 profile['id']: {
                     'article': profile['article'],
@@ -223,7 +225,7 @@ class ReferencesManager:
         """Возвращает словарь департаментов {id: name}"""
         return self._departments.copy()
     
-    def get_profiles(self) -> Dict[int, Dict[str, str]]:
+    def get_profile(self) -> Dict[int, Dict[str, str]]:
         """Возвращает словарь профилей {id: {article, description, sketch}}"""
         return self._profiles.copy()
     

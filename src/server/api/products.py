@@ -20,15 +20,15 @@ router = APIRouter(prefix="/api", tags=["products", "profiles"])
 
 
 # Products
-@router.get("/products", response_model=List[ProductResponse])
-def get_products(db: Session = Depends(get_db)):
-    """Get all products"""
+@router.get("/product", response_model=List[ProductResponse])
+def get_product(db: Session = Depends(get_db)):
+    """Get all product (единственное число)"""
     return db.query(Product).all()
 
 
-@router.post("/products", response_model=ProductResponse)
+@router.post("/product", response_model=ProductResponse)
 def create_product(product: ProductCreate, db: Session = Depends(get_db)):
-    """Create a new product"""
+    """Create a new product (единственное число)"""
     db_product = Product(**product.dict())
     db.add(db_product)
     db.commit()
@@ -36,9 +36,9 @@ def create_product(product: ProductCreate, db: Session = Depends(get_db)):
     return db_product
 
 
-@router.get("/products/{product_id}", response_model=ProductResponse)
-def get_product(product_id: int, db: Session = Depends(get_db)):
-    """Get product by ID"""
+@router.get("/product/{product_id}", response_model=ProductResponse)
+def get_product_by_id(product_id: int, db: Session = Depends(get_db)):
+    """Get product by ID (единственное число)"""
     product = db.query(Product).filter(Product.id == product_id).first()
     if not product:
         raise HTTPException(status_code=404, detail="Product not found")
@@ -46,15 +46,15 @@ def get_product(product_id: int, db: Session = Depends(get_db)):
 
 
 # Profiles
-@router.get("/profiles", response_model=List[ProfileResponse])
-def get_profiles(db: Session = Depends(get_db)):
-    """Get all profiles"""
+@router.get("/profile", response_model=List[ProfileResponse])
+def get_profile(db: Session = Depends(get_db)):
+    """Get all profile (единственное число)"""
     return db.query(Profile).all()
 
 
-@router.post("/profiles", response_model=ProfileResponse)
+@router.post("/profile", response_model=ProfileResponse)
 def create_profile(profile: ProfileCreate, db: Session = Depends(get_db)):
-    """Create a new profile"""
+    """Create a new profile (единственное число)"""
     profile_data = profile.dict()
     
     # Convert base64 image to binary if provided
@@ -77,9 +77,9 @@ def create_profile(profile: ProfileCreate, db: Session = Depends(get_db)):
     return db_profile
 
 
-@router.get("/profiles/{profile_id}", response_model=ProfileResponse)
-def get_profile(profile_id: int, db: Session = Depends(get_db)):
-    """Get profile by ID"""
+@router.get("/profile/{profile_id}", response_model=ProfileResponse)
+def get_profile_by_id(profile_id: int, db: Session = Depends(get_db)):
+    """Get profile by ID (единственное число)"""
     profile = db.query(Profile).filter(Profile.id == profile_id).first()
     if not profile:
         raise HTTPException(status_code=404, detail="Profile not found")
@@ -87,19 +87,19 @@ def get_profile(profile_id: int, db: Session = Depends(get_db)):
 
 
 # Product Components
-@router.get("/products/{product_id}/components", response_model=List[ProductComponentResponse])
-def get_product_components(product_id: int, db: Session = Depends(get_db)):
-    """Get all components for a product"""
+@router.get("/product/{product_id}/component", response_model=List[ProductComponentResponse])
+def get_product_component(product_id: int, db: Session = Depends(get_db)):
+    """Get all component for a product (единственное число)"""
     return db.query(ProductComponent).filter(ProductComponent.product_id == product_id).all()
 
 
-@router.post("/products/{product_id}/components", response_model=ProductComponentResponse)
+@router.post("/product/{product_id}/component", response_model=ProductComponentResponse)
 def create_product_component(
     product_id: int, 
     component: ProductComponentCreate, 
     db: Session = Depends(get_db)
 ):
-    """Create a new product component"""
+    """Create a new product component (единственное число)"""
     component.product_id = product_id
     db_component = ProductComponent(**component.dict())
     db.add(db_component)
@@ -109,9 +109,9 @@ def create_product_component(
 
 
 # Profile Tools
-@router.get("/profile-tools", response_model=List[dict])
-def get_profile_tools(db: Session = Depends(get_db)):
-    """Get all profile tools with profile information"""
+@router.get("/profile-tool", response_model=List[dict])
+def get_profile_tool(db: Session = Depends(get_db)):
+    """Get all profile tool with profile information (единственное число)"""
     tools = db.query(ProfileTool).all()
     result = []
     for tool in tools:
@@ -127,9 +127,9 @@ def get_profile_tools(db: Session = Depends(get_db)):
     return result
 
 
-@router.get("/profile-tools/{tool_id}/components", response_model=List[dict])
-def get_profile_tool_components(tool_id: int, db: Session = Depends(get_db)):
-    """Get components of a profile tool"""
+@router.get("/profile-tool/{tool_id}/component", response_model=List[dict])
+def get_profile_tool_component(tool_id: int, db: Session = Depends(get_db)):
+    """Get component of a profile tool (единственное число)"""
     tool = db.query(ProfileTool).filter(ProfileTool.id == tool_id).first()
     if not tool:
         raise HTTPException(status_code=404, detail="Profile tool not found")
@@ -146,9 +146,9 @@ def get_profile_tool_components(tool_id: int, db: Session = Depends(get_db)):
     return result
 
 
-@router.post("/profile-tools", response_model=dict)
+@router.post("/profile-tool", response_model=dict)
 def create_profile_tool(tool_data: dict, db: Session = Depends(get_db)):
-    """Create new profile tool"""
+    """Create new profile tool (единственное число)"""
     try:
         # Проверяем обязательные поля
         profile_id = tool_data.get("profile_id")
@@ -193,9 +193,9 @@ def create_profile_tool(tool_data: dict, db: Session = Depends(get_db)):
         raise HTTPException(status_code=500, detail=f"Error creating profile tool: {str(e)}")
 
 
-@router.post("/profile-tools/{tool_id}/components", response_model=dict)
+@router.post("/profile-tool/{tool_id}/component", response_model=dict)
 def create_profile_tool_component(tool_id: int, component_data: dict, db: Session = Depends(get_db)):
-    """Create new profile tool component"""
+    """Create new profile tool component (единственное число)"""
     try:
         # Проверяем что инструмент существует
         tool = db.query(ProfileTool).filter(ProfileTool.id == tool_id).first()

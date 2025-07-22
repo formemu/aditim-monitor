@@ -14,21 +14,21 @@ from ..schemas.directories import DepartmentResponse, TaskStatusResponse, Compon
 router = APIRouter(prefix="/api/directories", tags=["directories"], redirect_slashes=False)
 
 
-@router.get("/departments", response_model=List[DepartmentResponse])
-def get_departments(db: Session = Depends(get_db)):
-    """Get all departments"""
+@router.get("/department", response_model=List[DepartmentResponse])
+def get_department(db: Session = Depends(get_db)):
+    """Get all department (единственное число)"""
     return db.query(DirDepartment).all()
 
 
-@router.get("/task-statuses", response_model=List[TaskStatusResponse])
-def get_task_statuses(db: Session = Depends(get_db)):
-    """Get all task statuses"""
+@router.get("/task-status", response_model=List[TaskStatusResponse])
+def get_task_status(db: Session = Depends(get_db)):
+    """Get all task status (единственное число)"""
     return db.query(DirTaskStatus).all()
 
 
-@router.get("/component-types")
-def get_component_types(db: Session = Depends(get_db)):
-    """Get all component types from dir_component_types"""
+@router.get("/component-type")
+def get_component_type(db: Session = Depends(get_db)):
+    """Get all component type from dir_component_type (единственное число)"""
     component_types = db.query(ComponentType).all()
     return [
         {
@@ -40,9 +40,9 @@ def get_component_types(db: Session = Depends(get_db)):
     ]
 
 
-@router.get("/tool-dimensions")
-def get_tool_dimensions(db: Session = Depends(get_db)):
-    """Get all tool dimensions from dir_tool_dimensions"""
+@router.get("/tool-dimension")
+def get_tool_dimension(db: Session = Depends(get_db)):
+    """Get all tool dimension from dir_tool_dimension (единственное число)"""
     dimensions = db.query(ToolDimension).all()
     return [
         {
@@ -54,9 +54,9 @@ def get_tool_dimensions(db: Session = Depends(get_db)):
     ]
 
 
-@router.get("/component-statuses")
-def get_component_statuses(db: Session = Depends(get_db)):
-    """Get all component statuses from dir_component_statuses"""
+@router.get("/component-status")
+def get_component_status(db: Session = Depends(get_db)):
+    """Get all component status from dir_component_status (единственное число)"""
     statuses = db.query(ComponentStatus).all()
     return [
         {

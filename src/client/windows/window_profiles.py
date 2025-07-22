@@ -109,9 +109,8 @@ class ProfilesContent(QWidget):
     def load_profiles_from_server(self):
         """Загружает профили с сервера"""
         try:
-            profiles = self.api_client.get_profiles()
+            profiles = self.api_client.get_profile()
             self.update_profiles_table(profiles)
-                
         except Exception as e:
             QMessageBox.warning(self, "Предупреждение", f"Не удалось загрузить профили с сервера: {e}")
 
@@ -158,7 +157,7 @@ class ProfilesContent(QWidget):
     def load_profiles_async(self):
         """Асинхронная загрузка профилей с сервера"""
         try:
-            profiles = self.api_client.get_profiles()
+            profiles = self.api_client.get_profile()
             self.on_profiles_loaded(profiles)
         except Exception as e:
             self.on_profiles_load_error(e)
@@ -179,8 +178,63 @@ class ProfilesContent(QWidget):
         QMessageBox.information(self, "Редактировать", "Редактирование профиля")
 
     def on_delete_clicked(self):
-        """Удаление профиля"""
-        QMessageBox.information(self, "Удалить", "Удаление профиля")
+        """Удаление профиля с подтверждением и опцией удаления инструментов"""
+        selected_items = self.ui.tableWidget_profiles.selectedItems()
+        if not selected_items:
+            QMessageBox.warning(self, "Удаление профиля", "Сначала выберите профиль для удаления.")
+            return
+
+        row = selected_items[0].row()
+        profile = None
+        if self.current_profiles_data and row < len(self.current_profiles_data):
+            profile = self.current_profiles_data[row]
+        if not profile:
+            QMessageBox.warning(self, "Удаление профиля", "Не удалось получить данные профиля.")
+            return
+
+        article = profile.get('article', '-')
+        description = profile.get('description', '-')
+
+        # Подтверждение удаления профиля
+        reply = QMessageBox.question(
+            self,
+            "Удалить профиль",
+            f"Вы действительно хотите удалить профиль?\nАртикул: {article}\nОписание: {description}",
+            QMessageBox.Yes | QMessageBox.No,
+            QMessageBox.No
+        )
+        if reply != QMessageBox.Yes:
+            return
+
+        # Спросить про удаление инструментов
+        delete_tools = False
+        reply_tools = QMessageBox.question(
+            self,
+            "Удалить инструменты?",
+            "Удалить все инструменты, связанные с этим профилем?",
+            QMessageBox.Yes | QMessageBox.No,
+            QMessageBox.No
+        )
+        if reply_tools == QMessageBox.Yes:
+            delete_tools = True
+
+        try:
+            # Удаляем инструменты и их компоненты, если выбрано
+            if delete_tools:
+                # Получаем все инструменты профиля (единственное число)
+                tools = self.api_client.get_profile_tool()
+                profile_tool = [t for t in tools if t.get('profile_id') == profile['id']]
+                for tool in profile_tool:
+                    # Удаляем компоненты инструмента (единственное число)
+                    self.api_client.delete_profile_tool_component(tool['id'])
+                # Удаляем инструменты профиля (единственное число)
+                self.api_client.delete_profile_tool_by_profile(profile['id'])
+            # Удаляем сам профиль (единственное число)
+            self.api_client.delete_profile(profile['id'])
+            QMessageBox.information(self, "Удаление", "Профиль успешно удалён.")
+            self.refresh_data()
+        except Exception as e:
+            QMessageBox.critical(self, "Ошибка", f"Не удалось удалить профиль: {e}")
 
     def on_sketch_open_clicked(self):
         """Открытие эскиза"""

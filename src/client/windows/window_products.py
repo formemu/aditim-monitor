@@ -24,17 +24,12 @@ class ProductsContent(QWidget):
         # Больше не нужно кэшировать справочники - используем references_manager
         self.current_product_id = None  # ID текущего выбранного изделия
         self.current_tool_id = None  # ID текущего выбранного инструмента профиля
-        
-        # Кэш данных для предотвращения ненужных обновлений
         self.current_tools_data = None  # Изначально None для принудительной загрузки
         self.current_products_data = None
         
         self.load_ui()
         self.setup_ui()
-        # Убираем загрузку справочников - они уже загружены в references_manager
-        # self.load_departments()
-        # self.load_profiles()
-        # Не загружаем данные сразу, пусть таймер сработает при первой активации
+
 
     def load_ui(self):
         """Загрузка UI из файла"""
@@ -56,21 +51,21 @@ class ProductsContent(QWidget):
         self.ui.pushButton_profile_tool_add.clicked.connect(self.on_profile_tool_add_clicked)
         self.ui.pushButton_profile_tool_edit.clicked.connect(self.on_profile_tool_edit_clicked)
         self.ui.pushButton_profile_tool_delete.clicked.connect(self.on_profile_tool_delete_clicked)
-        self.ui.tableWidget_profile_tools.itemSelectionChanged.connect(self.on_profile_tool_selection_changed)
-        self.ui.lineEdit_search_profile_tools.textChanged.connect(self.on_profile_tools_search_changed)
+        self.ui.tableWidget_profile_tool.itemSelectionChanged.connect(self.on_profile_tool_selection_changed)
+        self.ui.lineEdit_search_profile_tool.textChanged.connect(self.on_profile_tools_search_changed)
         
         # Подключение кнопок для изделий
         self.ui.pushButton_product_add.clicked.connect(self.on_product_add_clicked)
         self.ui.pushButton_product_edit.clicked.connect(self.on_product_edit_clicked)
         self.ui.pushButton_product_delete.clicked.connect(self.on_product_delete_clicked)
-        self.ui.tableWidget_products.itemSelectionChanged.connect(self.on_product_selection_changed)
-        self.ui.lineEdit_search_products.textChanged.connect(self.on_products_search_changed)
+        self.ui.tableWidget_product.itemSelectionChanged.connect(self.on_product_selection_changed)
+        self.ui.lineEdit_search_product.textChanged.connect(self.on_products_search_changed)
         
         # Подключение кнопок для компонентов
         self.ui.pushButton_component_add.clicked.connect(self.on_component_add_clicked)
         self.ui.pushButton_component_edit.clicked.connect(self.on_component_edit_clicked)
         self.ui.pushButton_component_delete.clicked.connect(self.on_component_delete_clicked)
-        self.ui.tableWidget_components.itemSelectionChanged.connect(self.on_component_selection_changed)
+        self.ui.tableWidget_component.itemSelectionChanged.connect(self.on_component_selection_changed)
         
         # Подключение сигнала переключения вкладок
         self.ui.tabWidget_products.currentChanged.connect(self.on_tab_changed)
@@ -81,32 +76,31 @@ class ProductsContent(QWidget):
         # Настройка автоматического обновления каждые 5 секунд с умной проверкой
         self.update_timer = QTimer()
         self.update_timer.timeout.connect(self.load_current_tab_data_async)
-        # НЕ запускаем таймер сразу, он будет запущен при активации окна
-        # self.update_timer.start(5000)  # 5000 мс = 5 секунд
+
 
     def setup_tables(self):
         """Настройка параметров таблиц"""
         # Таблица инструментов профилей (убраны ненужные колонки)
-        self.ui.tableWidget_profile_tools.setSelectionBehavior(QAbstractItemView.SelectRows)
-        self.ui.tableWidget_profile_tools.setSelectionMode(QAbstractItemView.SingleSelection)
-        self.ui.tableWidget_profile_tools.setFocusPolicy(Qt.NoFocus)
-        self.ui.tableWidget_profile_tools.setColumnWidth(0, 200)  # Профиль
-        self.ui.tableWidget_profile_tools.horizontalHeader().setStretchLastSection(True)  # Описание
+        self.ui.tableWidget_profile_tool.setSelectionBehavior(QAbstractItemView.SelectRows)
+        self.ui.tableWidget_profile_tool.setSelectionMode(QAbstractItemView.SingleSelection)
+        self.ui.tableWidget_profile_tool.setFocusPolicy(Qt.NoFocus)
+        self.ui.tableWidget_profile_tool.setColumnWidth(0, 200)  # Профиль
+        self.ui.tableWidget_profile_tool.horizontalHeader().setStretchLastSection(True)  # Описание
         
         # Таблица изделий
-        self.ui.tableWidget_products.setSelectionBehavior(QAbstractItemView.SelectRows)
-        self.ui.tableWidget_products.setSelectionMode(QAbstractItemView.SingleSelection)
-        self.ui.tableWidget_products.setFocusPolicy(Qt.NoFocus)
-        self.ui.tableWidget_products.setColumnWidth(0, 200)  # Название
-        self.ui.tableWidget_products.setColumnWidth(1, 150)  # Департамент
-        self.ui.tableWidget_products.horizontalHeader().setStretchLastSection(True)  # Описание
+        self.ui.tableWidget_product.setSelectionBehavior(QAbstractItemView.SelectRows)
+        self.ui.tableWidget_product.setSelectionMode(QAbstractItemView.SingleSelection)
+        self.ui.tableWidget_product.setFocusPolicy(Qt.NoFocus)
+        self.ui.tableWidget_product.setColumnWidth(0, 200)  # Название
+        self.ui.tableWidget_product.setColumnWidth(1, 150)  # Департамент
+        self.ui.tableWidget_product.horizontalHeader().setStretchLastSection(True)  # Описание
         
         # Таблица компонентов
-        self.ui.tableWidget_components.setSelectionBehavior(QAbstractItemView.SelectRows)
-        self.ui.tableWidget_components.setSelectionMode(QAbstractItemView.SingleSelection)
-        self.ui.tableWidget_components.setFocusPolicy(Qt.NoFocus)
-        self.ui.tableWidget_components.setColumnWidth(0, 300)  # Название
-        self.ui.tableWidget_components.horizontalHeader().setStretchLastSection(True)  # Количество
+        self.ui.tableWidget_component.setSelectionBehavior(QAbstractItemView.SelectRows)
+        self.ui.tableWidget_component.setSelectionMode(QAbstractItemView.SingleSelection)
+        self.ui.tableWidget_component.setFocusPolicy(Qt.NoFocus)
+        self.ui.tableWidget_component.setColumnWidth(0, 300)  # Название
+        self.ui.tableWidget_component.horizontalHeader().setStretchLastSection(True)  # Количество
 
     def refresh_data(self):
         """Публичный метод для принудительного обновления данных"""
@@ -122,7 +116,7 @@ class ProductsContent(QWidget):
     def load_profile_tools_from_server(self):
         """Загружает инструменты профилей с сервера"""
         try:
-            tools = self.api_client.get_profile_tools()
+            tools = self.api_client.get_profile_tool()
             self.update_tools_table(tools)
                 
         except Exception as e:
@@ -131,7 +125,7 @@ class ProductsContent(QWidget):
     def update_tools_table(self, tools):
         """Обновляет таблицу инструментов с проверкой изменений"""
         # Проверяем если таблица пустая - обновляем принудительно
-        is_table_empty = self.ui.tableWidget_profile_tools.rowCount() == 0
+        is_table_empty = self.ui.tableWidget_profile_tool.rowCount() == 0
         
         # Сравниваем новые данные с кэшем (None означает первую загрузку)
         if self.current_tools_data is not None and tools == self.current_tools_data and not is_table_empty:
@@ -139,7 +133,7 @@ class ProductsContent(QWidget):
         
         # Сохраняем текущее выделение
         current_selection = None
-        selected_items = self.ui.tableWidget_profile_tools.selectedItems()
+        selected_items = self.ui.tableWidget_profile_tool.selectedItems()
         if selected_items:
             current_selection = selected_items[0].row()
         
@@ -147,10 +141,10 @@ class ProductsContent(QWidget):
         self.current_tools_data = tools
         
         # Очищаем таблицу
-        self.ui.tableWidget_profile_tools.setRowCount(0)
+        self.ui.tableWidget_profile_tool.setRowCount(0)
         
         # Заполняем таблицу данными с сервера (убраны названия и департамент)
-        self.ui.tableWidget_profile_tools.setRowCount(len(tools))
+        self.ui.tableWidget_profile_tool.setRowCount(len(tools))
         
         for row, tool in enumerate(tools):
             # Профиль (размерность + артикул профиля)
@@ -158,16 +152,16 @@ class ProductsContent(QWidget):
             profile_item = QTableWidgetItem(profile_text)
             profile_item.setFlags(profile_item.flags() & ~Qt.ItemIsEditable)
             profile_item.setData(Qt.UserRole, tool.get('id'))  # Сохраняем ID инструмента
-            self.ui.tableWidget_profile_tools.setItem(row, 0, profile_item)
+            self.ui.tableWidget_profile_tool.setItem(row, 0, profile_item)
             
             # Описание
             description_item = QTableWidgetItem(tool.get('description', ''))
             description_item.setFlags(description_item.flags() & ~Qt.ItemIsEditable)
-            self.ui.tableWidget_profile_tools.setItem(row, 1, description_item)
+            self.ui.tableWidget_profile_tool.setItem(row, 1, description_item)
         
         # Восстанавливаем выделение если возможно
         if current_selection is not None and current_selection < len(tools):
-            self.ui.tableWidget_profile_tools.selectRow(current_selection)
+            self.ui.tableWidget_profile_tool.selectRow(current_selection)
 
     def load_products_from_server(self):
         """Загружает изделия с сервера"""
@@ -181,7 +175,7 @@ class ProductsContent(QWidget):
     def update_products_table(self, products):
         """Обновляет таблицу изделий с проверкой изменений"""
         # Проверяем если таблица пустая - обновляем принудительно
-        is_table_empty = self.ui.tableWidget_products.rowCount() == 0
+        is_table_empty = self.ui.tableWidget_product.rowCount() == 0
         
         # Сравниваем новые данные с кэшем (None означает первую загрузку)
         if self.current_products_data is not None and products == self.current_products_data and not is_table_empty:
@@ -189,7 +183,7 @@ class ProductsContent(QWidget):
         
         # Сохраняем текущее выделение
         current_selection = None
-        selected_items = self.ui.tableWidget_products.selectedItems()
+        selected_items = self.ui.tableWidget_product.selectedItems()
         if selected_items:
             current_selection = selected_items[0].row()
         
@@ -197,17 +191,17 @@ class ProductsContent(QWidget):
         self.current_products_data = products
         
         # Очищаем таблицу
-        self.ui.tableWidget_products.setRowCount(0)
+        self.ui.tableWidget_product.setRowCount(0)
         
         # Заполняем таблицу данными с сервера
-        self.ui.tableWidget_products.setRowCount(len(products))
+        self.ui.tableWidget_product.setRowCount(len(products))
         
         for row, product in enumerate(products):
             # Название
             name_item = QTableWidgetItem(product.get('name', ''))
             name_item.setFlags(name_item.flags() & ~Qt.ItemIsEditable)
             name_item.setData(Qt.UserRole, product.get('id'))  # Сохраняем ID изделия
-            self.ui.tableWidget_products.setItem(row, 0, name_item)
+            self.ui.tableWidget_product.setItem(row, 0, name_item)
             
             # Департамент (используем references_manager)
             dept_id = product.get('id_departament', 0)
@@ -215,16 +209,16 @@ class ProductsContent(QWidget):
             dept_name = departments.get(dept_id, 'Неизвестно')
             dept_item = QTableWidgetItem(dept_name)
             dept_item.setFlags(dept_item.flags() & ~Qt.ItemIsEditable)
-            self.ui.tableWidget_products.setItem(row, 1, dept_item)
+            self.ui.tableWidget_product.setItem(row, 1, dept_item)
             
             # Описание
             description_item = QTableWidgetItem(product.get('description', ''))
             description_item.setFlags(description_item.flags() & ~Qt.ItemIsEditable)
-            self.ui.tableWidget_products.setItem(row, 2, description_item)
+            self.ui.tableWidget_product.setItem(row, 2, description_item)
         
         # Восстанавливаем выделение если возможно
         if current_selection is not None and current_selection < len(products):
-            self.ui.tableWidget_products.selectRow(current_selection)
+            self.ui.tableWidget_product.selectRow(current_selection)
 
     def load_components(self, item_type: str, item_id: int):
         """Загружает компоненты для выбранного элемента"""
@@ -233,20 +227,20 @@ class ProductsContent(QWidget):
                 components = self.api_client.get_product_components(item_id)
                 self.ui.label_selected_item.setText(f"Изделие ID: {item_id}")
             elif item_type == "profile_tool":
-                components = self.api_client.get_profile_tool_components(item_id)
+                components = self.api_client.get_profile_tool_component(item_id)
                 self.ui.label_selected_item.setText(f"Инструмент ID: {item_id}")
             else:
                 return
             
             # Очищаем таблицу компонентов
-            self.ui.tableWidget_components.setRowCount(0)
+            self.ui.tableWidget_component.setRowCount(0)
             
             if not components:
                 self.ui.label_component_description.setText("Описание: -")
                 return
             
             # Заполняем таблицу компонентов
-            self.ui.tableWidget_components.setRowCount(len(components))
+            self.ui.tableWidget_component.setRowCount(len(components))
             
             for row, component in enumerate(components):
                 if item_type == "product":
@@ -265,8 +259,8 @@ class ProductsContent(QWidget):
                 name_item.setData(Qt.UserRole, component.get('id'))  # Сохраняем ID компонента
                 quantity_item.setFlags(quantity_item.flags() & ~Qt.ItemIsEditable)
                 
-                self.ui.tableWidget_components.setItem(row, 0, name_item)
-                self.ui.tableWidget_components.setItem(row, 1, quantity_item)
+                self.ui.tableWidget_component.setItem(row, 0, name_item)
+                self.ui.tableWidget_component.setItem(row, 1, quantity_item)
             
             # Включаем кнопки управления компонентами
             self.ui.pushButton_component_add.setEnabled(True)
@@ -277,7 +271,7 @@ class ProductsContent(QWidget):
     def load_data_async(self):
         """Асинхронная загрузка данных с сервера"""
         run_async(
-            self.api_client.get_profile_tools,
+            self.api_client.get_profile_tool,
             on_success=self.on_profile_tools_loaded,
             on_error=self.on_data_load_error
         )
@@ -299,7 +293,7 @@ class ProductsContent(QWidget):
         if current_tab_index == 0:
             # Загружаем только инструменты профилей
             try:
-                tools = self.api_client.get_profile_tools()
+                tools = self.api_client.get_profile_tool()
                 self.on_profile_tools_loaded(tools)
             except Exception as e:
                 self.on_data_load_error(e)
@@ -338,15 +332,15 @@ class ProductsContent(QWidget):
     # Обработчики событий для инструментов профилей
     def on_profile_tool_selection_changed(self):
         """Обработчик изменения выделения в таблице инструментов профилей"""
-        selected_items = self.ui.tableWidget_profile_tools.selectedItems()
+        selected_items = self.ui.tableWidget_profile_tool.selectedItems()
         if selected_items:
             row = selected_items[0].row()
-            tool_id = self.ui.tableWidget_profile_tools.item(row, 0).data(Qt.UserRole)
+            tool_id = self.ui.tableWidget_profile_tool.item(row, 0).data(Qt.UserRole)
             self.current_tool_id = tool_id
             self.current_product_id = None  # Сброс выбора изделия
             
             # Сброс выделения в таблице изделий
-            self.ui.tableWidget_products.setCurrentItem(None)
+            self.ui.tableWidget_product.setCurrentItem(None)
             
             # Загружаем компоненты инструмента
             self.load_components("profile_tool", tool_id)
@@ -389,24 +383,24 @@ class ProductsContent(QWidget):
     def on_profile_tools_search_changed(self, text):
         """Обработчик изменения поиска для инструментов профилей"""
         # Простая фильтрация по названию
-        for row in range(self.ui.tableWidget_profile_tools.rowCount()):
-            item = self.ui.tableWidget_profile_tools.item(row, 0)
+        for row in range(self.ui.tableWidget_profile_tool.rowCount()):
+            item = self.ui.tableWidget_profile_tool.item(row, 0)
             if item:
                 visible = text.lower() in item.text().lower()
-                self.ui.tableWidget_profile_tools.setRowHidden(row, not visible)
+                self.ui.tableWidget_profile_tool.setRowHidden(row, not visible)
 
     # Обработчики событий для изделий
     def on_product_selection_changed(self):
         """Обработчик изменения выделения в таблице изделий"""
-        selected_items = self.ui.tableWidget_products.selectedItems()
+        selected_items = self.ui.tableWidget_product.selectedItems()
         if selected_items:
             row = selected_items[0].row()
-            product_id = self.ui.tableWidget_products.item(row, 0).data(Qt.UserRole)
+            product_id = self.ui.tableWidget_product.item(row, 0).data(Qt.UserRole)
             self.current_product_id = product_id
             self.current_tool_id = None  # Сброс выбора инструмента
             
             # Сброс выделения в таблице инструментов
-            self.ui.tableWidget_profile_tools.setCurrentItem(None)
+            self.ui.tableWidget_profile_tool.setCurrentItem(None)
             
             # Загружаем компоненты изделия
             self.load_components("product", product_id)
@@ -429,19 +423,19 @@ class ProductsContent(QWidget):
     def on_products_search_changed(self, text):
         """Обработчик изменения поиска для изделий"""
         # Простая фильтрация по названию
-        for row in range(self.ui.tableWidget_products.rowCount()):
-            item = self.ui.tableWidget_products.item(row, 0)
+        for row in range(self.ui.tableWidget_product.rowCount()):
+            item = self.ui.tableWidget_product.item(row, 0)
             if item:
                 visible = text.lower() in item.text().lower()
-                self.ui.tableWidget_products.setRowHidden(row, not visible)
+                self.ui.tableWidget_product.setRowHidden(row, not visible)
 
     # Обработчики событий для компонентов
     def on_component_selection_changed(self):
         """Обработчик изменения выделения в таблице компонентов"""
-        selected_items = self.ui.tableWidget_components.selectedItems()
+        selected_items = self.ui.tableWidget_component.selectedItems()
         if selected_items:
             row = selected_items[0].row()
-            component_id = self.ui.tableWidget_components.item(row, 0).data(Qt.UserRole)
+            component_id = self.ui.tableWidget_component.item(row, 0).data(Qt.UserRole)
             
             # Показываем описание компонента (если есть)
             if self.current_product_id:
@@ -454,7 +448,7 @@ class ProductsContent(QWidget):
                     pass
             elif self.current_tool_id:
                 try:
-                    components = self.api_client.get_profile_tool_components(self.current_tool_id)
+                    components = self.api_client.get_profile_tool_component(self.current_tool_id)
                     component = next((c for c in components if c.get('id') == component_id), None)
                     if component:
                         self.ui.label_component_description.setText(f"Описание: {component.get('description', '-')}")
@@ -483,7 +477,7 @@ class ProductsContent(QWidget):
 
     def clear_components(self):
         """Очищает панель компонентов"""
-        self.ui.tableWidget_components.setRowCount(0)
+        self.ui.tableWidget_component.setRowCount(0)
         self.ui.label_selected_item.setText("Выберите изделие")
         self.ui.label_component_description.setText("Описание: -")
         self.ui.pushButton_component_add.setEnabled(False)

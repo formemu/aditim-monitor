@@ -57,10 +57,10 @@ def init_db():
         
         # Add component types
         component_types = [
-            ComponentType(name="плита_1", description="Первая плита"),
-            ComponentType(name="плита_2", description="Вторая плита"),
-            ComponentType(name="плита_3", description="Третья плита"),
-            ComponentType(name="плита_4", description="Четвертая плита"),
+            ComponentType(name="плита 1", description="Первая плита"),
+            ComponentType(name="плита 2", description="Вторая плита"),
+            ComponentType(name="плита 3", description="Третья плита"),
+            ComponentType(name="плита 4", description="Четвертая плита"),
             ComponentType(name="пальцы", description="Пальцы"),
             ComponentType(name="усреднитель", description="Усреднитель"),
             ComponentType(name="кондуктор", description="Кондуктор")

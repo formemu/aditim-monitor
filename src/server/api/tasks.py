@@ -12,11 +12,11 @@ from ..models.products import Product, Profile
 from ..models.directories import DirDepartment, DirTaskStatus
 from ..schemas.tasks import TaskCreate, TaskUpdate, TaskResponse
 
-router = APIRouter(prefix="/api/tasks", tags=["tasks"])
+router = APIRouter(prefix="/api/task", tags=["task"])
 
 
 @router.get("/", response_model=List[TaskResponse])
-def get_tasks(
+def get_task_list(
     status: Optional[str] = None,
     limit: int = 100,
     db: Session = Depends(get_db)
@@ -82,7 +82,7 @@ def create_task(task: TaskCreate, db: Session = Depends(get_db)):
 
 
 @router.get("/{task_id}", response_model=TaskResponse)
-def get_task(task_id: int, db: Session = Depends(get_db)):
+def get_task_by_id(task_id: int, db: Session = Depends(get_db)):
     """Get task by ID"""
     task = db.query(Task).filter(Task.id == task_id).first()
     if not task:

@@ -16,13 +16,13 @@
      <property name="currentIndex">
       <number>0</number>
      </property>
-     <widget class="QWidget" name="tab_profile_tools">
+     <widget class="QWidget" name="tab_profile_tool">
       <attribute name="title">
        <string>Инструменты для экструдеров</string>
       </attribute>
-      <layout class="QVBoxLayout" name="verticalLayout_profile_tools">
+      <layout class="QVBoxLayout" name="verticalLayout_profile_tool">
        <item>
-        <layout class="QHBoxLayout" name="horizontalLayout_toolbar_profile_tools">
+        <layout class="QHBoxLayout" name="horizontalLayout_toolbar_profile_tool">
          <item>
           <widget class="QPushButton" name="pushButton_profile_tool_add">
            <property name="minimumSize">
@@ -63,7 +63,7 @@
           </widget>
          </item>
          <item>
-          <spacer name="horizontalSpacer_profile_tools">
+          <spacer name="horizontalSpacer_profile_tool">
            <property name="orientation">
             <enum>Qt::Horizontal</enum>
            </property>
@@ -76,7 +76,7 @@
           </spacer>
          </item>
          <item>
-          <widget class="QLineEdit" name="lineEdit_search_profile_tools">
+        <widget class="QLineEdit" name="lineEdit_search_profile_tool">
            <property name="minimumSize">
             <size>
              <width>200</width>
@@ -91,7 +91,7 @@
         </layout>
        </item>
        <item>
-        <widget class="QTableWidget" name="tableWidget_profile_tools">
+        <widget class="QTableWidget" name="tableWidget_profile_tool">
          <property name="alternatingRowColors">
           <bool>true</bool>
          </property>
@@ -172,7 +172,7 @@
           </spacer>
          </item>
          <item>
-          <widget class="QLineEdit" name="lineEdit_search_products">
+        <widget class="QLineEdit" name="lineEdit_search_product">
            <property name="minimumSize">
             <size>
              <width>200</width>
@@ -187,7 +187,7 @@
         </layout>
        </item>
        <item>
-        <widget class="QTableWidget" name="tableWidget_products">
+        <widget class="QTableWidget" name="tableWidget_product">
          <property name="alternatingRowColors">
           <bool>true</bool>
          </property>
@@ -306,7 +306,7 @@
        </layout>
       </item>
       <item>
-       <widget class="QTableWidget" name="tableWidget_components">
+        <widget class="QTableWidget" name="tableWidget_component">
         <property name="alternatingRowColors">
          <bool>true</bool>
         </property>

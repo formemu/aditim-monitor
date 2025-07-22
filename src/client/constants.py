@@ -64,21 +64,10 @@ STYLE_PATHS = {
     "HOME_PAGE": "resources/styles/home_page_template.qss"
 }
 
-
 # Update intervals
-UPDATE_INTERVAL_MS = 5000  # 5 seconds
+UPDATE_INTERVAL_MS = 10000  # 10 seconds
 MAX_ACTIVE_TASKS = 10
 
-# Profile Equipment Types (7 standard types)
-PROFILE_EQUIPMENT = [
-    "плиты 1",
-    "плиты 2", 
-    "плиты 3",
-    "плиты 4",
-    "пальцы",
-    "усреднитель",
-    "кондуктор"
-]
 
 # Utility functions for path resolution
 def get_ui_path(ui_name: str) -> str:

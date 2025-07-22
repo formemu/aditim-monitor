@@ -1,3 +1,5 @@
+"""Переработать get_profile_dimensions"""
+
 """
 Synchronous HTTP client for communication with ADITIM Monitor Server
 """
@@ -58,7 +60,7 @@ class ApiClient:
     # Directory operations
     def get_departments(self) -> List[Dict[Any, Any]]:
         """Get all departments"""
-        return self._request("GET", "/api/directories/departments")
+        return self._request("GET", "/api/directories/department")
     
     def get_statuses(self) -> List[Dict[Any, Any]]:
         """Get all task statuses"""
@@ -66,52 +68,60 @@ class ApiClient:
     
     def get_component_statuses(self) -> List[Dict[Any, Any]]:
         """Get all component statuses"""
-        return self._request("GET", "/api/directories/component-statuses")
+        return self._request("GET", "/api/directories/component-status")
     
     # Profile operations
-    def get_profiles(self) -> List[Dict[Any, Any]]:
-        """Get all profiles"""
-        return self._request("GET", "/api/profiles")
-    
+    def get_profile(self) -> List[Dict[Any, Any]]:
+        """Получить все профили (единственное число)"""
+        return self._request("GET", "/api/profile")
+
     def create_profile(self, profile_data: Dict[str, Any]) -> Dict[Any, Any]:
-        """Create new profile"""
-        return self._request("POST", "/api/profiles", json=profile_data)
+        """Создать новый профиль (единственное число)"""
+        return self._request("POST", "/api/profile", json=profile_data)
     
-    def create_profile(self, profile_data: Dict[str, Any]) -> Dict[Any, Any]:
-        """Create new profile"""
-        return self._request("POST", "/api/profiles", json=profile_data)
-    
-    # Product operations  
-    def get_products(self) -> List[Dict[Any, Any]]:
-        """Get all products"""
-        return self._request("GET", "/api/products")
-    
+    # Product operations
+    def get_product(self) -> List[Dict[Any, Any]]:
+        """Get all product (единственное число)"""
+        return self._request("GET", "/api/product")
+
     def create_product(self, product_data: Dict[str, Any]) -> Dict[Any, Any]:
-        """Create new product"""
-        return self._request("POST", "/api/products", json=product_data)
+        """Create new product (единственное число)"""
+        return self._request("POST", "/api/product", json=product_data)
     
-    def get_product_components(self, product_id: int) -> List[Dict[Any, Any]]:
-        """Get components of a product"""
-        return self._request("GET", f"/api/products/{product_id}/components")
-    
+    def get_product_component(self, product_id: int) -> List[Dict[Any, Any]]:
+        """Get component of a product (единственное число)"""
+        return self._request("GET", f"/api/product/{product_id}/component")
+
     def create_product_component(self, product_id: int, component_data: Dict[str, Any]) -> Dict[Any, Any]:
-        """Create new product component"""
-        return self._request("POST", f"/api/products/{product_id}/components", json=component_data)
+        """Create new product component (единственное число)"""
+        return self._request("POST", f"/api/product/{product_id}/component", json=component_data)
     
     # Profile Tools operations
-    def get_profile_tools(self) -> List[Dict[Any, Any]]:
-        """Get all profile tools"""
-        return self._request("GET", "/api/profile-tools")
-    
-    def get_profile_tool_components(self, tool_id: int) -> List[Dict[Any, Any]]:
-        """Get components of a profile tool"""
-        return self._request("GET", f"/api/profile-tools/{tool_id}/components")
+    def get_profile_tool(self) -> List[Dict[Any, Any]]:
+        """Получить все инструменты профиля (единственное число)"""
+        return self._request("GET", "/api/profile-tool")
+
+    def get_profile_tool_component(self, tool_id: int) -> List[Dict[Any, Any]]:
+        """Получить компоненты инструмента профиля (единственное число)"""
+        return self._request("GET", f"/api/profile-tool/{tool_id}/component")
+
+    def delete_profile(self, profile_id: int) -> Dict[Any, Any]:
+        """Удалить профиль по id"""
+        return self._request("DELETE", f"/api/profile/{profile_id}")
+
+    def delete_profile_tool_by_profile(self, profile_id: int) -> Dict[Any, Any]:
+        """Удалить все инструменты, связанные с профилем (единственное число)"""
+        return self._request("DELETE", f"/api/profile-tool/by-profile/{profile_id}")
+
+    def delete_profile_tool_component(self, tool_id: int) -> Dict[Any, Any]:
+        """Удалить все компоненты инструмента профиля по id инструмента (единственное число)"""
+        return self._request("DELETE", f"/api/profile-tool/{tool_id}/component")
     
     # References operations (новые методы для справочников)
     def get_component_types(self) -> List[Dict[Any, Any]]:
         """Get all component types from dir_component_types"""
         try:
-            return self._request("GET", "/api/directories/component-types")
+            return self._request("GET", "/api/directories/component-type")
         except Exception as e:
             # API method not implemented yet
             return []
@@ -120,7 +130,7 @@ class ApiClient:
         """Get available dimensions for a profile"""
         try:
             # Получаем размерности из справочника размерностей инструментов
-            dimensions_data = self._request("GET", "/api/directories/tool-dimensions")
+            dimensions_data = self._request("GET", "/api/directories/tool-dimension")
             # API возвращает список словарей напрямую
             if isinstance(dimensions_data, list):
                 return [dim['name'] for dim in dimensions_data if 'name' in dim]
@@ -133,9 +143,9 @@ class ApiClient:
             return ['40x20', '50x30', '60x40', '25x15']  # Default dimensions
     
     def get_profile_sketch(self, profile_id: int) -> Dict[str, Any]:
-        """Get profile sketch data"""
+        """Get profile sketch data (единственное число)"""
         try:
-            return self._request("GET", f"/api/profiles/{profile_id}/sketch")
+            return self._request("GET", f"/api/profile/{profile_id}/sketch")
         except Exception as e:
             # API method not implemented
             return {}
@@ -143,7 +153,7 @@ class ApiClient:
     def get_tool_dimensions(self) -> Dict[str, Any]:
         """Get tool dimensions from directories"""
         try:
-            dimensions_data = self._request("GET", "/api/directories/tool-dimensions")
+            dimensions_data = self._request("GET", "/api/directories/tool-dimension")
             # API возвращает список словарей напрямую
             if isinstance(dimensions_data, list):
                 return {'success': True, 'data': dimensions_data}
@@ -156,9 +166,9 @@ class ApiClient:
             return {'success': False, 'data': []}
     
     def create_profile_tool(self, tool_data: Dict[str, Any]) -> Dict[Any, Any]:
-        """Create new profile tool"""
-        return self._request("POST", "/api/profile-tools", json=tool_data)
-    
+        """Create new profile tool (единственное число)"""
+        return self._request("POST", "/api/profile-tool", json=tool_data)
+
     def create_profile_tool_component(self, tool_id: int, component_data: Dict[str, Any]) -> Dict[Any, Any]:
-        """Create new profile tool component"""
-        return self._request("POST", f"/api/profile-tools/{tool_id}/components", json=component_data)
+        """Create new profile tool component (единственное число)"""
+        return self._request("POST", f"/api/profile-tool/{tool_id}/component", json=component_data)
