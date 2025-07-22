@@ -62,15 +62,11 @@ class ApiClient:
     
     def get_statuses(self) -> List[Dict[Any, Any]]:
         """Get all task statuses"""
-        return self._request("GET", "/api/directories/statuses")
+        return self._request("GET", "/api/directories/task-statuses")
     
     def get_component_statuses(self) -> List[Dict[Any, Any]]:
         """Get all component statuses"""
         return self._request("GET", "/api/directories/component-statuses")
-    
-    def get_type_works(self) -> List[Dict[Any, Any]]:
-        """Get all work types"""
-        return self._request("GET", "/api/directories/work_types")
     
     # Profile operations
     def get_profiles(self) -> List[Dict[Any, Any]]:

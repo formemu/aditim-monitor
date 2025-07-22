@@ -21,11 +21,11 @@ class DirectoryResponse(DirectoryBase):
 
 
 # Specific directory schemas
-class DepartamentResponse(DirectoryResponse):
+class DepartmentResponse(DirectoryResponse):
     pass
 
 
-class StatusResponse(DirectoryResponse):
+class TaskStatusResponse(DirectoryResponse):
     pass
 
 

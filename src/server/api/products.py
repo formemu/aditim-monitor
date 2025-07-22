@@ -8,8 +8,8 @@ from sqlalchemy.orm import Session
 import base64
 
 from ..database import get_db
-from ..models.products import Product, Profile
-from ..models.profile_tools import ProductComponent, ProfileTool, ProfileToolComponent, ToolDimension, ComponentType, ComponentStatus
+from ..models.products import Product, Profile, ProductComponent
+from ..models.profile_tools import ProfileTool, ProfileToolComponent, ToolDimension, ComponentType, ComponentStatus
 from ..schemas.products import (
     ProductCreate, ProductUpdate, ProductResponse,
     ProfileCreate, ProfileUpdate, ProfileResponse,
@@ -122,7 +122,7 @@ def get_profile_tools(db: Session = Depends(get_db)):
             "profile_description": tool.profile.description if tool.profile else "",
             "dimension": tool.dimension.dimension if tool.dimension else "Неизвестно",
             "description": tool.description or "",
-            "components_count": len(tool.components)
+            "components_count": len(tool.component)
         })
     return result
 
@@ -135,7 +135,7 @@ def get_profile_tool_components(tool_id: int, db: Session = Depends(get_db)):
         raise HTTPException(status_code=404, detail="Profile tool not found")
     
     result = []
-    for component in tool.components:
+    for component in tool.component:
         result.append({
             "id": component.id,
             "component_type": component.component_type.name if component.component_type else "Неизвестно",

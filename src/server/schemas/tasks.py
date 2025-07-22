@@ -2,21 +2,19 @@
 Pydantic schemas for tasks
 """
 
-from datetime import datetime
+from datetime import datetime, date
 from typing import Optional, List, Union
 from pydantic import BaseModel
 
 
 class TaskBase(BaseModel):
-    id_product: Optional[Union[int, str]] = None
-    id_profile: Optional[Union[int, str]] = None
-    id_departament: int
-    equipment: Optional[str] = None
+    product_id: Optional[Union[int, str]] = None
+    profile_id: Optional[Union[int, str]] = None
+    department_id: int
     stage: Optional[str] = None
-    deadline: Optional[datetime] = None
+    deadline_on: Optional[date] = None
     position: int = 0
-    id_type_work: int
-    id_status: int = 1
+    status_id: int = 1
 
 
 class TaskCreate(TaskBase):
@@ -24,28 +22,24 @@ class TaskCreate(TaskBase):
 
 
 class TaskUpdate(BaseModel):
-    id_product: Optional[int] = None
-    id_profile: Optional[int] = None
-    id_departament: Optional[int] = None
-    equipment: Optional[str] = None
+    product_id: Optional[int] = None
+    profile_id: Optional[int] = None
+    department_id: Optional[int] = None
     stage: Optional[str] = None
-    deadline: Optional[datetime] = None
+    deadline_on: Optional[date] = None
     position: Optional[int] = None
-    id_type_work: Optional[int] = None
-    id_status: Optional[int] = None
+    status_id: Optional[int] = None
 
 
 class TaskResponse(BaseModel):
     id: int
-    id_product: Optional[int] = None
-    id_profile: Optional[int] = None
-    id_departament: int
-    equipment: Optional[str] = None
+    product_id: Optional[int] = None
+    profile_id: Optional[int] = None
+    department_id: int
     stage: Optional[str] = None
-    deadline: Optional[datetime] = None
+    deadline_on: Optional[date] = None
     position: int = 0
-    id_type_work: int
-    id_status: int = 1
+    status_id: int = 1
     created_at: datetime
     updated_at: datetime
     

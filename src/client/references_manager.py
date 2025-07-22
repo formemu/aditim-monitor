@@ -227,6 +227,10 @@ class ReferencesManager:
         """Возвращает словарь профилей {id: {article, description, sketch}}"""
         return self._profiles.copy()
     
+    def get_profile(self, profile_id: int) -> Optional[Dict[str, str]]:
+        """Возвращает данные одного профиля по ID"""
+        return self._profiles.get(profile_id)
+    
     def get_component_types(self) -> Dict[int, Dict[str, str]]:
         """Возвращает словарь типов компонентов {id: {name, description}}"""
         return self._component_types.copy()

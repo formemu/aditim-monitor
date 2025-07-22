@@ -7,29 +7,23 @@ from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 
 from ..database import get_db
-from ..models.directories import DirDepartament, DirQueueStatus, DirComponent
+from ..models.directories import DirDepartment, DirTaskStatus
 from ..models.profile_tools import ComponentType, ToolDimension, ComponentStatus
-from ..schemas.directories import DepartamentResponse, StatusResponse, ComponentResponse
+from ..schemas.directories import DepartmentResponse, TaskStatusResponse, ComponentResponse
 
 router = APIRouter(prefix="/api/directories", tags=["directories"], redirect_slashes=False)
 
 
-@router.get("/departments", response_model=List[DepartamentResponse])
+@router.get("/departments", response_model=List[DepartmentResponse])
 def get_departments(db: Session = Depends(get_db)):
     """Get all departments"""
-    return db.query(DirDepartament).all()
+    return db.query(DirDepartment).all()
 
 
-@router.get("/statuses", response_model=List[StatusResponse])
-def get_statuses(db: Session = Depends(get_db)):
-    """Get all queue statuses"""
-    return db.query(DirQueueStatus).all()
-
-
-@router.get("/components", response_model=List[ComponentResponse])
-def get_components(db: Session = Depends(get_db)):
-    """Get all components"""
-    return db.query(DirComponent).all()
+@router.get("/task-statuses", response_model=List[TaskStatusResponse])
+def get_task_statuses(db: Session = Depends(get_db)):
+    """Get all task statuses"""
+    return db.query(DirTaskStatus).all()
 
 
 @router.get("/component-types")

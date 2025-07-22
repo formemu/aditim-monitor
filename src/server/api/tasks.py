@@ -9,7 +9,7 @@ from sqlalchemy.orm import Session
 from ..database import get_db
 from ..models.tasks import Task
 from ..models.products import Product, Profile
-from ..models.directories import DirDepartament, DirQueueStatus
+from ..models.directories import DirDepartment, DirTaskStatus
 from ..schemas.tasks import TaskCreate, TaskUpdate, TaskResponse
 
 router = APIRouter(prefix="/api/tasks", tags=["tasks"])
@@ -25,7 +25,7 @@ def get_tasks(
     query = db.query(Task)
     
     if status:
-        query = query.join(DirQueueStatus).filter(DirQueueStatus.name == status)
+        query = query.join(DirTaskStatus).filter(DirTaskStatus.name == status)
     
     tasks = query.order_by(Task.position).limit(limit).all()
     return tasks
@@ -37,27 +37,27 @@ def create_task(task: TaskCreate, db: Session = Depends(get_db)):
     task_data = task.dict()
     
     # Handle product creation/lookup
-    if task.id_product and isinstance(task.id_product, str):
-        # If id_product is a string, treat it as product name and create/find product
-        product_name = task.id_product
+    if task.product_id and isinstance(task.product_id, str):
+        # If product_id is a string, treat it as product name and create/find product
+        product_name = task.product_id
         product = db.query(Product).filter(Product.name == product_name).first()
         if not product:
             # Create new product
-            product = Product(name=product_name, id_departament=task.id_departament)
+            product = Product(name=product_name, department_id=task.department_id)
             db.add(product)
             db.commit()
             db.refresh(product)
-        task_data["id_product"] = product.id
-    elif task.id_product:
+        task_data["product_id"] = product.id
+    elif task.product_id:
         # If it's an integer, validate it exists
-        product = db.query(Product).filter(Product.id == task.id_product).first()
+        product = db.query(Product).filter(Product.id == task.product_id).first()
         if not product:
             raise HTTPException(status_code=404, detail="Product not found")
     
     # Handle profile creation/lookup
-    if task.id_profile and isinstance(task.id_profile, str):
-        # If id_profile is a string, treat it as profile article and create/find profile
-        profile_article = task.id_profile
+    if task.profile_id and isinstance(task.profile_id, str):
+        # If profile_id is a string, treat it as profile article and create/find profile
+        profile_article = task.profile_id
         profile = db.query(Profile).filter(Profile.article == profile_article).first()
         if not profile:
             # Create new profile
@@ -65,10 +65,10 @@ def create_task(task: TaskCreate, db: Session = Depends(get_db)):
             db.add(profile)
             db.commit()
             db.refresh(profile)
-        task_data["id_profile"] = profile.id
-    elif task.id_profile:
+        task_data["profile_id"] = profile.id
+    elif task.profile_id:
         # If it's an integer, validate it exists
-        profile = db.query(Profile).filter(Profile.id == task.id_profile).first()
+        profile = db.query(Profile).filter(Profile.id == task.profile_id).first()
         if not profile:
             raise HTTPException(status_code=404, detail="Profile not found")
     

@@ -10,7 +10,7 @@ import base64
 class ProductBase(BaseModel):
     name: str
     description: Optional[str] = None
-    id_departament: int
+    department_id: int
 
 
 class ProductCreate(ProductBase):
@@ -20,7 +20,7 @@ class ProductCreate(ProductBase):
 class ProductUpdate(BaseModel):
     name: Optional[str] = None
     description: Optional[str] = None
-    id_departament: Optional[int] = None
+    department_id: Optional[int] = None
 
 
 class ProductResponse(ProductBase):

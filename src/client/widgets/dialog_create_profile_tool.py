@@ -176,7 +176,7 @@ class DialogCreateProfileTool(QDialog):
                 
                 image_data = base64.b64decode(base64_data)
                 pixmap = QPixmap()
-                pixmap.loadFromData(image_data)
+                result = pixmap.loadFromData(image_data)
                 
                 if not pixmap.isNull():
                     # Масштабируем изображение под размер label

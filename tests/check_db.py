@@ -18,7 +18,7 @@ try:
     from src.server.database import engine, Base
     from src.server.models.tasks import Task
     from src.server.models.products import Product, Profile
-    from src.server.models.directories import DirDepartament, DirQueueStatus
+    from src.server.models.directories import DirDepartment, DirTaskStatus
 except ImportError as e:
     print(f"Error importing modules: {e}")
     print("Make sure you're running from the project root directory")
@@ -48,9 +48,9 @@ def get_table_stats(session):
         }
         
         # Tasks by status
-        statuses = session.query(DirQueueStatus).all()
+        statuses = session.query(DirTaskStatus).all()
         for status in statuses:
-            count = session.query(Task).filter(Task.id_status == status.id).count()
+            count = session.query(Task).filter(Task.status_id == status.id).count()
             stats['tasks']['by_status'][status.name] = count
             
     except Exception as e:
@@ -71,8 +71,8 @@ def get_table_stats(session):
     # Directories statistics
     try:
         stats['directories'] = {
-            'departments': session.query(DirDepartament).count(),
-            'statuses': session.query(DirQueueStatus).count()
+            'departments': session.query(DirDepartment).count(),
+            'statuses': session.query(DirTaskStatus).count()
         }
     except Exception as e:
         stats['directories'] = {'error': str(e)}
@@ -161,7 +161,6 @@ def main():
             print(f"📁 Directories:")
             print(f"   - Departments: {dirs['departments']}")
             print(f"   - Statuses: {dirs['statuses']}")
-            print(f"   - Work types: {dirs['work_types']}")
         
     except Exception as e:
         print(f"❌ Error getting statistics: {e}")

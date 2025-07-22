@@ -8,11 +8,11 @@ from datetime import date
 sys.path.insert(0, str(Path(__file__).parent / "src"))
 
 from server.database import SessionLocal, engine, Base
-from server.models.directories import DirDepartament, DirQueueStatus
-from server.models.products import Profile, Product
+from server.models.directories import DirDepartment, DirTaskStatus
+from server.models.products import Profile, Product, ProductComponent
 from server.models.profile_tools import (
     ToolDimension, ComponentType, ComponentStatus, 
-    ProfileTool, ProfileToolComponent, ProductComponent
+    ProfileTool, ProfileToolComponent
 )
 from server.models.tasks import Task, TaskComponent
 
@@ -25,25 +25,25 @@ def init_db():
     
     try:
         # Check if data already exists
-        if db.query(DirDepartament).count() > 0:
+        if db.query(DirDepartment).count() > 0:
             print("Database already initialized")
             return
         
         # Add departments
         departments = [
-            DirDepartament(name="Цех металлообработки"),
-            DirDepartament(name="Цех экструзии"), 
-            DirDepartament(name="Лаборатория")
+            DirDepartment(name="Цех металлообработки"),
+            DirDepartment(name="Цех экструзии"), 
+            DirDepartment(name="Лаборатория")
         ]
         for dept in departments:
             db.add(dept)
         
         # Add statuses
         statuses = [
-            DirQueueStatus(name="Новая"),
-            DirQueueStatus(name="В работе"),
-            DirQueueStatus(name="Выполнена"),
-            DirQueueStatus(name="Отменена")
+            DirTaskStatus(name="Новая"),
+            DirTaskStatus(name="В работе"),
+            DirTaskStatus(name="Выполнена"),
+            DirTaskStatus(name="Отменена")
         ]
         for status in statuses:
             db.add(status)
@@ -93,7 +93,7 @@ def init_db():
         
         # Add test products
         products = [
-            Product(name="Фланец", description="Соединительный фланец", id_departament=1)
+            Product(name="Фланец", description="Соединительный фланец", department_id=1)
         ]
         for product in products:
             db.add(product)
@@ -138,25 +138,25 @@ def init_db():
         # Add test tasks
         tasks = [
             Task(
-                id_profile=1,
-                id_departament=1,
-                deadline=date(2025, 1, 25),
+                profile_id=1,
+                department_id=1,
+                deadline_on=date(2025, 1, 25),
                 position=1,
-                id_status=2
+                status_id=2
             ),
             Task(
-                id_profile=2,
-                id_departament=1,
-                deadline=date(2025, 1, 30),
+                profile_id=2,
+                department_id=1,
+                deadline_on=date(2025, 1, 30),
                 position=2,
-                id_status=2
+                status_id=2
             ),
             Task(
-                id_product=1,
-                id_departament=1,
-                deadline=date(2025, 2, 5),
+                product_id=1,
+                department_id=1,
+                deadline_on=date(2025, 2, 5),
                 position=3,
-                id_status=1
+                status_id=1
             )
         ]
         for task in tasks:
