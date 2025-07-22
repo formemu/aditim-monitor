@@ -64,6 +64,10 @@ class ApiClient:
         """Get all task statuses"""
         return self._request("GET", "/api/directories/statuses")
     
+    def get_component_statuses(self) -> List[Dict[Any, Any]]:
+        """Get all component statuses"""
+        return self._request("GET", "/api/directories/component-statuses")
+    
     def get_type_works(self) -> List[Dict[Any, Any]]:
         """Get all work types"""
         return self._request("GET", "/api/directories/work_types")
@@ -113,15 +117,23 @@ class ApiClient:
         try:
             return self._request("GET", "/api/directories/component-types")
         except Exception as e:
-            print(f"API method get_component_types not implemented: {e}")
+            # API method not implemented yet
             return []
     
     def get_profile_dimensions(self, profile_id: int) -> List[str]:
         """Get available dimensions for a profile"""
         try:
-            return self._request("GET", f"/api/profiles/{profile_id}/dimensions")
+            # Получаем размерности из справочника размерностей инструментов
+            dimensions_data = self._request("GET", "/api/directories/tool-dimensions")
+            # API возвращает список словарей напрямую
+            if isinstance(dimensions_data, list):
+                return [dim['name'] for dim in dimensions_data if 'name' in dim]
+            elif isinstance(dimensions_data, dict) and dimensions_data.get('success'):
+                return [dim['name'] for dim in dimensions_data.get('data', []) if 'name' in dim]
+            else:
+                return ['40x20', '50x30', '60x40', '25x15']  # Default dimensions
         except Exception as e:
-            print(f"API method get_profile_dimensions not implemented: {e}")
+            # API method not implemented
             return ['40x20', '50x30', '60x40', '25x15']  # Default dimensions
     
     def get_profile_sketch(self, profile_id: int) -> Dict[str, Any]:
@@ -129,8 +141,23 @@ class ApiClient:
         try:
             return self._request("GET", f"/api/profiles/{profile_id}/sketch")
         except Exception as e:
-            print(f"API method get_profile_sketch not implemented: {e}")
+            # API method not implemented
             return {}
+    
+    def get_tool_dimensions(self) -> Dict[str, Any]:
+        """Get tool dimensions from directories"""
+        try:
+            dimensions_data = self._request("GET", "/api/directories/tool-dimensions")
+            # API возвращает список словарей напрямую
+            if isinstance(dimensions_data, list):
+                return {'success': True, 'data': dimensions_data}
+            elif isinstance(dimensions_data, dict):
+                return dimensions_data
+            else:
+                return {'success': False, 'data': []}
+        except Exception as e:
+            # API method not implemented
+            return {'success': False, 'data': []}
     
     def create_profile_tool(self, tool_data: Dict[str, Any]) -> Dict[Any, Any]:
         """Create new profile tool"""

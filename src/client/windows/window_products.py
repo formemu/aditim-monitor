@@ -2,7 +2,7 @@
 Содержимое изделий для ADITIM Monitor Client с вкладками и компонентами
 """
 
-from PySide6.QtWidgets import QWidget, QMessageBox, QTableWidgetItem, QAbstractItemView
+from PySide6.QtWidgets import QWidget, QMessageBox, QTableWidgetItem, QAbstractItemView, QDialog
 from PySide6.QtCore import QFile, Qt, QTimer
 from PySide6.QtUiTools import QUiLoader
 
@@ -11,6 +11,7 @@ from ..api_client import ApiClient
 from ..style_utils import load_styles_with_constants
 from ..async_utils import run_async
 from ..references_manager import references_manager
+from ..widgets.dialog_create_profile_tool import DialogCreateProfileTool
 
 
 class ProductsContent(QWidget):
@@ -210,7 +211,8 @@ class ProductsContent(QWidget):
             
             # Департамент (используем references_manager)
             dept_id = product.get('id_departament', 0)
-            dept_name = references_manager.get_department_name(dept_id)
+            departments = references_manager.get_departments()
+            dept_name = departments.get(dept_id, 'Неизвестно')
             dept_item = QTableWidgetItem(dept_name)
             dept_item.setFlags(dept_item.flags() & ~Qt.ItemIsEditable)
             self.ui.tableWidget_products.setItem(row, 1, dept_item)
@@ -354,7 +356,27 @@ class ProductsContent(QWidget):
 
     def on_profile_tool_add_clicked(self):
         """Обработчик кнопки добавления инструмента профиля"""
-        QMessageBox.information(self, "Информация", "Функция будет реализована позже")
+        try:
+            dialog = DialogCreateProfileTool(self.api_client, self)
+            dialog.profile_tool_created.connect(self.on_profile_tool_created)
+            
+            if dialog.exec() == QDialog.Accepted:
+                # Диалог уже обновляет данные через сигнал
+                pass
+                
+        except Exception as e:
+            QMessageBox.critical(self, "Ошибка", f"Не удалось открыть диалог создания инструмента: {e}")
+
+    def on_profile_tool_created(self, tool_data):
+        """Обработчик успешного создания инструмента профиля"""
+        # Обновляем таблицу инструментов
+        self.load_profile_tools_from_server()
+        
+        QMessageBox.information(
+            self, 
+            "Успех", 
+            f"Инструмент профиля успешно создан и добавлен в список!"
+        )
 
     def on_profile_tool_edit_clicked(self):
         """Обработчик кнопки редактирования инструмента профиля"""

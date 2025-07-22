@@ -9,7 +9,7 @@ import base64
 
 from ..database import get_db
 from ..models.products import Product, Profile
-from ..models.profile_tools import ProductComponent, ProfileTool
+from ..models.profile_tools import ProductComponent, ProfileTool, ProfileToolComponent, ToolDimension, ComponentType, ComponentStatus
 from ..schemas.products import (
     ProductCreate, ProductUpdate, ProductResponse,
     ProfileCreate, ProfileUpdate, ProfileResponse,
@@ -144,3 +144,99 @@ def get_profile_tool_components(tool_id: int, db: Session = Depends(get_db)):
             "status": component.status.name if component.status else "Неизвестно"
         })
     return result
+
+
+@router.post("/profile-tools", response_model=dict)
+def create_profile_tool(tool_data: dict, db: Session = Depends(get_db)):
+    """Create new profile tool"""
+    try:
+        # Проверяем обязательные поля
+        profile_id = tool_data.get("profile_id")
+        dimension = tool_data.get("dimension")
+        
+        if not profile_id:
+            raise HTTPException(status_code=400, detail="profile_id is required")
+        if not dimension:
+            raise HTTPException(status_code=400, detail="dimension is required")
+        
+        # Проверяем что профиль существует
+        profile = db.query(Profile).filter(Profile.id == profile_id).first()
+        if not profile:
+            raise HTTPException(status_code=404, detail="Profile not found")
+        
+        # Ищем размерность в справочнике (если нужно)
+        dimension_obj = db.query(ToolDimension).filter(ToolDimension.dimension == dimension).first()
+        
+        # Создаем инструмент профиля
+        new_tool = ProfileTool(
+            profile_id=profile_id,
+            dimension_id=dimension_obj.id if dimension_obj else None,
+            description=tool_data.get("description")
+        )
+        
+        db.add(new_tool)
+        db.commit()
+        db.refresh(new_tool)
+        
+        return {
+            "id": new_tool.id,
+            "profile_id": new_tool.profile_id,
+            "dimension": dimension,
+            "description": new_tool.description,
+            "success": True
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        db.rollback()
+        raise HTTPException(status_code=500, detail=f"Error creating profile tool: {str(e)}")
+
+
+@router.post("/profile-tools/{tool_id}/components", response_model=dict)
+def create_profile_tool_component(tool_id: int, component_data: dict, db: Session = Depends(get_db)):
+    """Create new profile tool component"""
+    try:
+        # Проверяем что инструмент существует
+        tool = db.query(ProfileTool).filter(ProfileTool.id == tool_id).first()
+        if not tool:
+            raise HTTPException(status_code=404, detail="Profile tool not found")
+        
+        # Проверяем обязательные поля
+        component_type_id = component_data.get("component_type_id")
+        if not component_type_id:
+            raise HTTPException(status_code=400, detail="component_type_id is required")
+        
+        # Проверяем что тип компонента существует
+        component_type = db.query(ComponentType).filter(ComponentType.id == component_type_id).first()
+        if not component_type:
+            raise HTTPException(status_code=404, detail="Component type not found")
+        
+        # Создаем компонент
+        new_component = ProfileToolComponent(
+            tool_id=tool_id,
+            component_type_id=component_type_id,
+            variant=component_data.get("variant", 1),
+            description=component_data.get("description"),
+            status_id=component_data.get("status_id", 1)  # По умолчанию статус "В разработке"
+        )
+        
+        db.add(new_component)
+        db.commit()
+        db.refresh(new_component)
+        
+        return {
+            "id": new_component.id,
+            "tool_id": new_component.tool_id,
+            "component_type_id": new_component.component_type_id,
+            "variant": new_component.variant,
+            "description": new_component.description,
+            "status_id": new_component.status_id,
+            "success": True
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        db.rollback()
+        raise HTTPException(status_code=500, detail=f"Error creating component: {str(e)}")

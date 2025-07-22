@@ -22,3 +22,11 @@ class DirQueueStatus(Base):
     __tablename__ = "dir_queue_status"
     id = Column(Integer, primary_key=True, index=True)
     name = Column(String, nullable=True)
+
+
+class DirToolDimension(Base):
+    """Модель размерностей инструментов"""
+    __tablename__ = "dir_tool_dimension"
+    id = Column(Integer, primary_key=True, index=True)
+    dimension = Column(String, nullable=False)
+    description = Column(String, nullable=True)
