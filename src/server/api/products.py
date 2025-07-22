@@ -4,6 +4,7 @@ API routes for products and profiles
 
 from typing import List
 from fastapi import APIRouter, Depends, HTTPException
+from fastapi import status
 from sqlalchemy.orm import Session
 import base64
 
@@ -240,3 +241,54 @@ def create_profile_tool_component(tool_id: int, component_data: dict, db: Sessio
     except Exception as e:
         db.rollback()
         raise HTTPException(status_code=500, detail=f"Error creating component: {str(e)}")
+
+
+# === ENDPOINT: Удаление всех инструментов профиля и их компонентов по profile_id ===
+@router.delete("/profile-tool/by-profile/{profile_id}", response_model=dict, status_code=status.HTTP_200_OK)
+def delete_profile_tool_by_profile(profile_id: int, db: Session = Depends(get_db)):
+    """Удалить все инструменты профиля и их компоненты по profile_id (единственное число)"""
+    tools = db.query(ProfileTool).filter(ProfileTool.profile_id == profile_id).all()
+    if not tools:
+        return {"success": True, "deleted": 0}
+
+    deleted_tools = 0
+    deleted_components = 0
+    for tool in tools:
+        components = db.query(ProfileToolComponent).filter(ProfileToolComponent.tool_id == tool.id).all()
+        for component in components:
+            db.delete(component)
+            deleted_components += 1
+        db.delete(tool)
+        deleted_tools += 1
+    db.commit()
+    return {"success": True, "deleted_tools": deleted_tools, "deleted_components": deleted_components}
+
+
+
+# === ENDPOINT: Удаление профиля по profile_id ===
+@router.delete("/profile/{profile_id}", response_model=dict, status_code=status.HTTP_200_OK)
+def delete_profile(profile_id: int, db: Session = Depends(get_db)):
+    """Удалить профиль по profile_id (единственное число)"""
+    profile = db.query(Profile).filter(Profile.id == profile_id).first()
+    if not profile:
+        raise HTTPException(status_code=404, detail="Profile not found")
+    db.delete(profile)
+    db.commit()
+    return {"success": True, "deleted": 1}
+
+# === ENDPOINT: Удаление всех компонентов инструмента профиля по tool_id ===
+@router.delete("/profile-tool/{tool_id}/component", response_model=dict, status_code=status.HTTP_200_OK)
+def delete_profile_tool_component(tool_id: int, db: Session = Depends(get_db)):
+    """Удалить все компоненты инструмента профиля по tool_id (единственное число)"""
+    components = db.query(ProfileToolComponent).filter(ProfileToolComponent.tool_id == tool_id).all()
+    if not components:
+        return {"success": True, "deleted": 0}
+
+    deleted = 0
+    for component in components:
+        db.delete(component)
+        deleted += 1
+    db.commit()
+    return {"success": True, "deleted": deleted}
+
+
