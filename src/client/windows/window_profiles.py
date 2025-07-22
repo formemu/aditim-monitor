@@ -2,11 +2,15 @@
 Содержимое профилей для ADITIM Monitor Client
 """
 
+
+import os
+import base64
 from PySide6.QtWidgets import QWidget, QMessageBox, QTableWidgetItem, QAbstractItemView
 from PySide6.QtCore import QFile, Qt, QTimer
 from PySide6.QtUiTools import QUiLoader
+from PySide6.QtGui import QPixmap
 
-from ..constants import UI_PATHS_ABS as UI_PATHS, get_style_path
+from ..constants import UI_PATHS_ABS as UI_PATHS, ICON_PATHS_ABS as ICON_PATHS, get_style_path
 from ..widgets.dialog_create_profile import DialogCreateProfile
 from ..api_client import ApiClient
 from ..style_utils import load_styles_with_constants
@@ -192,7 +196,6 @@ class ProfilesContent(QWidget):
         if selected_items:
             row = selected_items[0].row()
             self.selected_row = row  # Запоминаем выбранную строку
-            
             self.ui.pushButton_sketch_open.setEnabled(True)
             self.ui.pushButton_autocad_open.setEnabled(True)
             # Обновляем информацию в панели предварительного просмотра
@@ -200,12 +203,55 @@ class ProfilesContent(QWidget):
             description = self.ui.tableWidget_profiles.item(row, 1).text() if self.ui.tableWidget_profiles.item(row, 1) else ""
             self.ui.label_profile_article.setText(f"Артикул: {article}")
             self.ui.label_profile_description.setText(f"Описание: {description}")
+
+            # Подгружаем и отображаем эскиз профиля
+            profile = None
+            if self.current_profiles_data and row < len(self.current_profiles_data):
+                profile = self.current_profiles_data[row]
+            self.load_and_show_sketch(profile)
         else:
             self.selected_row = None
             self.ui.pushButton_sketch_open.setEnabled(False)
             self.ui.pushButton_autocad_open.setEnabled(False)
             self.ui.label_profile_article.setText("Артикул: -")
             self.ui.label_profile_description.setText("Описание: -")
+            self.set_sketch_placeholder()
+            self.ui.label_sketch.setText("")
+
+    def load_and_show_sketch(self, profile):
+        """Загружает и отображает эскиз профиля или иконку-заглушку"""
+        if profile and profile.get('sketch'):
+            try:
+                sketch_data = profile['sketch']
+                if sketch_data.startswith('data:image'):
+                    base64_data = sketch_data.split(',')[1]
+                else:
+                    base64_data = sketch_data
+                image_data = base64.b64decode(base64_data)
+                pixmap = QPixmap()
+                if pixmap.loadFromData(image_data) and not pixmap.isNull():
+                    scaled_pixmap = pixmap.scaled(200, 150, Qt.KeepAspectRatio, Qt.SmoothTransformation)
+                    self.ui.label_sketch.setPixmap(scaled_pixmap)
+                    self.ui.label_sketch.setText("")
+                else:
+                    self.set_sketch_placeholder()
+                    self.ui.label_sketch.setText("Ошибка загрузки эскиза")
+            except Exception:
+                self.set_sketch_placeholder()
+                self.ui.label_sketch.setText("Ошибка загрузки эскиза")
+        else:
+            self.set_sketch_placeholder()
+            self.ui.label_sketch.setText("Эскиз не найден")
+
+    def set_sketch_placeholder(self):
+        """Устанавливает иконку-заглушку вместо эскиза"""
+        placeholder_path = ICON_PATHS.get("SKETCH_PLACEHOLDER")
+        if placeholder_path and os.path.exists(placeholder_path):
+            pixmap = QPixmap(placeholder_path)
+            scaled_pixmap = pixmap.scaled(120, 120, Qt.KeepAspectRatio, Qt.SmoothTransformation)
+            self.ui.label_sketch.setPixmap(scaled_pixmap)
+        else:
+            self.ui.label_sketch.clear()
 
     def on_search_changed(self, text):
         """Поиск по артикулу"""
