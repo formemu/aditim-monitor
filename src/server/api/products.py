@@ -113,9 +113,9 @@ def create_product_component(
 @router.get("/profile-tool", response_model=List[dict])
 def get_profile_tool(db: Session = Depends(get_db)):
     """Get all profile tool with profile information (единственное число)"""
-    tools = db.query(ProfileTool).all()
+    list_tool = db.query(ProfileTool).all()
     result = []
-    for tool in tools:
+    for tool in list_tool:
         result.append({
             "id": tool.id,
             "profile_id": tool.profile_id,
@@ -247,21 +247,21 @@ def create_profile_tool_component(tool_id: int, component_data: dict, db: Sessio
 @router.delete("/profile-tool/by-profile/{profile_id}", response_model=dict, status_code=status.HTTP_200_OK)
 def delete_profile_tool_by_profile(profile_id: int, db: Session = Depends(get_db)):
     """Удалить все инструменты профиля и их компоненты по profile_id (единственное число)"""
-    tools = db.query(ProfileTool).filter(ProfileTool.profile_id == profile_id).all()
-    if not tools:
+    list_tool = db.query(ProfileTool).filter(ProfileTool.profile_id == profile_id).all()
+    if not list_tool:
         return {"success": True, "deleted": 0}
 
-    deleted_tools = 0
-    deleted_components = 0
-    for tool in tools:
-        components = db.query(ProfileToolComponent).filter(ProfileToolComponent.tool_id == tool.id).all()
-        for component in components:
+    count_tool_deleted = 0
+    count_component_deleted = 0
+    for tool in list_tool:
+        list_component = db.query(ProfileToolComponent).filter(ProfileToolComponent.tool_id == tool.id).all()
+        for component in list_component:
             db.delete(component)
-            deleted_components += 1
+            count_component_deleted += 1
         db.delete(tool)
-        deleted_tools += 1
+        count_tool_deleted += 1
     db.commit()
-    return {"success": True, "deleted_tools": deleted_tools, "deleted_components": deleted_components}
+    return {"success": True, "deleted_tools": count_tool_deleted, "deleted_components": count_component_deleted}
 
 
 
@@ -280,15 +280,15 @@ def delete_profile(profile_id: int, db: Session = Depends(get_db)):
 @router.delete("/profile-tool/{tool_id}/component", response_model=dict, status_code=status.HTTP_200_OK)
 def delete_profile_tool_component(tool_id: int, db: Session = Depends(get_db)):
     """Удалить все компоненты инструмента профиля по tool_id (единственное число)"""
-    components = db.query(ProfileToolComponent).filter(ProfileToolComponent.tool_id == tool_id).all()
-    if not components:
+    list_component = db.query(ProfileToolComponent).filter(ProfileToolComponent.tool_id == tool_id).all()
+    if not list_component:
         return {"success": True, "deleted": 0}
 
-    deleted = 0
-    for component in components:
+    count_deleted = 0
+    for component in list_component:
         db.delete(component)
-        deleted += 1
+        count_deleted += 1
     db.commit()
-    return {"success": True, "deleted": deleted}
+    return {"success": True, "deleted": count_deleted}
 
 

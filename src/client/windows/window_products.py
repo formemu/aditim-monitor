@@ -24,8 +24,8 @@ class ProductsContent(QWidget):
         # Больше не нужно кэшировать справочники - используем references_manager
         self.current_product_id = None  # ID текущего выбранного изделия
         self.current_tool_id = None  # ID текущего выбранного инструмента профиля
-        self.current_tools_data = None  # Изначально None для принудительной загрузки
-        self.current_products_data = None
+        self.current_data_tool = None  # Изначально None для принудительной загрузки
+        self.current_data_product = None
         
         self.load_ui()
         self.setup_ui()
@@ -52,14 +52,14 @@ class ProductsContent(QWidget):
         self.ui.pushButton_profile_tool_edit.clicked.connect(self.on_profile_tool_edit_clicked)
         self.ui.pushButton_profile_tool_delete.clicked.connect(self.on_profile_tool_delete_clicked)
         self.ui.tableWidget_profile_tool.itemSelectionChanged.connect(self.on_profile_tool_selection_changed)
-        self.ui.lineEdit_search_profile_tool.textChanged.connect(self.on_profile_tools_search_changed)
+        self.ui.lineEdit_search_profile_tool.textChanged.connect(self.on_profile_tool_search_changed)
         
         # Подключение кнопок для изделий
         self.ui.pushButton_product_add.clicked.connect(self.on_product_add_clicked)
         self.ui.pushButton_product_edit.clicked.connect(self.on_product_edit_clicked)
         self.ui.pushButton_product_delete.clicked.connect(self.on_product_delete_clicked)
         self.ui.tableWidget_product.itemSelectionChanged.connect(self.on_product_selection_changed)
-        self.ui.lineEdit_search_product.textChanged.connect(self.on_products_search_changed)
+        self.ui.lineEdit_search_product.textChanged.connect(self.on_product_search_changed)
         
         # Подключение кнопок для компонентов
         self.ui.pushButton_component_add.clicked.connect(self.on_component_add_clicked)
@@ -104,31 +104,31 @@ class ProductsContent(QWidget):
 
     def refresh_data(self):
         """Публичный метод для принудительного обновления данных"""
-        self.current_tools_data = []  # Сбрасываем кэш
-        self.current_products_data = []
+        self.current_data_tool = []  # Сбрасываем кэш
+        self.current_data_product = []
         self.load_data()
 
     def load_data(self):
         """Загружает все данные с сервера"""
-        self.load_profile_tools_from_server()
-        self.load_products_from_server()
+        self.load_profile_tool_from_server()
+        self.load_product_from_server()
 
-    def load_profile_tools_from_server(self):
+    def load_profile_tool_from_server(self):
         """Загружает инструменты профилей с сервера"""
         try:
-            tools = self.api_client.get_profile_tool()
-            self.update_tools_table(tools)
+            list_tool = self.api_client.get_profile_tool()
+            self.update_table_tool(list_tool)
                 
         except Exception as e:
             QMessageBox.warning(self, "Предупреждение", f"Не удалось загрузить инструменты профилей с сервера: {e}")
 
-    def update_tools_table(self, tools):
+    def update_table_tool(self, list_tool):
         """Обновляет таблицу инструментов с проверкой изменений"""
         # Проверяем если таблица пустая - обновляем принудительно
         is_table_empty = self.ui.tableWidget_profile_tool.rowCount() == 0
         
         # Сравниваем новые данные с кэшем (None означает первую загрузку)
-        if self.current_tools_data is not None and tools == self.current_tools_data and not is_table_empty:
+        if self.current_data_tool is not None and list_tool == self.current_data_tool and not is_table_empty:
             return  # Данные не изменились и таблица не пустая, не обновляем
         
         # Сохраняем текущее выделение
@@ -138,15 +138,15 @@ class ProductsContent(QWidget):
             current_selection = selected_items[0].row()
         
         # Обновляем кэш
-        self.current_tools_data = tools
+        self.current_data_tool = list_tool
         
         # Очищаем таблицу
         self.ui.tableWidget_profile_tool.setRowCount(0)
         
         # Заполняем таблицу данными с сервера (убраны названия и департамент)
-        self.ui.tableWidget_profile_tool.setRowCount(len(tools))
+        self.ui.tableWidget_profile_tool.setRowCount(len(list_tool))
         
-        for row, tool in enumerate(tools):
+        for row, tool in enumerate(list_tool):
             # Профиль (размерность + артикул профиля)
             profile_text = f"{tool.get('dimension', 'Неизвестно')} - {tool.get('profile_article', 'Неизвестно')}"
             profile_item = QTableWidgetItem(profile_text)
@@ -160,25 +160,25 @@ class ProductsContent(QWidget):
             self.ui.tableWidget_profile_tool.setItem(row, 1, description_item)
         
         # Восстанавливаем выделение если возможно
-        if current_selection is not None and current_selection < len(tools):
+        if current_selection is not None and current_selection < len(list_tool):
             self.ui.tableWidget_profile_tool.selectRow(current_selection)
 
-    def load_products_from_server(self):
+    def load_product_from_server(self):
         """Загружает изделия с сервера"""
         try:
-            products = self.api_client.get_products()
-            self.update_products_table(products)
+            list_product = self.api_client.get_product()
+            self.update_table_product(list_product)
                 
         except Exception as e:
             QMessageBox.warning(self, "Предупреждение", f"Не удалось загрузить изделия с сервера: {e}")
 
-    def update_products_table(self, products):
+    def update_table_product(self, list_product):
         """Обновляет таблицу изделий с проверкой изменений"""
         # Проверяем если таблица пустая - обновляем принудительно
         is_table_empty = self.ui.tableWidget_product.rowCount() == 0
         
         # Сравниваем новые данные с кэшем (None означает первую загрузку)
-        if self.current_products_data is not None and products == self.current_products_data and not is_table_empty:
+        if self.current_data_product is not None and list_product == self.current_data_product and not is_table_empty:
             return  # Данные не изменились и таблица не пустая, не обновляем
         
         # Сохраняем текущее выделение
@@ -188,15 +188,15 @@ class ProductsContent(QWidget):
             current_selection = selected_items[0].row()
         
         # Обновляем кэш
-        self.current_products_data = products
+        self.current_data_product = list_product
         
         # Очищаем таблицу
         self.ui.tableWidget_product.setRowCount(0)
         
         # Заполняем таблицу данными с сервера
-        self.ui.tableWidget_product.setRowCount(len(products))
+        self.ui.tableWidget_product.setRowCount(len(list_product))
         
-        for row, product in enumerate(products):
+        for row, product in enumerate(list_product):
             # Название
             name_item = QTableWidgetItem(product.get('name', ''))
             name_item.setFlags(name_item.flags() & ~Qt.ItemIsEditable)
@@ -217,17 +217,17 @@ class ProductsContent(QWidget):
             self.ui.tableWidget_product.setItem(row, 2, description_item)
         
         # Восстанавливаем выделение если возможно
-        if current_selection is not None and current_selection < len(products):
+        if current_selection is not None and current_selection < len(list_product):
             self.ui.tableWidget_product.selectRow(current_selection)
 
-    def load_components(self, item_type: str, item_id: int):
+    def load_component(self, item_type: str, item_id: int):
         """Загружает компоненты для выбранного элемента"""
         try:
             if item_type == "product":
-                components = self.api_client.get_product_components(item_id)
+                list_component = self.api_client.get_product_component(item_id)
                 self.ui.label_selected_item.setText(f"Изделие ID: {item_id}")
             elif item_type == "profile_tool":
-                components = self.api_client.get_profile_tool_component(item_id)
+                list_component = self.api_client.get_profile_tool_component(item_id)
                 self.ui.label_selected_item.setText(f"Инструмент ID: {item_id}")
             else:
                 return
@@ -235,14 +235,14 @@ class ProductsContent(QWidget):
             # Очищаем таблицу компонентов
             self.ui.tableWidget_component.setRowCount(0)
             
-            if not components:
+            if not list_component:
                 self.ui.label_component_description.setText("Описание: -")
                 return
             
             # Заполняем таблицу компонентов
-            self.ui.tableWidget_component.setRowCount(len(components))
+            self.ui.tableWidget_component.setRowCount(len(list_component))
             
-            for row, component in enumerate(components):
+            for row, component in enumerate(list_component):
                 if item_type == "product":
                     # Для изделий
                     name_item = QTableWidgetItem(component.get('component_name', ''))
@@ -272,12 +272,12 @@ class ProductsContent(QWidget):
         """Асинхронная загрузка данных с сервера"""
         run_async(
             self.api_client.get_profile_tool,
-            on_success=self.on_profile_tools_loaded,
+            on_success=self.on_profile_tool_loaded,
             on_error=self.on_data_load_error
         )
         run_async(
-            self.api_client.get_products,
-            on_success=self.on_products_loaded,
+            self.api_client.get_product,
+            on_success=self.on_product_loaded,
             on_error=self.on_data_load_error
         )
 
@@ -293,15 +293,15 @@ class ProductsContent(QWidget):
         if current_tab_index == 0:
             # Загружаем только инструменты профилей
             try:
-                tools = self.api_client.get_profile_tool()
-                self.on_profile_tools_loaded(tools)
+                list_tool = self.api_client.get_profile_tool()
+                self.on_profile_tool_loaded(list_tool)
             except Exception as e:
                 self.on_data_load_error(e)
         elif current_tab_index == 1:
             # Загружаем только изделия
             try:
-                products = self.api_client.get_products()
-                self.on_products_loaded(products)
+                list_product = self.api_client.get_product()
+                self.on_product_loaded(list_product)
             except Exception as e:
                 self.on_data_load_error(e)
 
@@ -311,17 +311,17 @@ class ProductsContent(QWidget):
         # Данные будут загружены только по таймеру для активной вкладки
         pass
 
-    def on_profile_tools_loaded(self, tools):
+    def on_profile_tool_loaded(self, list_tool):
         """Обработчик успешной загрузки инструментов профилей"""
         try:
-            self.update_tools_table(tools)
+            self.update_table_tool(list_tool)
         except Exception as e:
             print(f"Ошибка обновления таблицы инструментов: {e}")
 
-    def on_products_loaded(self, products):
+    def on_product_loaded(self, list_product):
         """Обработчик успешной загрузки изделий"""
         try:
-            self.update_products_table(products)
+            self.update_table_product(list_product)
         except Exception as e:
             print(f"Ошибка обновления таблицы изделий: {e}")
 
@@ -343,10 +343,10 @@ class ProductsContent(QWidget):
             self.ui.tableWidget_product.setCurrentItem(None)
             
             # Загружаем компоненты инструмента
-            self.load_components("profile_tool", tool_id)
+            self.load_component("profile_tool", tool_id)
         else:
             self.current_tool_id = None
-            self.clear_components()
+            self.clear_component()
 
     def on_profile_tool_add_clicked(self):
         """Обработчик кнопки добавления инструмента профиля"""
@@ -364,7 +364,7 @@ class ProductsContent(QWidget):
     def on_profile_tool_created(self, tool_data):
         """Обработчик успешного создания инструмента профиля"""
         # Обновляем таблицу инструментов
-        self.load_profile_tools_from_server()
+        self.load_profile_tool_from_server()
         
         QMessageBox.information(
             self, 
@@ -380,7 +380,7 @@ class ProductsContent(QWidget):
         """Обработчик кнопки удаления инструмента профиля"""
         QMessageBox.information(self, "Информация", "Функция будет реализована позже")
 
-    def on_profile_tools_search_changed(self, text):
+    def on_profile_tool_search_changed(self, text):
         """Обработчик изменения поиска для инструментов профилей"""
         # Простая фильтрация по названию
         for row in range(self.ui.tableWidget_profile_tool.rowCount()):
@@ -403,10 +403,10 @@ class ProductsContent(QWidget):
             self.ui.tableWidget_profile_tool.setCurrentItem(None)
             
             # Загружаем компоненты изделия
-            self.load_components("product", product_id)
+            self.load_component("product", product_id)
         else:
             self.current_product_id = None
-            self.clear_components()
+            self.clear_component()
 
     def on_product_add_clicked(self):
         """Обработчик кнопки добавления изделия"""
@@ -420,7 +420,7 @@ class ProductsContent(QWidget):
         """Обработчик кнопки удаления изделия"""
         QMessageBox.information(self, "Информация", "Функция будет реализована позже")
 
-    def on_products_search_changed(self, text):
+    def on_product_search_changed(self, text):
         """Обработчик изменения поиска для изделий"""
         # Простая фильтрация по названию
         for row in range(self.ui.tableWidget_product.rowCount()):
@@ -440,16 +440,16 @@ class ProductsContent(QWidget):
             # Показываем описание компонента (если есть)
             if self.current_product_id:
                 try:
-                    components = self.api_client.get_product_components(self.current_product_id)
-                    component = next((c for c in components if c.get('id') == component_id), None)
+                    list_component = self.api_client.get_product_component(self.current_product_id)
+                    component = next((c for c in list_component if c.get('id') == component_id), None)
                     if component:
                         self.ui.label_component_description.setText(f"Описание: {component.get('description', '-')}")
                 except:
                     pass
             elif self.current_tool_id:
                 try:
-                    components = self.api_client.get_profile_tool_component(self.current_tool_id)
-                    component = next((c for c in components if c.get('id') == component_id), None)
+                    list_component = self.api_client.get_profile_tool_component(self.current_tool_id)
+                    component = next((c for c in list_component if c.get('id') == component_id), None)
                     if component:
                         self.ui.label_component_description.setText(f"Описание: {component.get('description', '-')}")
                 except:
@@ -475,7 +475,7 @@ class ProductsContent(QWidget):
         """Обработчик кнопки удаления компонента"""
         QMessageBox.information(self, "Информация", "Функция будет реализована позже")
 
-    def clear_components(self):
+    def clear_component(self):
         """Очищает панель компонентов"""
         self.ui.tableWidget_component.setRowCount(0)
         self.ui.label_selected_item.setText("Выберите изделие")
