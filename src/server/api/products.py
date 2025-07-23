@@ -101,8 +101,11 @@ def create_product_component(
     db: Session = Depends(get_db)
 ):
     """Create a new product component (единственное число)"""
-    component.product_id = product_id
-    db_component = ProductComponent(**component.dict())
+    # Создаем словарь данных и добавляем product_id
+    component_data = component.dict()
+    component_data['product_id'] = product_id
+    
+    db_component = ProductComponent(**component_data)
     db.add(db_component)
     db.commit()
     db.refresh(db_component)

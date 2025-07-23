@@ -12,6 +12,7 @@ from ..style_utils import load_styles_with_constants
 from ..async_utils import run_async
 from ..references_manager import references_manager
 from ..widgets.dialog_create_profile_tool import DialogCreateProfileTool
+from ..widgets.dialog_create_product import DialogCreateProduct
 
 
 class ProductsContent(QWidget):
@@ -204,7 +205,7 @@ class ProductsContent(QWidget):
             self.ui.tableWidget_product.setItem(row, 0, name_item)
             
             # Департамент (используем references_manager)
-            dept_id = product.get('id_departament', 0)
+            dept_id = product.get('department_id', 0)  # Исправлено: department_id вместо id_departament
             departments = references_manager.get_departments()
             dept_name = departments.get(dept_id, 'Неизвестно')
             dept_item = QTableWidgetItem(dept_name)
@@ -372,6 +373,17 @@ class ProductsContent(QWidget):
             f"Инструмент профиля успешно создан и добавлен в список!"
         )
 
+    def on_product_created(self, product_data):
+        """Обработчик успешного создания изделия"""
+        # Обновляем таблицу изделий
+        self.load_product_from_server()
+        
+        QMessageBox.information(
+            self, 
+            "Успех", 
+            f"Изделие '{product_data.get('name', '')}' успешно создано и добавлено в список!"
+        )
+
     def on_profile_tool_edit_clicked(self):
         """Обработчик кнопки редактирования инструмента профиля"""
         QMessageBox.information(self, "Информация", "Функция будет реализована позже")
@@ -410,7 +422,16 @@ class ProductsContent(QWidget):
 
     def on_product_add_clicked(self):
         """Обработчик кнопки добавления изделия"""
-        QMessageBox.information(self, "Информация", "Функция будет реализована позже")
+        try:
+            dialog = DialogCreateProduct(self.api_client, self)
+            dialog.product_created.connect(self.on_product_created)
+            
+            if dialog.exec() == QDialog.Accepted:
+                # Диалог уже обновляет данные через сигнал
+                pass
+                
+        except Exception as e:
+            QMessageBox.critical(self, "Ошибка", f"Не удалось открыть диалог создания изделия: {e}")
 
     def on_product_edit_clicked(self):
         """Обработчик кнопки редактирования изделия"""
