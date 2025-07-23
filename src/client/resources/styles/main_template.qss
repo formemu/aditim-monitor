@@ -4,7 +4,7 @@
 
 QMainWindow {
     background-color: {{COLOR_PRIMARY_DARK}};
-    color: white;
+    color: #d3cccce0;
 }
 QTableWidget::item {
     border: none;
@@ -15,6 +15,14 @@ QTableWidget::item:selected {
     background-color: {{COLOR_PRIMARY_DARK}};
     border: none;
     outline: none;
+}
+
+/* Заголовок "ПРОФИЛИ" */
+QLabel#label_profiles_title {
+    font-size: {{FONT_SIZE_LOGO}};
+    font-weight: bold;
+    color: #d3cccce0;
+    text-align: center;
 }
 
 

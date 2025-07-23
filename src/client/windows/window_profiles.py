@@ -45,6 +45,9 @@ class ProfilesContent(QWidget):
         style_sheet = load_styles_with_constants(style_path)
         self.ui.setStyleSheet(style_sheet)
         
+        # Загружаем логотип ADITIM
+        self.load_logo()
+        
         self.ui.pushButton_profile_add.clicked.connect(self.on_add_clicked)
         self.ui.pushButton_profile_edit.clicked.connect(self.on_edit_clicked)
         self.ui.pushButton_profile_delete.clicked.connect(self.on_delete_clicked)
@@ -68,6 +71,41 @@ class ProfilesContent(QWidget):
         self.update_timer.timeout.connect(self.load_profiles_async)
         # НЕ запускаем таймер сразу, он будет запущен при активации окна
         # self.update_timer.start(5000)  # 5000 мс = 5 секунд
+
+    def load_logo(self):
+        """Загружает логотип ADITIM в правую панель"""
+        try:
+            # Путь к основному логотипу ADITIM - используем абсолютный путь
+            logo_path = ICON_PATHS["ADITIM_LOGO_MAIN"]
+            
+            print(f"Загружаем логотип из: {logo_path}")
+            
+            if os.path.exists(logo_path):
+                # Загружаем изображение
+                pixmap = QPixmap(logo_path)
+                
+                if not pixmap.isNull():
+                    # Масштабируем с сохранением пропорций для компактного размера 300x100
+                    scaled_pixmap = pixmap.scaled(300, 100, Qt.KeepAspectRatio, Qt.SmoothTransformation)
+                    
+                    # Устанавливаем изображение в QLabel
+                    self.ui.label_logo.setPixmap(scaled_pixmap)
+                    self.ui.label_logo.setText("")  # Убираем текст "ADITIM"
+                    print("Логотип загружен успешно")
+                else:
+                    print("Ошибка: QPixmap не смог загрузить изображение (файл поврежден или неподдерживаемый формат)")
+                    self.ui.label_logo.setText("ADITIM\nЛОГОТИП")
+                    
+                # Устанавливаем темный фон для лучшего контраста с белым логотипом
+
+            else:
+                # Если файл не найден, оставляем текст
+                self.ui.label_logo.setText("ADITIM\nЛОГОТИП")
+                print(f"Файл логотипа не найден: {logo_path}")
+                
+        except Exception as e:
+            print(f"Ошибка загрузки логотипа: {e}")
+            self.ui.label_logo.setText("ADITIM\nЛОГОТИП")
 
     def on_add_clicked(self):
         """Добавление нового профиля"""

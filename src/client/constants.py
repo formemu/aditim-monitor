@@ -24,6 +24,7 @@ COLORS = {
 FONTS = {
     "FONT_FAMILY_PRIMARY": "Segoe UI, system-ui, sans-serif",
     "FONT_FAMILY_SECONDARY": "Roboto, Arial, sans-serif", 
+    "FONT_SIZE_LOGO": "36px",
     "FONT_SIZE_LARGE": "24px",
     "FONT_SIZE_MEDIUM": "18px",
     "FONT_SIZE_SMALL": "14px",
@@ -33,7 +34,8 @@ PATHS = {
     "MAIN_STYLE": "src/client/resources/styles/main.qss",
     "DIALOG_STYLE": "src/client/resources/styles/dialogs.qss", 
     "ICONS": "src/client/resources/icons/",
-    "IMAGES": "src/client/resources/images/"
+    "IMAGES": "src/client/resources/images/",
+    "ADITIM_LOGO_MAIN": "src/client/resources/icons/aditim_logo_main.png"
 }
 
 # UI Paths (относительные пути от client директории)
@@ -55,7 +57,8 @@ ICON_PATHS = {
     "DELETE": "resources/icons/icon_delete.svg", 
     "LOGO": "resources/icons/aditim_logo.ico",
     "LOGO_PNG": "resources/icons/aditim_logo.png",
-    "LOGO_JPG": "resources/icons/aditim_logo2.jpg"
+    "LOGO_JPG": "resources/icons/aditim_logo2.jpg",
+    "ADITIM_LOGO_MAIN": "resources/icons/aditim_logo_main.png"
 }
 
 # Style Paths (относительные пути от client директории)
