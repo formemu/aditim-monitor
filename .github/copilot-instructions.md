@@ -59,7 +59,7 @@
 - **Связи**: все relationships в единственном числе
 
 ## 🔗 API Server
-- **Endpoints**: `/api/directories/task-statuses`, `/api/profile-tools`
+- **Endpoints**: `/api/directories/dir_task_status`, `/api/profile-tools`
 - **Методы**: `get_`, `create_`, `update_`, `delete_`
 - **Схемы**: `ProfileResponse`, `TaskRequest`, `ComponentCreate`
 

@@ -8,60 +8,42 @@ from sqlalchemy.orm import Session
 
 from ..database import get_db
 from ..models.directories import DirDepartment, DirTaskStatus, DirToolDimension, DirComponentType, DirComponentStatus
-from ..schemas.directories import DepartmentResponse, TaskStatusResponse, ComponentResponse
+from ..schemas.directories import (
+    DepartmentResponse, 
+    TaskStatusResponse, 
+    ComponentTypeResponse, 
+    ComponentStatusResponse, 
+    ToolDimensionResponse
+)
 
 router = APIRouter(prefix="/api/directories", tags=["directories"], redirect_slashes=False)
 
 
-@router.get("/department", response_model=List[DepartmentResponse])
+@router.get("/dir_department", response_model=List[DepartmentResponse])
 def get_department(db: Session = Depends(get_db)):
-    """Get all department (единственное число)"""
+    """Получить все отделы"""
     return db.query(DirDepartment).all()
 
 
-@router.get("/task-status", response_model=List[TaskStatusResponse])
+@router.get("/dir_task_status", response_model=List[TaskStatusResponse])
 def get_task_status(db: Session = Depends(get_db)):
-    """Get all task status (единственное число)"""
+    """Получить все статусы задач"""
     return db.query(DirTaskStatus).all()
 
 
-@router.get("/component-type")
+@router.get("/dir_component_type", response_model=List[ComponentTypeResponse])
 def get_component_type(db: Session = Depends(get_db)):
-    """Get all component type from dir_component_type (единственное число)"""
-    component_types = db.query(DirComponentType).all()
-    return [
-        {
-            "id": ct.id,
-            "name": ct.name,
-            "description": ct.description or ""
-        }
-        for ct in component_types
-    ]
+    """Получить все типы компонентов"""
+    return db.query(DirComponentType).all()
 
 
-@router.get("/tool-dimension")
+@router.get("/dir_tool_dimension", response_model=List[ToolDimensionResponse])
 def get_tool_dimension(db: Session = Depends(get_db)):
-    """Get all tool dimension from dir_tool_dimension (единственное число)"""
-    dimensions = db.query(DirToolDimension).all()
-    return [
-        {
-            "id": dim.id,
-            "dimension": dim.dimension,
-            "description": dim.description or ""
-        }
-        for dim in dimensions
-    ]
+    """Получить все размерности инструмента"""
+    return db.query(DirToolDimension).all()
 
 
-@router.get("/component-status")
+@router.get("/dir_component_status", response_model=List[ComponentStatusResponse])
 def get_component_status(db: Session = Depends(get_db)):
-    """Get all component status from dir_component_status (единственное число)"""
-    statuses = db.query(DirComponentStatus).all()
-    return [
-        {
-            "id": status.id,
-            "name": status.name,
-            "description": status.description or ""
-        }
-        for status in statuses
-    ]
+    """Получить все статусы компонентов"""
+    return db.query(DirComponentStatus).all()

@@ -81,7 +81,11 @@ class DialogCreateProduct(QDialog):
     def add_component_row_data(self, row: int, name: str = "", quantity: int = 1):
         """Добавляет данные в строку компонента"""
         # Временно отключаем обработчик для избежания рекурсии
-        self.ui.tableWidget_components.itemChanged.disconnect()
+        try:
+            self.ui.tableWidget_components.itemChanged.disconnect(self.on_component_item_changed)
+        except TypeError:
+            # Сигнал не был подключен
+            pass
         
         # Название компонента (редактируемое поле)
         name_item = QTableWidgetItem(name)

@@ -58,27 +58,27 @@ class ApiClient:
     # === Справочники ===
     def get_departments(self) -> List[Dict[Any, Any]]:
         """Получение всех подразделений"""
-        return self._request("GET", "/api/directories/department")
+        return self._request("GET", "/api/directories/dir_department")
     
     def get_statuses(self) -> List[Dict[Any, Any]]:
         """Получение всех статусов задач"""
-        return self._request("GET", "/api/directories/task-statuses")
+        return self._request("GET", "/api/directories/dir_task_status")
     
     def get_component_statuses(self) -> List[Dict[Any, Any]]:
         """Получение всех статусов компонентов"""
-        return self._request("GET", "/api/directories/component-status")
+        return self._request("GET", "/api/directories/dir_component_status")
     
     def get_component_types(self) -> List[Dict[Any, Any]]:
         """Получение типов компонентов"""
         try:
-            return self._request("GET", "/api/directories/component-type")
+            return self._request("GET", "/api/directories/dir_component_type")
         except Exception:
             return []
     
     def get_profile_dimensions(self, profile_id: int) -> List[str]:
         """Получение доступных размеров профиля"""
         try:
-            response = self._request("GET", "/api/directories/tool-dimension")
+            response = self._request("GET", "/api/directories/dir_tool_dimension")
             
             if isinstance(response, list):
                 return [item['name'] for item in response if 'name' in item]
@@ -93,7 +93,7 @@ class ApiClient:
     def get_tool_dimensions(self) -> Dict[str, Any]:
         """Получение размеров инструментов из справочников"""
         try:
-            data = self._request("GET", "/api/directories/tool-dimension")
+            data = self._request("GET", "/api/directories/dir_tool_dimension")
             
             if isinstance(data, list):
                 return {'success': True, 'data': data}
