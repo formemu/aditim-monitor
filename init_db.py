@@ -8,12 +8,10 @@ from datetime import date
 sys.path.insert(0, str(Path(__file__).parent / "src"))
 
 from server.database import SessionLocal, engine, Base
-from server.models.directories import DirDepartment, DirTaskStatus
-from server.models.products import Profile, Product, ProductComponent
-from server.models.profile_tools import (
-    ToolDimension, ComponentType, ComponentStatus, 
-    ProfileTool, ProfileToolComponent
-)
+from server.models.directories import DirDepartment, DirTaskStatus, DirToolDimension, DirComponentType, DirComponentStatus
+from server.models.products import Product, ProductComponent
+from server.models.profiles import Profile
+from server.models.profile_tools import ProfileTool, ProfileToolComponent
 from server.models.tasks import Task, TaskComponent
 
 # Create tables
@@ -50,32 +48,32 @@ def init_db():
         
         # Add tool dimensions
         tool_dimensions = [
-            ToolDimension(dimension="250x190(250x130)", description="250x190x45 (2 плиты) 250x190x48 (1 плита) 250x130x56 (1 плита)")
+            DirToolDimension(dimension="250x190(250x130)", description="250x190x45 (2 плиты) 250x190x48 (1 плита) 250x130x56 (1 плита)")
         ]
         for dim in tool_dimensions:
             db.add(dim)
         
         # Add component types
         component_types = [
-            ComponentType(name="плита 1", description="Первая плита"),
-            ComponentType(name="плита 2", description="Вторая плита"),
-            ComponentType(name="плита 3", description="Третья плита"),
-            ComponentType(name="плита 4", description="Четвертая плита"),
-            ComponentType(name="пальцы", description="Пальцы"),
-            ComponentType(name="усреднитель", description="Усреднитель"),
-            ComponentType(name="кондуктор", description="Кондуктор")
+            DirComponentType(name="плита 1", description="Первая плита"),
+            DirComponentType(name="плита 2", description="Вторая плита"),
+            DirComponentType(name="плита 3", description="Третья плита"),
+            DirComponentType(name="плита 4", description="Четвертая плита"),
+            DirComponentType(name="пальцы", description="Пальцы"),
+            DirComponentType(name="усреднитель", description="Усреднитель"),
+            DirComponentType(name="кондуктор", description="Кондуктор")
         ]
         for comp_type in component_types:
             db.add(comp_type)
         
         # Add component statuses
         component_statuses = [
-            ComponentStatus(name="в разработке", description="Компонент находится в стадии разработки"),
-            ComponentStatus(name="изготовление", description="Компонент изготавливается"),
-            ComponentStatus(name="на испытаниях", description="Компонент проходит испытания"),
-            ComponentStatus(name="в работе", description="Компонент используется в производстве"),
-            ComponentStatus(name="не пошел", description="Компонент не прошел испытания"),
-            ComponentStatus(name="брак", description="Компонент забракован")
+            DirComponentStatus(name="в разработке", description="Компонент находится в стадии разработки"),
+            DirComponentStatus(name="изготовление", description="Компонент изготавливается"),
+            DirComponentStatus(name="на испытаниях", description="Компонент проходит испытания"),
+            DirComponentStatus(name="в работе", description="Компонент используется в производстве"),
+            DirComponentStatus(name="не пошел", description="Компонент не прошел испытания"),
+            DirComponentStatus(name="брак", description="Компонент забракован")
         ]
         for comp_status in component_statuses:
             db.add(comp_status)
@@ -138,21 +136,21 @@ def init_db():
         # Add test tasks
         tasks = [
             Task(
-                profile_id=1,
+                profile_tool_id=1,  # Ссылка на инструмент профиля 1634447.1
                 department_id=1,
                 deadline_on=date(2025, 1, 25),
                 position=1,
                 status_id=2
             ),
             Task(
-                profile_id=2,
+                profile_tool_id=2,  # Ссылка на инструмент профиля 1540096.0
                 department_id=1,
                 deadline_on=date(2025, 1, 30),
                 position=2,
                 status_id=2
             ),
             Task(
-                product_id=1,
+                product_id=1,  # Ссылка на изделие "Фланец"
                 department_id=1,
                 deadline_on=date(2025, 2, 5),
                 position=3,
@@ -166,12 +164,12 @@ def init_db():
         
         # Add test task components
         task_components = [
-            # Компоненты для первой задачи (профиль 1634447.1) - ссылки на реальные компоненты инструмента
+            # Компоненты для первой задачи (инструмент профиля 1634447.1) - ссылки на компоненты инструмента
             TaskComponent(task_id=1, profile_tool_component_id=1, description="Плита 1 для профиля 1634447.1"),  # Плита 1, вариант 1
             TaskComponent(task_id=1, profile_tool_component_id=2, description="Плита 2 для профиля 1634447.1"),  # Плита 2, вариант 1
             TaskComponent(task_id=1, profile_tool_component_id=3, description="Пальцы для профиля 1634447.1"),   # Пальцы, вариант 1
             
-            # Компоненты для второй задачи (профиль 1540096.0) - ссылка на компонент инструмента
+            # Компоненты для второй задачи (инструмент профиля 1540096.0) - ссылка на компонент инструмента
             TaskComponent(task_id=2, profile_tool_component_id=4, description="Плита 1 для профиля 1540096.0"),  # Плита 1, вариант 1
             TaskComponent(task_id=2, profile_tool_component_id=5, description="Плита 3 для профиля 1540096.0"),  # Плита 3, вариант 2
             

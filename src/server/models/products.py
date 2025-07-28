@@ -20,18 +20,6 @@ class Product(Base):
     task = relationship("Task", back_populates="product")
 
 
-class Profile(Base):
-    __tablename__ = "profile"
-    id = Column(Integer, primary_key=True, index=True)
-    article = Column(String, nullable=False, unique=True)
-    description = Column(String, nullable=True)
-    sketch = Column(LargeBinary, nullable=True)
-    
-    # Связи
-    tool = relationship("ProfileTool", back_populates="profile", cascade="all, delete-orphan")
-    task = relationship("Task", back_populates="profile")
-
-
 class ProductComponent(Base):
     __tablename__ = "product_component"
     id = Column(Integer, primary_key=True, index=True)

@@ -7,42 +7,6 @@ from sqlalchemy.orm import relationship
 from ..database import Base
 
 
-class ToolDimension(Base):
-    """Справочник размерностей инструментов"""
-    __tablename__ = "dir_tool_dimension"
-    
-    id = Column(Integer, primary_key=True, index=True)
-    dimension = Column(String(100), nullable=False, unique=True)
-    description = Column(Text)
-    
-    # Связи
-    tool = relationship("ProfileTool", back_populates="dimension")
-
-
-class ComponentType(Base):
-    """Справочник типов компонентов инструментов"""
-    __tablename__ = "dir_component_type"
-    
-    id = Column(Integer, primary_key=True, index=True)
-    name = Column(String(50), nullable=False, unique=True)
-    description = Column(Text)
-    
-    # Связи
-    component = relationship("ProfileToolComponent", back_populates="component_type")
-
-
-class ComponentStatus(Base):
-    """Справочник статусов компонентов"""
-    __tablename__ = "dir_component_status"
-    
-    id = Column(Integer, primary_key=True, index=True)
-    name = Column(String(50), nullable=False, unique=True)
-    description = Column(Text)
-    
-    # Связи
-    component = relationship("ProfileToolComponent", back_populates="status")
-
-
 class ProfileTool(Base):
     """Инструмент для изготовления профиля"""
     __tablename__ = "profile_tool"
@@ -54,8 +18,9 @@ class ProfileTool(Base):
     
     # Связи
     profile = relationship("Profile", back_populates="tool")
-    dimension = relationship("ToolDimension", back_populates="tool")
+    dimension = relationship("DirToolDimension", back_populates="tool")
     component = relationship("ProfileToolComponent", back_populates="tool", cascade="all, delete-orphan")
+    task = relationship("Task", back_populates="profile_tool")
 
 
 class ProfileToolComponent(Base):
@@ -71,6 +36,6 @@ class ProfileToolComponent(Base):
     
     # Связи
     tool = relationship("ProfileTool", back_populates="component")
-    component_type = relationship("ComponentType", back_populates="component")
-    status = relationship("ComponentStatus", back_populates="component")
+    component_type = relationship("DirComponentType", back_populates="component")
+    status = relationship("DirComponentStatus", back_populates="component")
     task_component = relationship("TaskComponent", back_populates="profile_tool_component")

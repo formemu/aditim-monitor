@@ -87,6 +87,11 @@ def migrate_database():
         print("  • task: id_status -> status_id")
         cursor.execute("ALTER TABLE task RENAME COLUMN id_status TO status_id")
         
+        print("\n📋 ЭТАП 3: Обновление архитектуры (Task -> ProfileTool вместо Profile)...")
+        
+        print("  • task: profile_id -> profile_tool_id")
+        cursor.execute("ALTER TABLE task RENAME COLUMN profile_id TO profile_tool_id")
+        
         conn.commit()
         print("\n✅ Миграция базы данных завершена успешно!")
         

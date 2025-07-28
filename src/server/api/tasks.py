@@ -8,7 +8,9 @@ from sqlalchemy.orm import Session
 
 from ..database import get_db
 from ..models.tasks import Task
-from ..models.products import Product, Profile
+from ..models.products import Product
+from ..models.profiles import Profile
+from ..models.profile_tools import ProfileTool
 from ..models.directories import DirDepartment, DirTaskStatus
 from ..schemas.tasks import TaskCreate, TaskUpdate, TaskResponse
 
@@ -54,23 +56,11 @@ def create_task(task: TaskCreate, db: Session = Depends(get_db)):
         if not product:
             raise HTTPException(status_code=404, detail="Product not found")
     
-    # Handle profile creation/lookup
-    if task.profile_id and isinstance(task.profile_id, str):
-        # If profile_id is a string, treat it as profile article and create/find profile
-        profile_article = task.profile_id
-        profile = db.query(Profile).filter(Profile.article == profile_article).first()
-        if not profile:
-            # Create new profile
-            profile = Profile(article=profile_article)
-            db.add(profile)
-            db.commit()
-            db.refresh(profile)
-        task_data["profile_id"] = profile.id
-    elif task.profile_id:
-        # If it's an integer, validate it exists
-        profile = db.query(Profile).filter(Profile.id == task.profile_id).first()
-        if not profile:
-            raise HTTPException(status_code=404, detail="Profile not found")
+    # Handle profile_tool validation
+    if task_data.get("profile_tool_id"):
+        profile_tool = db.query(ProfileTool).filter(ProfileTool.id == task_data["profile_tool_id"]).first()
+        if not profile_tool:
+            raise HTTPException(status_code=404, detail="Profile tool not found")
     
     # Create task
     db_task = Task(**task_data)

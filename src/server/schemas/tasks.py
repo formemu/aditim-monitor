@@ -9,7 +9,7 @@ from pydantic import BaseModel
 
 class TaskBase(BaseModel):
     product_id: Optional[Union[int, str]] = None
-    profile_id: Optional[Union[int, str]] = None
+    profile_tool_id: Optional[int] = None
     department_id: int
     stage: Optional[str] = None
     deadline_on: Optional[date] = None
@@ -23,7 +23,7 @@ class TaskCreate(TaskBase):
 
 class TaskUpdate(BaseModel):
     product_id: Optional[int] = None
-    profile_id: Optional[int] = None
+    profile_tool_id: Optional[int] = None
     department_id: Optional[int] = None
     stage: Optional[str] = None
     deadline_on: Optional[date] = None
@@ -34,7 +34,7 @@ class TaskUpdate(BaseModel):
 class TaskResponse(BaseModel):
     id: int
     product_id: Optional[int] = None
-    profile_id: Optional[int] = None
+    profile_tool_id: Optional[int] = None
     department_id: int
     stage: Optional[str] = None
     deadline_on: Optional[date] = None

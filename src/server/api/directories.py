@@ -7,8 +7,7 @@ from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 
 from ..database import get_db
-from ..models.directories import DirDepartment, DirTaskStatus
-from ..models.profile_tools import ComponentType, ToolDimension, ComponentStatus
+from ..models.directories import DirDepartment, DirTaskStatus, DirToolDimension, DirComponentType, DirComponentStatus
 from ..schemas.directories import DepartmentResponse, TaskStatusResponse, ComponentResponse
 
 router = APIRouter(prefix="/api/directories", tags=["directories"], redirect_slashes=False)
@@ -29,7 +28,7 @@ def get_task_status(db: Session = Depends(get_db)):
 @router.get("/component-type")
 def get_component_type(db: Session = Depends(get_db)):
     """Get all component type from dir_component_type (единственное число)"""
-    component_types = db.query(ComponentType).all()
+    component_types = db.query(DirComponentType).all()
     return [
         {
             "id": ct.id,
@@ -43,7 +42,7 @@ def get_component_type(db: Session = Depends(get_db)):
 @router.get("/tool-dimension")
 def get_tool_dimension(db: Session = Depends(get_db)):
     """Get all tool dimension from dir_tool_dimension (единственное число)"""
-    dimensions = db.query(ToolDimension).all()
+    dimensions = db.query(DirToolDimension).all()
     return [
         {
             "id": dim.id,
@@ -57,7 +56,7 @@ def get_tool_dimension(db: Session = Depends(get_db)):
 @router.get("/component-status")
 def get_component_status(db: Session = Depends(get_db)):
     """Get all component status from dir_component_status (единственное число)"""
-    statuses = db.query(ComponentStatus).all()
+    statuses = db.query(DirComponentStatus).all()
     return [
         {
             "id": status.id,
