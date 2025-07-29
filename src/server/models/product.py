@@ -2,7 +2,7 @@
 Product models for ADITIM Monitor
 """
 
-from sqlalchemy import Column, Integer, String, ForeignKey, Text, LargeBinary
+from sqlalchemy import Column, Integer, String, ForeignKey, Text
 from sqlalchemy.orm import relationship
 from ..database import Base
 

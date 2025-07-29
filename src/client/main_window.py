@@ -6,12 +6,12 @@ from PySide6.QtWidgets import QMainWindow, QMessageBox, QVBoxLayout
 from PySide6.QtCore import QFile
 from PySide6.QtUiTools import QUiLoader
 
-from .constants import UI_PATHS_ABS as UI_PATHS, STYLE_PATHS_ABS as STYLE_PATHS
-from .style_utils import load_styles_with_constants
+from .constant import UI_PATHS_ABS as UI_PATHS, STYLE_PATHS_ABS as STYLE_PATHS
+from .style_util import load_styles_with_constants
 from .widgets.home_page import HomePage
-from .windows.window_profiles import ProfilesContent
-from .windows.window_products import ProductsContent
-from .windows.window_tasks import TasksContent
+from .windows.window_profile import ProfilesContent
+from .windows.window_product import ProductsContent
+from .windows.window_task import TasksContent
 from .api_client import ApiClient
 
 

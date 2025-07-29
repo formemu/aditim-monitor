@@ -16,9 +16,9 @@ sys.path.insert(0, str(project_root))
 
 try:
     from src.server.database import engine, Base
-    from src.server.models.tasks import Task
-    from src.server.models.products import Product, Profile
-    from src.server.models.directories import DirDepartment, DirTaskStatus
+    from src.server.models.task import Task
+    from src.server.models.product import Product, Profile
+    from src.server.models.directory import DirDepartment, DirTaskStatus
 except ImportError as e:
     print(f"Error importing modules: {e}")
     print("Make sure you're running from the project root directory")

@@ -8,9 +8,9 @@ from fastapi import status
 from sqlalchemy.orm import Session
 
 from ..database import get_db
-from ..models.profiles import Profile
-from ..models.profile_tools import ProfileTool, ProfileToolComponent
-from ..models.directories import DirToolDimension, DirComponentType, DirComponentStatus
+from ..models.profile import Profile
+from ..models.profile_tool import ProfileTool, ProfileToolComponent
+from ..models.directory import DirToolDimension, DirComponentType
 
 router = APIRouter(prefix="/api", tags=["profile-tools"])
 

@@ -4,7 +4,7 @@
 
 import httpx
 from typing import List, Optional, Dict, Any
-from .constants import API_BASE_URL, API_TIMEOUT
+from .constant import API_BASE_URL, API_TIMEOUT
 
 
 class ApiClient:
@@ -36,22 +36,22 @@ class ApiClient:
         """Создание новой задачи"""
         return self._request("POST", "api/task/", json=task_data)
     
-    def get_tasks(
-        self, 
-        status_id: Optional[int] = None,
-        department_id: Optional[int] = None,
-        limit: Optional[int] = None
-    ) -> List[Dict[Any, Any]]:
-        """Получение списка задач с фильтрацией"""
-        params = {}
-        if status_id:
-            params["status_id"] = status_id
-        if department_id:
-            params["department_id"] = department_id
-        if limit:
-            params["limit"] = limit
+    # def get_tasks( # НЕ ИСПОЛЬЗУЕТСЯ
+    #     self, 
+    #     status_id: Optional[int] = None,
+    #     department_id: Optional[int] = None,
+    #     limit: Optional[int] = None
+    # ) -> List[Dict[Any, Any]]:
+    #     """Получение списка задач с фильтрацией"""
+    #     params = {}
+    #     if status_id:
+    #         params["status_id"] = status_id
+    #     if department_id:
+    #         params["department_id"] = department_id
+    #     if limit:
+    #         params["limit"] = limit
             
-        return self._request("GET", "/api/tasks/", params=params)
+    #     return self._request("GET", "/api/tasks/", params=params)
     
     def update_task(self, task_id: int, task_data: Dict[str, Any]) -> Dict[Any, Any]:
         """Обновление задачи"""
@@ -78,26 +78,26 @@ class ApiClient:
         return self._request("POST", "api/task/task-component", json=component_data)
     
     # === Справочники ===
-    def get_departments(self) -> List[Dict[Any, Any]]:
+    def get_department(self) -> List[Dict[Any, Any]]:
         """Получение всех подразделений"""
         return self._request("GET", "/api/directories/dir_department")
     
-    def get_statuses(self) -> List[Dict[Any, Any]]:
+    def get_status(self) -> List[Dict[Any, Any]]:
         """Получение всех статусов задач"""
         return self._request("GET", "/api/directories/dir_task_status")
     
-    def get_component_statuses(self) -> List[Dict[Any, Any]]:
+    def get_component_status(self) -> List[Dict[Any, Any]]:
         """Получение всех статусов компонентов"""
         return self._request("GET", "/api/directories/dir_component_status")
     
-    def get_component_types(self) -> List[Dict[Any, Any]]:
+    def get_component_type(self) -> List[Dict[Any, Any]]:
         """Получение типов компонентов"""
         try:
             return self._request("GET", "/api/directories/dir_component_type")
         except Exception:
             return []
     
-    def get_profile_dimensions(self, profile_id: int) -> List[str]:
+    def get_profile_dimension(self, profile_id: int) -> List[str]:
         """Получение доступных размеров профиля"""
         try:
             response = self._request("GET", "/api/directories/dir_tool_dimension")
@@ -112,7 +112,7 @@ class ApiClient:
             
         return ['40x20', '50x30', '60x40', '25x15']
     
-    def get_tool_dimensions(self) -> Dict[str, Any]:
+    def get_tool_dimension(self) -> Dict[str, Any]:
         """Получение размеров инструментов из справочников"""
         try:
             data = self._request("GET", "/api/directories/dir_tool_dimension")
@@ -140,12 +140,12 @@ class ApiClient:
         """Удаление профиля по ID"""
         return self._request("DELETE", f"/api/profile/{profile_id}")
 
-    def get_profile_sketch(self, profile_id: int) -> Dict[str, Any]:
-        """Получение эскиза профиля"""
-        try:
-            return self._request("GET", f"/api/profile/{profile_id}/sketch")
-        except Exception:
-            return {}
+    # def get_profile_sketch(self, profile_id: int) -> Dict[str, Any]:
+    #     """Получение эскиза профиля""" # НЕ ИСПОЛЬЗУЕТСЯ
+    #     try:
+    #         return self._request("GET", f"/api/profile/{profile_id}/sketch")
+    #     except Exception:
+    #         return {}
     
     # === Инструменты профиля ===
     def get_profile_tool(self) -> List[Dict[Any, Any]]:

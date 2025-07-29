@@ -63,7 +63,7 @@ class DialogCreateTask(QDialog):
     
     def load_ui(self) -> None:
         """Загрузка UI из файла."""
-        from ..constants import UI_PATHS_ABS as UI_PATHS
+        from ..constant import UI_PATHS_ABS as UI_PATHS
         ui_file = QFile(UI_PATHS["DIALOG_CREATE_TASK"])
         
         if not ui_file.open(QFile.ReadOnly):
@@ -124,8 +124,6 @@ class DialogCreateTask(QDialog):
         try:
             # Загружаем профили и инструменты
             self.array_profile_tool = self.api_client.get_profile_tool()
-            print(f"Загружено {len(self.array_profile_tool)} профиль-инструментов")
-            
             # Заполняем комбобокс профилей
             self.populate_profile_combo()
             
@@ -302,22 +300,3 @@ class DialogCreateTask(QDialog):
         # Закрываем диалог
         self.accept()
     
-    def accept(self):
-        """Переопределенный метод accept для отладки."""
-        print("DialogCreateTask: accept() вызван")
-        super().accept()
-    
-    def reject(self):
-        """Переопределенный метод reject для отладки."""
-        print("DialogCreateTask: reject() вызван")
-        super().reject()
-    
-    def closeEvent(self, event):
-        """Обработчик события закрытия диалога."""
-        print("DialogCreateTask: closeEvent() вызван")
-        super().closeEvent(event)
-    
-    def hideEvent(self, event):
-        """Обработчик события скрытия диалога."""
-        print("DialogCreateTask: hideEvent() вызван")
-        super().hideEvent(event)

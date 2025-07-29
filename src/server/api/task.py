@@ -7,11 +7,12 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 
 from ..database import get_db
-from ..models.tasks import Task
-from ..models.products import Product
-from ..models.profile_tools import ProfileTool
-from ..models.directories import DirDepartment, DirTaskStatus
-from ..schemas.tasks import TaskCreate, TaskUpdate, TaskResponse
+from ..models.task import Task
+from ..models.product import Product
+from ..models.profile_tool import ProfileTool
+from ..models.task import TaskComponent
+from ..models.directory import DirTaskStatus
+from ..schemas.task import TaskCreate, TaskUpdate, TaskResponse
 
 router = APIRouter(prefix="/api/task", tags=["task"])
 
@@ -28,8 +29,8 @@ def get_task_list(
     if status:
         query = query.join(DirTaskStatus).filter(DirTaskStatus.name == status)
     
-    tasks = query.order_by(Task.position).limit(limit).all()
-    return tasks
+    task = query.order_by(Task.position).limit(limit).all()
+    return task
 
 
 @router.post("/", response_model=TaskResponse)
@@ -76,11 +77,6 @@ def create_task(task: TaskCreate, db: Session = Depends(get_db)):
 def get_task_component_list(task_id: Optional[int] = None, db: Session = Depends(get_db)):
     """Get all task components, optionally filtered by task_id"""
     try:
-        from ..models.tasks import TaskComponent
-        from ..models.profile_tools import ProfileToolComponent
-        from ..models.products import ProductComponent
-        from ..models.directories import DirComponentType
-        
         # Получаем все компоненты задач
         query = db.query(TaskComponent)
         
@@ -133,7 +129,7 @@ def get_task_component_list(task_id: Optional[int] = None, db: Session = Depends
 def create_task_component(component_data: dict, db: Session = Depends(get_db)):
     """Create new task component"""
     try:
-        from ..models.tasks import TaskComponent
+        from ..models.task import TaskComponent
         
         component = TaskComponent(
             task_id=component_data["task_id"],

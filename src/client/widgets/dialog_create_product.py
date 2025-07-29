@@ -8,10 +8,10 @@ from PySide6.QtWidgets import (QDialog, QMessageBox, QTableWidgetItem,
 from PySide6.QtCore import Signal, QFile, Qt
 from PySide6.QtUiTools import QUiLoader
 
-from ..constants import UI_PATHS_ABS as UI_PATHS
+from ..constant import UI_PATHS_ABS as UI_PATHS
 from ..api_client import ApiClient
 from ..references_manager import references_manager
-from ..style_utils import load_styles_with_constants
+from ..style_util import load_styles_with_constants
 
 
 class DialogCreateProduct(QDialog):
@@ -139,14 +139,14 @@ class DialogCreateProduct(QDialog):
             return False
         
         # Проверяем компоненты
-        components = self.get_components_from_table()
-        if not components:
+        component = self.get_component_from_table()
+        if not component:
             QMessageBox.warning(self, "Ошибка", "Добавьте хотя бы один компонент с названием")
             return False
         
         return True
 
-    def get_components_from_table(self) -> List[Dict[str, Any]]:
+    def get_component_from_table(self) -> List[Dict[str, Any]]:
         """Извлекает компоненты из таблицы"""
         components = []
         
@@ -181,7 +181,7 @@ class DialogCreateProduct(QDialog):
         }
         
         # Собираем компоненты
-        list_component = self.get_components_from_table()
+        list_component = self.get_component_from_table()
         
         return {
             'product': product_data,

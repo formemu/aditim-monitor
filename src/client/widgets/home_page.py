@@ -8,8 +8,8 @@ from PySide6.QtCore import QFile, Signal, Qt
 from PySide6.QtUiTools import QUiLoader
 from PySide6.QtGui import QPixmap
 
-from ..constants import UI_PATHS_ABS as UI_PATHS, ICON_PATHS_ABS as ICON_PATHS, get_style_path
-from ..style_utils import load_styles_with_constants
+from ..constant import UI_PATHS_ABS as UI_PATHS, ICON_PATHS_ABS as ICON_PATHS, get_style_path
+from ..style_util import load_styles_with_constants
 
 
 class HomePage(QWidget):

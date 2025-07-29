@@ -2,7 +2,7 @@
 Profile models for ADITIM Monitor
 """
 
-from sqlalchemy import Column, Integer, String, Text, LargeBinary
+from sqlalchemy import Column, Integer, String, LargeBinary
 from sqlalchemy.orm import relationship
 from ..database import Base
 

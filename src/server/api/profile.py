@@ -8,8 +8,8 @@ from sqlalchemy.orm import Session
 import base64
 
 from ..database import get_db
-from ..models.profiles import Profile
-from ..schemas.products import ProfileCreate, ProfileUpdate, ProfileResponse
+from ..models.profile import Profile
+from ..schemas.product import ProfileCreate, ProfileResponse
 
 router = APIRouter(prefix="/api", tags=["profiles"])
 
@@ -45,13 +45,13 @@ def create_profile(profile: ProfileCreate, db: Session = Depends(get_db)):
     return db_profile
 
 
-@router.get("/profile/{profile_id}", response_model=ProfileResponse)
-def get_profile_by_id(profile_id: int, db: Session = Depends(get_db)):
-    """Get profile by ID (единственное число)"""
-    profile = db.query(Profile).filter(Profile.id == profile_id).first()
-    if not profile:
-        raise HTTPException(status_code=404, detail="Profile not found")
-    return profile
+# @router.get("/profile/{profile_id}", response_model=ProfileResponse) # НЕ ИСПОЛЬЗУЕТСЯ
+# def get_profile_by_id(profile_id: int, db: Session = Depends(get_db)):
+#     """Get profile by ID (единственное число)"""
+#     profile = db.query(Profile).filter(Profile.id == profile_id).first()
+#     if not profile:
+#         raise HTTPException(status_code=404, detail="Profile not found")
+#     return profile
 
 
 @router.delete("/profile/{profile_id}", response_model=dict)

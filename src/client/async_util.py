@@ -3,10 +3,10 @@
 """
 
 from PySide6.QtCore import QRunnable, QObject, Signal, QThreadPool
-from typing import Callable, Any
+from typing import Callable
 
 
-class WorkerSignals(QObject):
+class WorkerSignal(QObject):
     """Сигналы для рабочего класса"""
     finished = Signal(object)  # Успешное завершение с результатом
     error = Signal(Exception)  # Ошибка выполнения
@@ -20,7 +20,7 @@ class AsyncWorker(QRunnable):
         self.func = func
         self.args = args
         self.kwargs = kwargs
-        self.signals = WorkerSignals()
+        self.signals = WorkerSignal()
         
         # Подключаем callbacks
         if on_success:

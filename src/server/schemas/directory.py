@@ -22,23 +22,23 @@ class DirectoryResponse(DirectoryBase):
 
 
 # Specific directory schemas
-class DepartmentResponse(DirectoryResponse):
+class DirDepartmentResponse(DirectoryResponse):
     pass
 
 
-class TaskStatusResponse(DirectoryResponse):
+class DirTaskStatusResponse(DirectoryResponse):
     pass
 
 
-class ComponentTypeResponse(DirectoryResponse):
+class DirComponentTypeResponse(DirectoryResponse):
     description: Optional[str] = None
 
 
-class ComponentStatusResponse(DirectoryResponse):
+class DirComponentStatusResponse(DirectoryResponse):
     description: Optional[str] = None
 
 
-class ToolDimensionResponse(BaseModel):
+class DirToolDimensionResponse(BaseModel):
     id: int
     dimension: str
     description: Optional[str] = None

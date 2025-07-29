@@ -6,10 +6,10 @@ from PySide6.QtWidgets import QWidget, QMessageBox, QTableWidgetItem, QAbstractI
 from PySide6.QtCore import QFile, Qt, QTimer
 from PySide6.QtUiTools import QUiLoader
 
-from ..constants import UI_PATHS_ABS as UI_PATHS, get_style_path
+from ..constant import UI_PATHS_ABS as UI_PATHS, get_style_path
 from ..api_client import ApiClient
-from ..style_utils import load_styles_with_constants
-from ..async_utils import run_async
+from ..style_util import load_styles_with_constants
+from ..async_util import run_async
 from ..references_manager import references_manager
 from ..widgets.dialog_create_profile_tool import DialogCreateProfileTool
 from ..widgets.dialog_create_product import DialogCreateProduct
@@ -34,7 +34,7 @@ class ProductsContent(QWidget):
 
     def load_ui(self):
         """Загрузка UI из файла"""
-        ui_file = QFile(UI_PATHS["PRODUCTS_CONTENT"])
+        ui_file = QFile(UI_PATHS["PRODUCT_CONTENT"])
         ui_file.open(QFile.ReadOnly)
         
         loader = QUiLoader()

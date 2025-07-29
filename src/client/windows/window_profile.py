@@ -10,11 +10,11 @@ from PySide6.QtCore import QFile, Qt, QTimer
 from PySide6.QtUiTools import QUiLoader
 from PySide6.QtGui import QPixmap
 
-from ..constants import UI_PATHS_ABS as UI_PATHS, ICON_PATHS_ABS as ICON_PATHS, get_style_path
+from ..constant import UI_PATHS_ABS as UI_PATHS, ICON_PATHS_ABS as ICON_PATHS, get_style_path
 from ..widgets.dialog_create_profile import DialogCreateProfile
 from ..api_client import ApiClient
-from ..style_utils import load_styles_with_constants
-from ..async_utils import run_async
+from ..style_util import load_styles_with_constants
+from ..async_util import run_async
 
 
 class ProfilesContent(QWidget):
@@ -31,7 +31,7 @@ class ProfilesContent(QWidget):
 
     def load_ui(self):
         """Загрузка UI из файла"""
-        ui_file = QFile(UI_PATHS["PROFILES_CONTENT"])
+        ui_file = QFile(UI_PATHS["PROFILE_CONTENT"])
         ui_file.open(QFile.ReadOnly)
         
         loader = QUiLoader()

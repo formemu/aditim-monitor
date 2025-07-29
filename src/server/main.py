@@ -6,18 +6,18 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from .database import engine, Base
-from .api.tasks import router as tasks_router
-from .api.directories import router as directories_router
-from .api.products import router as products_router
-from .api.profiles import router as profiles_router
-from .api.profile_tools import router as profile_tools_router
+from .api.task import router as tasks_router
+from .api.directory import router as directories_router
+from .api.product import router as products_router
+from .api.profile import router as profiles_router
+from .api.profile_tool import router as profile_tools_router
 
 # Import models to register them with SQLAlchemy
-from .models.directories import DirDepartment, DirTaskStatus, DirToolDimension, DirComponentType, DirComponentStatus
-from .models.products import Product, ProductComponent
-from .models.profiles import Profile
-from .models.profile_tools import ProfileTool, ProfileToolComponent
-from .models.tasks import Task, TaskComponent
+from .models.directory import DirDepartment, DirTaskStatus, DirToolDimension, DirComponentType, DirComponentStatus
+from .models.product import Product, ProductComponent
+from .models.profile import Profile
+from .models.profile_tool import ProfileTool, ProfileToolComponent
+from .models.task import Task, TaskComponent
 
 # Create database tables
 Base.metadata.create_all(bind=engine)

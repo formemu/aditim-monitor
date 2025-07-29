@@ -12,10 +12,10 @@ from PySide6.QtUiTools import QUiLoader
 from PySide6.QtGui import QPixmap
 import base64
 
-from ..constants import UI_PATHS_ABS as UI_PATHS
+from ..constant import UI_PATHS_ABS as UI_PATHS
 from ..api_client import ApiClient
 from ..references_manager import references_manager
-from ..style_utils import load_styles_with_constants
+from ..style_util import load_styles_with_constants
 
 
 class DialogCreateProfileTool(QDialog):
