@@ -51,9 +51,7 @@ def get_product_component(product_id: int, db: Session = Depends(get_db)):
 def create_product_component(
     product_id: int, 
     component: ProductComponentCreate, 
-    db: Session = Depends(get_db)
-):
-    """Create a new product component """
+    db: Session = Depends(get_db)):
     # Создаем словарь данных и добавляем product_id
     component_data = component.dict()
     component_data['product_id'] = product_id

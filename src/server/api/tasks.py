@@ -9,7 +9,6 @@ from sqlalchemy.orm import Session
 from ..database import get_db
 from ..models.tasks import Task
 from ..models.products import Product
-from ..models.profiles import Profile
 from ..models.profile_tools import ProfileTool
 from ..models.directories import DirDepartment, DirTaskStatus
 from ..schemas.tasks import TaskCreate, TaskUpdate, TaskResponse
