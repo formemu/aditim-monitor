@@ -11,6 +11,7 @@ from .style_utils import load_styles_with_constants
 from .widgets.home_page import HomePage
 from .windows.window_profiles import ProfilesContent
 from .windows.window_products import ProductsContent
+from .windows.window_tasks import TasksContent
 from .api_client import ApiClient
 
 
@@ -57,10 +58,14 @@ class MainWindow(QMainWindow):
         # Создаем страницу изделий с API клиентом
         self.products_content = ProductsContent(self.api_client)
         
+        # Создаем страницу задач с API клиентом
+        self.tasks_content = TasksContent(self.api_client)
+        
         # Добавляем в стек
         self.ui.stackedWidget_content.addWidget(self.home_page.ui)
         self.ui.stackedWidget_content.addWidget(self.profiles_content.ui)
         self.ui.stackedWidget_content.addWidget(self.products_content.ui)
+        self.ui.stackedWidget_content.addWidget(self.tasks_content.ui)
         
         # Устанавливаем домашнюю страницу активной
         self.ui.stackedWidget_content.setCurrentWidget(self.home_page.ui)
@@ -93,6 +98,7 @@ class MainWindow(QMainWindow):
         # Останавливаем все таймеры
         self.profiles_content.stop_auto_refresh()
         self.products_content.stop_auto_refresh()
+        self.tasks_content.stop_auto_refresh()
         
         self.ui.stackedWidget_content.setCurrentWidget(self.home_page.ui)
         self.setWindowTitle("ADITIM Monitor")
@@ -101,6 +107,7 @@ class MainWindow(QMainWindow):
         """Показать профили"""
         # Останавливаем таймеры других окон
         self.products_content.stop_auto_refresh()
+        self.tasks_content.stop_auto_refresh()
         
         # Активируем окно профилей
         self.ui.stackedWidget_content.setCurrentWidget(self.profiles_content.ui)
@@ -113,6 +120,7 @@ class MainWindow(QMainWindow):
         """Показать изделия"""
         # Останавливаем таймеры других окон
         self.profiles_content.stop_auto_refresh()
+        self.tasks_content.stop_auto_refresh()
         
         # Активируем окно изделий
         self.ui.stackedWidget_content.setCurrentWidget(self.products_content.ui)
@@ -135,7 +143,12 @@ class MainWindow(QMainWindow):
         self.profiles_content.stop_auto_refresh()
         self.products_content.stop_auto_refresh()
         
-        QMessageBox.information(self, "Задачи", "Окно задач (в разработке)")
+        # Показываем страницу задач
+        self.ui.stackedWidget_content.setCurrentWidget(self.tasks_content.ui)
+        self.setWindowTitle("ADITIM Monitor - Задачи")
+        
+        # Запускаем автообновление для задач
+        self.tasks_content.start_auto_refresh()
 
     def show_settings(self):
         """Показать настройки"""
