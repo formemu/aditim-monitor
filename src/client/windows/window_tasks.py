@@ -12,6 +12,7 @@ from ..widgets.dialog_create_task import DialogCreateTask
 from ..api_client import ApiClient
 from ..style_utils import load_styles_with_constants
 from ..references_manager import references_manager
+from ..async_utils import run_async
 
 
 class TasksContent(QWidget):
@@ -236,51 +237,36 @@ class TasksContent(QWidget):
         self.ui.label_task_department.setText("Отдел: - | Статус: - | Срок: - | Создано: -")
 
     def get_task_display_name(self, task):
-        """Получает отображаемое название задачи"""
+        """Получает отображаемое название задачи используя кэшированные данные"""
         # Логика: если profile_tool_id != NULL → артикул профиля, иначе название изделия
         if task.get('profile_tool_id'):
-            # Получаем артикул профиля через profile_tool
-            try:
-                profile_tools = self.api_client.get_profile_tool()
-                for tool in profile_tools:
-                    if tool['id'] == task['profile_tool_id']:
-                        profiles = self.api_client.get_profile()
-                        for profile in profiles:
-                            if profile['id'] == tool['profile_id']:
-                                return profile.get('article', f"Профиль {task['profile_tool_id']}")
-                return f"Профиль {task['profile_tool_id']}"
-            except:
-                return f"Профиль {task['profile_tool_id']}"
+            # Получаем артикул профиля через кэшированные данные
+            tool_data = references_manager.get_profile_tool(task['profile_tool_id'])
+            if tool_data and tool_data.get('profile_id'):
+                profile_data = references_manager.get_profile(tool_data['profile_id'])
+                if profile_data:
+                    return profile_data.get('article', f"Профиль {task['profile_tool_id']}")
+            return f"Профиль {task['profile_tool_id']}"
         else:
-            # Получаем название изделия
-            try:
-                products = self.api_client.get_product()
-                for product in products:
-                    if product['id'] == task.get('product_id'):
-                        return product.get('name', f"Изделие {task['product_id']}")
-                return f"Изделие {task.get('product_id', 'N/A')}"
-            except:
-                return f"Изделие {task.get('product_id', 'N/A')}"
+            # Получаем название изделия из кэша
+            product_data = references_manager.get_product(task.get('product_id'))
+            if product_data:
+                return product_data.get('name', f"Изделие {task.get('product_id', 'N/A')}")
+            return f"Изделие {task.get('product_id', 'N/A')}"
 
     def get_status_name(self, status_id):
         """Получает название статуса по ID"""
         try:
-            statuses = references_manager.get_task_status()
-            for status in statuses:
-                if status['id'] == status_id:
-                    return status.get('name', '-')
-            return '-'
+            status_data = references_manager.get_task_status(status_id)
+            return status_data.get('name', '-') if status_data else '-'
         except:
             return '-'
 
     def get_department_name(self, department_id):
         """Получает название отдела по ID"""
         try:
-            departments = references_manager.get_department()
-            for dept in departments:
-                if dept['id'] == department_id:
-                    return dept.get('name', '-')
-            return '-'
+            departments = references_manager.get_departments()
+            return departments.get(department_id, '-')
         except:
             return '-'
 
@@ -334,12 +320,37 @@ class TasksContent(QWidget):
         self.load_tasks_from_server()
 
     def load_tasks_from_server(self):
-        """Загружает задачи с сервера"""
+        """Загружает задачи с сервера асинхронно"""
         try:
-            tasks = self.api_client.get_task()
+            # Показываем индикатор загрузки (можно добавить spinner)
+            self.ui.tableWidget_tasks.setEnabled(False)
+            
+            # Запускаем асинхронную загрузку
+            run_async(
+                self.api_client.get_task,
+                on_success=self._on_tasks_loaded,
+                on_error=self._on_tasks_load_error
+            )
+        except Exception as e:
+            self._on_tasks_load_error(e)
+
+    def _on_tasks_loaded(self, tasks):
+        """Обработчик успешной загрузки задач"""
+        try:
+            self.ui.tableWidget_tasks.setEnabled(True)
             self.update_tasks_table(tasks)
         except Exception as e:
-            QMessageBox.warning(self, "Предупреждение", f"Не удалось загрузить задачи с сервера: {e}")
+            self._on_tasks_load_error(e)
+
+    def _on_tasks_load_error(self, error):
+        """Обработчик ошибки загрузки задач"""
+        self.ui.tableWidget_tasks.setEnabled(True)
+        QMessageBox.warning(self, "Предупреждение", f"Не удалось загрузить задачи с сервера: {error}")
+
+    def load_tasks_async(self):
+        """Асинхронная загрузка задач для таймера"""
+        if self.ui.tableWidget_tasks.isEnabled():  # Не загружаем если уже идет загрузка
+            self.load_tasks_from_server()
 
     def update_tasks_table(self, tasks):
         """Обновляет таблицу задач с проверкой изменений"""
@@ -414,25 +425,6 @@ class TasksContent(QWidget):
         if current_selection is not None and current_selection < len(tasks):
             self.ui.tableWidget_tasks.selectRow(current_selection)
             self.selected_row = current_selection
-
-    def load_tasks_async(self):
-        """Асинхронная загрузка задач с сервера"""
-        try:
-            tasks = self.api_client.get_task()
-            self.on_tasks_loaded(tasks)
-        except Exception as e:
-            self.on_tasks_load_error(e)
-
-    def on_tasks_loaded(self, tasks):
-        """Обработчик успешной загрузки задач"""
-        try:
-            self.update_tasks_table(tasks)
-        except Exception as e:
-            print(f"Ошибка обновления UI: {e}")
-
-    def on_tasks_load_error(self, error):
-        """Обработчик ошибки загрузки задач"""
-        print(f"Ошибка загрузки задач: {error}")
 
     def start_auto_refresh(self):
         """Запускает автоматическое обновление данных"""

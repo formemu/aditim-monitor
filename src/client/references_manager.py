@@ -32,12 +32,18 @@ class ReferencesManager:
         self._component_types = {}      # {id: {name, description}}
         self._profile_dimensions = {}   # {profile_id: [dimensions]}
         self._statuses = {}            # {id: name} - статусы компонентов
+        self._profile_tools = {}       # {id: {profile_id, dimension_id, description}}
+        self._products = {}            # {id: {name, description, department_id}}
+        self._task_statuses = {}       # {id: name} - статусы задач
         
         # Флаги загрузки
         self._departments_loaded = False
         self._profiles_loaded = False
         self._component_types_loaded = False
         self._statuses_loaded = False
+        self._profile_tools_loaded = False
+        self._products_loaded = False
+        self._task_statuses_loaded = False
         
         self._initialized = True
     
@@ -69,6 +75,9 @@ class ReferencesManager:
             self._load_profiles_sync()
             self._load_component_types_sync()
             self._load_statuses_sync()
+            self._load_profile_tools_sync()
+            self._load_products_sync()
+            self._load_task_statuses_sync()
             
         except Exception as e:
             raise
@@ -186,6 +195,54 @@ class ReferencesManager:
             self._load_statuses_core()
         except Exception as e:
             raise
+
+    def _load_profile_tools_sync(self):
+        """Синхронная загрузка инструментов профилей"""
+        try:
+            profile_tools = self.api_client.get_profile_tool()
+            self._profile_tools = {
+                tool['id']: {
+                    'profile_id': tool['profile_id'],
+                    'dimension_id': tool.get('dimension_id'),
+                    'description': tool.get('description', '')
+                }
+                for tool in profile_tools
+            }
+            self._profile_tools_loaded = True
+        except Exception as e:
+            pass
+
+    def _load_products_sync(self):
+        """Синхронная загрузка изделий"""
+        try:
+            products = self.api_client.get_product()
+            self._products = {
+                product['id']: {
+                    'name': product['name'],
+                    'description': product.get('description', ''),
+                    'department_id': product.get('department_id')
+                }
+                for product in products
+            }
+            self._products_loaded = True
+        except Exception as e:
+            pass
+
+    def _load_task_statuses_sync(self):
+        """Синхронная загрузка статусов задач"""
+        try:
+            task_statuses = self.api_client.get_task_status()
+            self._task_statuses = {status['id']: status['name'] for status in task_statuses}
+            self._task_statuses_loaded = True
+        except Exception as e:
+            # Захардкоженные статусы задач
+            self._task_statuses = {
+                1: 'В очереди',
+                2: 'В работе',
+                3: 'Выполнено',
+                4: 'Отменено'
+            }
+            self._task_statuses_loaded = True
     
     async def _load_statuses(self):
         """Загружает справочник статусов"""
@@ -255,6 +312,33 @@ class ReferencesManager:
     def get_default_status_id(self) -> int:
         """Возвращает ID статуса компонента по умолчанию ('в разработке')"""
         return 1  # ID статуса "в разработке"
+
+    def get_profile_tools(self) -> Dict[int, Dict[str, Any]]:
+        """Возвращает словарь инструментов профилей {id: {profile_id, dimension_id, description}}"""
+        return self._profile_tools.copy()
+
+    def get_profile_tool(self, tool_id: int) -> Optional[Dict[str, Any]]:
+        """Возвращает данные одного инструмента профиля по ID"""
+        return self._profile_tools.get(tool_id)
+
+    def get_products(self) -> Dict[int, Dict[str, Any]]:
+        """Возвращает словарь изделий {id: {name, description, department_id}}"""
+        return self._products.copy()
+
+    def get_product(self, product_id: int) -> Optional[Dict[str, Any]]:
+        """Возвращает данные одного изделия по ID"""
+        return self._products.get(product_id)
+
+    def get_task_statuses(self) -> Dict[int, str]:
+        """Возвращает словарь статусов задач {id: name}"""
+        return self._task_statuses.copy()
+
+    def get_task_status(self, status_id: int) -> Optional[Dict[str, str]]:
+        """Возвращает данные одного статуса задачи по ID"""
+        status_name = self._task_statuses.get(status_id)
+        if status_name:
+            return {"id": status_id, "name": status_name}
+        return None
     
     def search_profiles(self, query: str) -> List[Dict[str, Any]]:
         """Поиск профилей ТОЛЬКО по артикулу"""
@@ -284,6 +368,9 @@ class ReferencesManager:
         self._profiles_loaded = False
         self._component_types_loaded = False
         self._statuses_loaded = False
+        self._profile_tools_loaded = False
+        self._products_loaded = False
+        self._task_statuses_loaded = False
         self._profile_dimensions.clear()
         
         self.load_all_references_sync()
