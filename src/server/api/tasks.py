@@ -70,6 +70,93 @@ def create_task(task: TaskCreate, db: Session = Depends(get_db)):
     return db_task
 
 
+# === Task Component endpoints ===
+
+@router.get("/task-component")
+def get_task_component_list(task_id: Optional[int] = None, db: Session = Depends(get_db)):
+    """Get all task components, optionally filtered by task_id"""
+    try:
+        from ..models.tasks import TaskComponent
+        from ..models.profile_tools import ProfileToolComponent
+        from ..models.products import ProductComponent
+        from ..models.directories import DirComponentType
+        
+        # Получаем все компоненты задач
+        query = db.query(TaskComponent)
+        
+        # Фильтрация по task_id если указан
+        if task_id:
+            query = query.filter(TaskComponent.task_id == task_id)
+        
+        components = query.all()
+        
+        result = []
+        for comp in components:
+            comp_dict = {
+                "id": comp.id,
+                "task_id": comp.task_id,
+                "profile_tool_component_id": comp.profile_tool_component_id,
+                "product_component_id": comp.product_component_id
+            }
+            
+            # Определяем тип компонента и получаем данные
+            if comp.profile_tool_component_id and comp.profile_tool_component:
+                # Компонент инструмента профиля
+                name = comp.profile_tool_component.component_type.name if comp.profile_tool_component.component_type else "Неизвестный компонент"
+                variant = comp.profile_tool_component.variant
+                if variant:
+                    name = f"{name} (вариант {variant})"
+                comp_dict["name"] = name
+                comp_dict["quantity"] = 1  # По умолчанию для компонентов инструментов
+                
+            elif comp.product_component_id and comp.product_component:
+                # Компонент изделия
+                comp_dict["name"] = comp.product_component.component_name
+                comp_dict["quantity"] = comp.product_component.quantity or 1
+                
+            else:
+                # Компонент без связи
+                comp_dict["name"] = "Неизвестный компонент"
+                comp_dict["quantity"] = 1
+            
+            result.append(comp_dict)
+        
+        return result
+        
+    except Exception as e:
+        import traceback
+        traceback.print_exc()
+        return []
+
+
+@router.post("/task-component")
+def create_task_component(component_data: dict, db: Session = Depends(get_db)):
+    """Create new task component"""
+    try:
+        from ..models.tasks import TaskComponent
+        
+        component = TaskComponent(
+            task_id=component_data["task_id"],
+            profile_tool_component_id=component_data["profile_tool_component_id"]
+        )
+        
+        db.add(component)
+        db.commit()
+        db.refresh(component)
+        
+        result = {
+            "id": component.id,
+            "task_id": component.task_id,
+            "profile_tool_component_id": component.profile_tool_component_id
+        }
+        return result
+        
+    except Exception as e:
+        import traceback
+        traceback.print_exc()
+        raise HTTPException(status_code=400, detail=str(e))
+
+
 @router.get("/{task_id}", response_model=TaskResponse)
 def get_task_by_id(task_id: int, db: Session = Depends(get_db)):
     """Get task by ID"""

@@ -19,7 +19,6 @@ class Task(Base):
     position = Column(Integer, nullable=False, default=0)
     status_id = Column(Integer, ForeignKey("dir_task_status.id"), nullable=False, default=1)
     created_at = Column(DateTime, server_default=func.now())
-    updated_at = Column(DateTime, server_default=func.now(), onupdate=func.now())
     
     # Relationships
     product = relationship("Product", back_populates="task")

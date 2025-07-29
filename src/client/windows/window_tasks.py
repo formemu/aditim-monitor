@@ -8,6 +8,7 @@ from PySide6.QtUiTools import QUiLoader
 from datetime import datetime
 
 from ..constants import UI_PATHS_ABS as UI_PATHS, get_style_path
+from ..widgets.dialog_create_task import DialogCreateTask
 from ..api_client import ApiClient
 from ..style_utils import load_styles_with_constants
 from ..references_manager import references_manager
@@ -71,7 +72,70 @@ class TasksContent(QWidget):
 
     def on_add_clicked(self):
         """Добавление новой задачи"""
-        QMessageBox.information(self, "Добавить задачу", "Функция создания задачи будет реализована позже")
+        try:
+            # Создаем диалог создания задачи
+            dialog = DialogCreateTask(self)
+            
+            # Подключаем сигнал успешного создания задачи
+            dialog.task_created.connect(self.on_task_created)
+            
+            # Показываем модальный диалог
+            result = dialog.exec()
+            
+        except Exception as e:
+            print(f"TasksContent: ОШИБКА при создании диалога: {e}")
+            import traceback
+            traceback.print_exc()
+            QMessageBox.critical(self, "Ошибка", f"Не удалось открыть диалог создания задачи: {e}")
+
+    def on_task_created(self, task_data):
+        """Обработчик успешного создания задачи"""
+        try:
+            print(f"TasksContent: Получены данные для создания задачи: {task_data}")
+            
+            # Извлекаем компоненты отдельно
+            array_component_id = task_data.pop("array_component_id", [])
+            
+            # Создаем задачу на сервере (без компонентов)
+            response = self.api_client.create_task(task_data)
+            print(f"TasksContent: Ответ сервера при создании задачи: {response}")
+            
+            # FastAPI возвращает объект напрямую, не в обертке success/data
+            if response and 'id' in response:
+                created_task = response
+                task_id = created_task.get('id')
+                print(f"TasksContent: Задача создана успешно с ID: {task_id}")
+                
+                # Если есть компоненты, создаем их для задачи
+                if array_component_id:
+                    for component_id in array_component_id:
+                        component_data = {
+                            "task_id": task_id,
+                            "profile_tool_component_id": component_id
+                        }
+                        print(f"TasksContent: Создаем компонент {component_id} для задачи {task_id}")
+                        comp_response = self.api_client.create_task_component(component_data)
+                        print(f"TasksContent: Ответ при создании компонента: {comp_response}")
+                        
+                        if comp_response and 'id' in comp_response:
+                            print(f"Компонент {component_id} добавлен к задаче {task_id}")
+                        else:
+                            print(f"Предупреждение: не удалось добавить компонент {component_id}: {comp_response}")
+                
+                # Принудительно перезагружаем список задач с сервера
+                self.current_tasks_data = []  # Сбрасываем кэш для принудительного обновления
+                self.load_tasks_from_server()
+                
+                QMessageBox.information(self, "Успех", "Задача создана успешно!")
+            else:
+                print(f"TasksContent: Неожиданный формат ответа: {response}")
+                QMessageBox.critical(self, "Ошибка", f"Неожиданный ответ от сервера: {response}")
+                    
+        except Exception as e:
+            print(f"TasksContent: ОШИБКА при создании задачи: {e}")
+            import traceback
+            traceback.print_exc()
+            QMessageBox.critical(self, "Ошибка", f"Не удалось создать задачу: {e}")
 
     def on_edit_clicked(self):
         """Редактирование задачи"""
@@ -145,10 +209,6 @@ class TasksContent(QWidget):
         status_name = self.get_status_name(task.get('task_status_id'))
         department_name = self.get_department_name(task.get('department_id'))
         
-        self.ui.label_task_name.setText(f"Название: {task_name}")
-        self.ui.label_task_status.setText(f"Статус: {status_name}")
-        self.ui.label_task_department.setText(f"Отдел: {department_name}")
-        
         # Форматируем даты
         deadline = task.get('deadline_on', '')
         if deadline:
@@ -166,16 +226,14 @@ class TasksContent(QWidget):
             except:
                 pass
         
-        self.ui.label_task_deadline.setText(f"Срок: {deadline or '-'}")
-        self.ui.label_task_created.setText(f"Создано: {created or '-'}")
+        # Используем только существующие элементы
+        self.ui.label_task_name.setText(f"Название: {task_name}")
+        self.ui.label_task_department.setText(f"Отдел: {department_name} | Статус: {status_name} | Срок: {deadline or '-'} | Создано: {created or '-'}")
 
     def clear_task_info_panel(self):
         """Очищает панель информации о задаче"""
         self.ui.label_task_name.setText("Название: -")
-        self.ui.label_task_status.setText("Статус: -")
-        self.ui.label_task_department.setText("Отдел: -")
-        self.ui.label_task_deadline.setText("Срок: -")
-        self.ui.label_task_created.setText("Создано: -")
+        self.ui.label_task_department.setText("Отдел: - | Статус: - | Срок: - | Создано: -")
 
     def get_task_display_name(self, task):
         """Получает отображаемое название задачи"""
@@ -229,11 +287,13 @@ class TasksContent(QWidget):
     def load_task_components(self, task_id):
         """Загружает компоненты задачи"""
         try:
-            components = self.api_client.get_task_component()
+            components = self.api_client.get_task_component(task_id=task_id)
             task_components = [c for c in components if c.get('task_id') == task_id]
             self.update_components_table(task_components)
+            
         except Exception as e:
-            print(f"Ошибка загрузки компонентов: {e}")
+            import traceback
+            traceback.print_exc()
             self.clear_components_table()
 
     def update_components_table(self, components):

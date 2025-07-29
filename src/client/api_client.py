@@ -17,7 +17,10 @@ class ApiClient:
         
     def _request(self, method: str, endpoint: str, **kwargs) -> Dict[Any, Any]:
         """Выполнение HTTP-запроса к серверу"""
-        url = f"{self.base_url}{endpoint}"
+        # Убираем лишние слеши
+        base = self.base_url.rstrip('/')
+        endpoint = endpoint.lstrip('/')
+        url = f"{base}/{endpoint}"
         
         with httpx.Client(timeout=self.timeout) as client:
             response = client.request(method, url, **kwargs)
@@ -25,6 +28,14 @@ class ApiClient:
             return response.json()
     
     # === Операции с задачами ===
+    def get_task(self) -> List[Dict[Any, Any]]:
+        """Получение всех задач"""
+        return self._request("GET", "api/task/")
+    
+    def create_task(self, task_data: Dict[str, Any]) -> Dict[Any, Any]:
+        """Создание новой задачи"""
+        return self._request("POST", "api/task/", json=task_data)
+    
     def get_tasks(
         self, 
         status_id: Optional[int] = None,
@@ -54,6 +65,17 @@ class ApiClient:
         """Обновление позиции задачи в очереди"""
         return self._request("PUT", f"/api/tasks/{task_id}/position", 
                            json={"position": new_position})
+    
+    def get_task_component(self, task_id: int = None) -> List[Dict[Any, Any]]:
+        """Получение компонентов задач, опционально для конкретной задачи"""
+        if task_id:
+            return self._request("GET", f"api/task/task-component?task_id={task_id}")
+        else:
+            return self._request("GET", "api/task/task-component")
+    
+    def create_task_component(self, component_data: Dict[str, Any]) -> Dict[Any, Any]:
+        """Создание компонента задачи"""
+        return self._request("POST", "api/task/task-component", json=component_data)
     
     # === Справочники ===
     def get_departments(self) -> List[Dict[Any, Any]]:

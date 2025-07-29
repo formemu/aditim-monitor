@@ -237,9 +237,20 @@ class ReferencesManager:
         """Возвращает словарь типов компонентов {id: {name, description}}"""
         return self._component_types.copy()
     
+    def get_component_type(self, type_id: int) -> Optional[Dict[str, str]]:
+        """Возвращает данные одного типа компонента по ID"""
+        return self._component_types.get(type_id)
+    
     def get_statuses(self) -> Dict[int, str]:
         """Возвращает словарь статусов компонентов {id: name}"""
         return self._statuses.copy()
+    
+    def get_component_status(self, status_id: int) -> Optional[Dict[str, str]]:
+        """Возвращает данные одного статуса компонента по ID"""
+        status_name = self._statuses.get(status_id)
+        if status_name:
+            return {"id": status_id, "name": status_name}
+        return None
     
     def get_default_status_id(self) -> int:
         """Возвращает ID статуса компонента по умолчанию ('в разработке')"""
