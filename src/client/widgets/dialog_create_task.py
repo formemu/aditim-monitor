@@ -88,36 +88,26 @@ class DialogCreateTask(QDialog):
     
     def setup_ui(self) -> None:
         """Настройка элементов интерфейса."""
-        try:
-            # Подключение сигналов
-            self.ui.comboBox_profile.currentTextChanged.connect(
-                self.on_profile_changed
-            )
-            self.ui.comboBox_tool.currentTextChanged.connect(
-                self.on_tool_changed
-            )
-            self.ui.pushButton_create.clicked.connect(self.create_task)
+        # Подключение сигналов
+        self.ui.comboBox_profile.currentTextChanged.connect(self.on_profile_changed)
+        self.ui.comboBox_tool.currentTextChanged.connect(self.on_tool_changed)
+        self.ui.pushButton_create.clicked.connect(self.create_task)
+        
+        # Подключаем кнопку отмены явно
+        self.ui.pushButton_cancel.clicked.connect(self.reject)
+        
+        # Настройка даты по умолчанию (неделя от сегодня)
+        default_date = date.today() + timedelta(days=7)
+        self.ui.dateEdit_deadline.setDate(QDate.fromString(default_date.isoformat(), "yyyy-MM-dd"))
+        
+        # Минимальная дата - сегодня
+        self.ui.dateEdit_deadline.setMinimumDate(QDate.currentDate())
+        
+        # Скрываем поле отдела для задач инструмента
+        self.ui.label_department.setVisible(False)
+        self.ui.comboBox_department.setVisible(False)
             
-            # Подключаем кнопку отмены явно
-            self.ui.pushButton_cancel.clicked.connect(self.reject)
-            
-            # Настройка даты по умолчанию (неделя от сегодня)
-            default_date = date.today() + timedelta(days=7)
-            self.ui.dateEdit_deadline.setDate(QDate.fromString(
-                default_date.isoformat(), "yyyy-MM-dd"
-            ))
-            
-            # Минимальная дата - сегодня
-            self.ui.dateEdit_deadline.setMinimumDate(QDate.currentDate())
-            
-            # Скрываем поле отдела для задач инструмента
-            self.ui.label_department.setVisible(False)
-            self.ui.comboBox_department.setVisible(False)
-            
-        except Exception as e:
-            print(f"Ошибка настройки UI: {e}")
-            import traceback
-            traceback.print_exc()
+
     
     def load_initial_data(self) -> None:
         """Загрузка начальных данных."""
@@ -147,7 +137,7 @@ class DialogCreateTask(QDialog):
         for profile_tool in self.array_profile_tool:
             profile_id = profile_tool["profile_id"]
             if profile_id not in dict_profile_used:
-                profile = references_manager.get_profile(profile_id)
+                profile = references_manager.get_profile_by_id(profile_id)
                 if profile:
                     dict_profile_used[profile_id] = profile
                     self.ui.comboBox_profile.addItem(
@@ -178,7 +168,7 @@ class DialogCreateTask(QDialog):
         for profile_tool in self.array_profile_tool:
             if profile_tool["profile_id"] == profile_id:
                 # Используем ID инструмента как название (можно потом улучшить)
-                tool_name = f"Инструмент {profile_tool['id']}"
+                tool_name = f"Инструмент {profile_tool['dimension']}"
                 self.ui.comboBox_tool.addItem(
                     tool_name, profile_tool["id"]
                 )

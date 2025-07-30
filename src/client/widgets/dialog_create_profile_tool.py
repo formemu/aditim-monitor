@@ -82,23 +82,18 @@ class DialogCreateProfileTool(QDialog):
 
     def load_default_dimensions(self):
         """Загружает размерности по умолчанию"""
-        try:
-            # Загружаем размерности инструментов из справочника
-            tool_dimensions = references_manager.load_tool_dimensions()
-            
-            self.ui.comboBox_dimension.clear()
-            if tool_dimensions:
-                # Используем правильное поле - 'dimension' из API ответа
-                dimensions = [dim.get('dimension', dim.get('name', '')) for dim in tool_dimensions]
-                self.ui.comboBox_dimension.addItems(dimensions)
-            else:
-                # Если справочник пуст, используем захардкоженные значения
-                self.ui.comboBox_dimension.addItems(['40x20', '50x30', '60x40', '25x15'])
-                
-        except Exception as e:
-            # Добавляем значения по умолчанию
-            self.ui.comboBox_dimension.clear()
-            self.ui.comboBox_dimension.addItems(['40x20', '50x30', '60x40', '25x15'])
+        # Загружаем размерности инструментов из справочника
+        dimension_dict = references_manager.get_dimension()
+        self.ui.comboBox_dimension.clear()
+        # Извлекаем значения dimension из словаря
+        dimension_list = []
+        for dim_id, dim_data in dimension_dict.items():
+            dimension_list.append(dim_data.get('dimension', ''))
+        
+        self.ui.comboBox_dimension.addItems(dimension_list)
+
+
+
 
     def on_profile_search_changed(self, text: str):
         """Обработчик изменения поискового запроса"""
@@ -108,7 +103,7 @@ class DialogCreateProfileTool(QDialog):
             return
         
         # Ищем профили через references_manager
-        search_results = references_manager.search_profiles(text)
+        search_results = references_manager.search_profile(text)
         
         for profile in search_results[:10]:  # Показываем максимум 10 результатов
             display_text = f"{profile['article']} - {profile.get('description', '')}"
@@ -131,41 +126,17 @@ class DialogCreateProfileTool(QDialog):
             self.ui.listWidget_profile_results.clear()
             
             # Загружаем размерности для профиля
-            self.load_dimensions_for_profile(profile_data['id'])
             
             # Загружаем эскиз профиля
             self.load_profile_sketch(profile_data['id'])
         else:
             pass
 
-    def load_dimensions_for_profile(self, profile_id: int):
-        """Загружает размерности для выбранного профиля"""
-        try:
-            # Пробуем загрузить специфичные для профиля размерности
-            dimensions = references_manager.load_profile_dimensions(profile_id)
-            
-            if not dimensions:
-                # Если нет специфичных размерностей, используем общие из tool-dimensions
-                tool_dimensions = references_manager.load_tool_dimensions()
-                dimensions = [dim.get('dimension', dim.get('name', '')) for dim in tool_dimensions]
-            
-            self.ui.comboBox_dimension.clear()
-            if dimensions:
-                self.ui.comboBox_dimension.addItems(dimensions)
-            else:
-                # Последняя попытка - значения по умолчанию
-                self.ui.comboBox_dimension.addItems(['40x20', '50x30', '60x40', '25x15'])
-            
-        except Exception as e:
-            # Добавляем значения по умолчанию
-            self.ui.comboBox_dimension.clear()
-            self.ui.comboBox_dimension.addItems(['40x20', '50x30', '60x40', '25x15'])
-
     def load_profile_sketch(self, profile_id: int):
         """Загружает и отображает эскиз профиля"""
         try:
             # Получаем данные профиля из references_manager
-            profile = references_manager.get_profile(profile_id)
+            profile = references_manager.get_profile_by_id(profile_id)
             
             if profile and profile.get('sketch'):
                 # Конвертируем base64 в QPixmap
@@ -200,8 +171,8 @@ class DialogCreateProfileTool(QDialog):
     def load_component_types(self):
         """Загружает типы компонентов в таблицу"""
         try:
-            component_types = references_manager.get_component_types()
-            statuses = references_manager.get_statuses()
+            component_type = references_manager.get_component_type()
+            statuses = references_manager.get_status()
             default_status_id = references_manager.get_default_status_id()
             
             # Очищаем таблицу
@@ -209,9 +180,9 @@ class DialogCreateProfileTool(QDialog):
             self.component_widgets.clear()
             
             # Заполняем таблицу типами компонентов
-            self.ui.tableWidget_components.setRowCount(len(component_types))
+            self.ui.tableWidget_components.setRowCount(len(component_type))
             
-            for row, (type_id, type_data) in enumerate(component_types.items()):
+            for row, (type_id, type_data) in enumerate(component_type.items()):
                 # Колонка 0: Checkbox "Использовать"
                 checkbox = QCheckBox()
                 checkbox.setChecked(False)  # По умолчанию не выбран

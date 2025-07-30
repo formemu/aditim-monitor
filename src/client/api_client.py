@@ -80,27 +80,27 @@ class ApiClient:
     # === Справочники ===
     def get_department(self) -> List[Dict[Any, Any]]:
         """Получение всех подразделений"""
-        return self._request("GET", "/api/directories/dir_department")
+        return self._request("GET", "/api/directory/dir_department")
     
     def get_status(self) -> List[Dict[Any, Any]]:
         """Получение всех статусов задач"""
-        return self._request("GET", "/api/directories/dir_task_status")
-    
+        return self._request("GET", "/api/directory/dir_task_status")
+
     def get_component_status(self) -> List[Dict[Any, Any]]:
         """Получение всех статусов компонентов"""
-        return self._request("GET", "/api/directories/dir_component_status")
-    
+        return self._request("GET", "/api/directory/dir_component_status")
+
     def get_component_type(self) -> List[Dict[Any, Any]]:
         """Получение типов компонентов"""
         try:
-            return self._request("GET", "/api/directories/dir_component_type")
+            return self._request("GET", "/api/directory/dir_component_type")
         except Exception:
             return []
     
     def get_profile_dimension(self, profile_id: int) -> List[str]:
         """Получение доступных размеров профиля"""
         try:
-            response = self._request("GET", "/api/directories/dir_tool_dimension")
+            response = self._request("GET", "/api/directory/dir_tool_dimension")
             
             if isinstance(response, list):
                 return [item['name'] for item in response if 'name' in item]
@@ -109,14 +109,11 @@ class ApiClient:
                 
         except Exception:
             pass
-            
-        return ['40x20', '50x30', '60x40', '25x15']
     
     def get_tool_dimension(self) -> Dict[str, Any]:
         """Получение размеров инструментов из справочников"""
         try:
-            data = self._request("GET", "/api/directories/dir_tool_dimension")
-            
+            data = self._request("GET", "/api/directory/dir_tool_dimension")
             if isinstance(data, list):
                 return {'success': True, 'data': data}
             elif isinstance(data, dict):
@@ -154,6 +151,7 @@ class ApiClient:
 
     def create_profile_tool(self, tool_data: Dict[str, Any]) -> Dict[Any, Any]:
         """Создание нового инструмента профиля"""
+        print(tool_data)
         return self._request("POST", "/api/profile-tool", json=tool_data)
 
     def delete_profile_tool_by_profile(self, profile_id: int) -> Dict[Any, Any]:

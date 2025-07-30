@@ -12,7 +12,7 @@ from ..models.profile import Profile
 from ..models.profile_tool import ProfileTool, ProfileToolComponent
 from ..models.directory import DirToolDimension, DirComponentType
 
-router = APIRouter(prefix="/api", tags=["profile-tools"])
+router = APIRouter(prefix="/api", tags=["profile-tool"])
 
 
 @router.get("/profile-tool", response_model=List[dict])

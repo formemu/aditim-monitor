@@ -16,7 +16,7 @@ from ..schemas.directory import (
     DirToolDimensionResponse
 )
 
-router = APIRouter(prefix="/api/directories", tags=["directories"], redirect_slashes=False)
+router = APIRouter(prefix="/api/directory", tags=["directory"], redirect_slashes=False)
 
 
 @router.get("/dir_department", response_model=List[DirDepartmentResponse])

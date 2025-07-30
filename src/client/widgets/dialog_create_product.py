@@ -61,7 +61,7 @@ class DialogCreateProduct(QDialog):
     def load_departments(self):
         """Загружает департаменты в combobox"""
         try:
-            departments = references_manager.get_departments()
+            departments = references_manager.get_department()
             
             self.ui.comboBox_department.clear()
             self.ui.comboBox_department.addItem("-- Выберите департамент --", 0)

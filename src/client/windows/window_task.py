@@ -241,9 +241,9 @@ class TasksContent(QWidget):
         # Логика: если profile_tool_id != NULL → артикул профиля, иначе название изделия
         if task.get('profile_tool_id'):
             # Получаем артикул профиля через кэшированные данные
-            tool_data = references_manager.get_profile_tool(task['profile_tool_id'])
+            tool_data = references_manager.get_profile_tool_by_id(task['profile_tool_id'])
             if tool_data and tool_data.get('profile_id'):
-                profile_data = references_manager.get_profile(tool_data['profile_id'])
+                profile_data = references_manager.get_profile_by_id(tool_data['profile_id'])
                 if profile_data:
                     return profile_data.get('article', f"Профиль {task['profile_tool_id']}")
             return f"Профиль {task['profile_tool_id']}"
@@ -257,7 +257,7 @@ class TasksContent(QWidget):
     def get_status_name(self, status_id):
         """Получает название статуса по ID"""
         try:
-            status_data = references_manager.get_task_status(status_id)
+            status_data = references_manager.get_task_status_by_id(status_id)
             return status_data.get('name', '-') if status_data else '-'
         except:
             return '-'
@@ -265,7 +265,7 @@ class TasksContent(QWidget):
     def get_department_name(self, department_id):
         """Получает название отдела по ID"""
         try:
-            departments = references_manager.get_departments()
+            departments = references_manager.get_department()
             return departments.get(department_id, '-')
         except:
             return '-'

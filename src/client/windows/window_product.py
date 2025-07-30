@@ -206,7 +206,7 @@ class ProductsContent(QWidget):
             
             # Департамент (используем references_manager)
             dept_id = product.get('department_id', 0)  # Исправлено: department_id вместо id_departament
-            departments = references_manager.get_departments()
+            departments = references_manager.get_department()
             dept_name = departments.get(dept_id, 'Неизвестно')
             dept_item = QTableWidgetItem(dept_name)
             dept_item.setFlags(dept_item.flags() & ~Qt.ItemIsEditable)
