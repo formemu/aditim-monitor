@@ -11,141 +11,262 @@
    </rect>
   </property>
   <property name="windowTitle">
-   <string>Создание задачи для инструмента</string>
+   <string>Создание задачи</string>
   </property>
   <property name="modal">
    <bool>true</bool>
   </property>
   <layout class="QVBoxLayout" name="verticalLayout_main">
    <item>
-    <widget class="QGroupBox" name="groupBox_instrument">
-     <property name="title">
-      <string>Выбор инструмента</string>
+    <widget class="QTabWidget" name="tabWidget">
+     <property name="currentIndex">
+      <number>0</number>
      </property>
-     <layout class="QFormLayout" name="formLayout_instrument">
-      <item row="0" column="0">
-       <widget class="QLabel" name="label_profile">
-        <property name="text">
-         <string>Профиль:</string>
-        </property>
-       </widget>
-      </item>
-      <item row="0" column="1">
-       <widget class="QComboBox" name="comboBox_profile">
-        <property name="placeholderText">
-         <string>Выберите профиль...</string>
-        </property>
-       </widget>
-      </item>
-      <item row="1" column="0">
-       <widget class="QLabel" name="label_tool">
-        <property name="text">
-         <string>Инструмент:</string>
-        </property>
-       </widget>
-      </item>
-      <item row="1" column="1">
-       <widget class="QComboBox" name="comboBox_tool">
-        <property name="placeholderText">
-         <string>Выберите инструмент...</string>
-        </property>
-        <property name="enabled">
-         <bool>false</bool>
-        </property>
-       </widget>
-      </item>
-     </layout>
-    </widget>
-   </item>
-   <item>
-    <widget class="QGroupBox" name="groupBox_components">
-     <property name="title">
-      <string>Компоненты требующие работы</string>
-     </property>
-     <layout class="QVBoxLayout" name="verticalLayout_components">
-      <item>
-       <widget class="QScrollArea" name="scrollArea_components">
-        <property name="widgetResizable">
-         <bool>true</bool>
-        </property>
-        <widget class="QWidget" name="scrollAreaWidgetContents">
-         <property name="geometry">
-          <rect>
-           <x>0</x>
-           <y>0</y>
-           <width>576</width>
-           <height>69</height>
-          </rect>
+     <widget class="QWidget" name="tab_profile_tool">
+      <attribute name="title">
+       <string>Инструмент для экструзии</string>
+      </attribute>
+      <layout class="QVBoxLayout" name="verticalLayout">
+       <item>
+        <widget class="QGroupBox" name="groupBox_profile_tool_instrument">
+         <property name="title">
+          <string>Выбор инструмента</string>
          </property>
-         <layout class="QVBoxLayout" name="verticalLayout_checkboxes"/>
+         <layout class="QFormLayout" name="formLayout_instrument">
+          <item row="0" column="0">
+           <widget class="QLabel" name="label_profile_tool_profile">
+            <property name="text">
+             <string>Профиль:</string>
+            </property>
+           </widget>
+          </item>
+          <item row="0" column="1">
+           <widget class="QComboBox" name="comboBox_profile_tool_profile">
+            <property name="placeholderText">
+             <string>Выберите профиль...</string>
+            </property>
+           </widget>
+          </item>
+          <item row="1" column="0">
+           <widget class="QLabel" name="label_profile_tool_tool">
+            <property name="text">
+             <string>Инструмент:</string>
+            </property>
+           </widget>
+          </item>
+          <item row="1" column="1">
+           <widget class="QComboBox" name="comboBox_profile_tool_tool">
+            <property name="enabled">
+             <bool>false</bool>
+            </property>
+            <property name="placeholderText">
+             <string>Выберите инструмент...</string>
+            </property>
+           </widget>
+          </item>
+         </layout>
         </widget>
-       </widget>
-      </item>
-     </layout>
-    </widget>
-   </item>
-   <item>
-    <widget class="QGroupBox" name="groupBox_params">
-     <property name="title">
-      <string>Параметры задачи</string>
-     </property>
-     <layout class="QFormLayout" name="formLayout_params">
-      <item row="0" column="0">
-       <widget class="QLabel" name="label_department">
-        <property name="text">
-         <string>Отдел:</string>
-        </property>
-       </widget>
-      </item>
-      <item row="0" column="1">
-       <widget class="QComboBox" name="comboBox_department">
-        <property name="placeholderText">
-         <string>Выберите отдел...</string>
-        </property>
-       </widget>
-      </item>
-      <item row="1" column="0">
-       <widget class="QLabel" name="label_deadline">
-        <property name="text">
-         <string>Срок:</string>
-        </property>
-       </widget>
-      </item>
-      <item row="1" column="1">
-       <widget class="QDateEdit" name="dateEdit_deadline">
-        <property name="calendarPopup">
-         <bool>true</bool>
-        </property>
-        <property name="date">
-         <date>
-          <year>2025</year>
-          <month>2</month>
-          <day>1</day>
-         </date>
-        </property>
-       </widget>
-      </item>
-      <item row="2" column="0">
-       <widget class="QLabel" name="label_description">
-        <property name="text">
-         <string>Описание:</string>
-        </property>
-       </widget>
-      </item>
-      <item row="2" column="1">
-       <widget class="QTextEdit" name="textEdit_description">
-        <property name="maximumSize">
-         <size>
-          <width>16777215</width>
-          <height>80</height>
-         </size>
-        </property>
-        <property name="placeholderText">
-         <string>Дополнительное описание задачи...</string>
-        </property>
-       </widget>
-      </item>
-     </layout>
+       </item>
+       <item>
+        <widget class="QGroupBox" name="groupBox_profile_tool_component">
+         <property name="title">
+          <string>Компоненты требующие работы</string>
+         </property>
+         <layout class="QVBoxLayout" name="verticalLayout_components">
+          <item>
+           <widget class="QScrollArea" name="scrollArea_profile_tool_component">
+            <property name="widgetResizable">
+             <bool>true</bool>
+            </property>
+            <widget class="QWidget" name="widget_profile_tool_content">
+             <property name="geometry">
+              <rect>
+               <x>0</x>
+               <y>0</y>
+               <width>536</width>
+               <height>113</height>
+              </rect>
+             </property>
+             <layout class="QVBoxLayout" name="verticalLayout_checkboxes"/>
+            </widget>
+           </widget>
+          </item>
+         </layout>
+        </widget>
+       </item>
+       <item>
+        <widget class="QGroupBox" name="groupBox_profile_tool_param">
+         <property name="title">
+          <string>Параметры задачи</string>
+         </property>
+         <layout class="QFormLayout" name="formLayout_params">
+          <item row="0" column="0">
+           <widget class="QLabel" name="label_profile_tool_deadline">
+            <property name="text">
+             <string>Срок:</string>
+            </property>
+           </widget>
+          </item>
+          <item row="0" column="1">
+           <widget class="QDateEdit" name="dateEdit_profile_tool_deadline">
+            <property name="calendarPopup">
+             <bool>true</bool>
+            </property>
+            <property name="date">
+             <date>
+              <year>2025</year>
+              <month>2</month>
+              <day>1</day>
+             </date>
+            </property>
+           </widget>
+          </item>
+          <item row="1" column="0">
+           <widget class="QLabel" name="label_profile_tool_description">
+            <property name="text">
+             <string>Описание:</string>
+            </property>
+           </widget>
+          </item>
+          <item row="1" column="1">
+           <widget class="QTextEdit" name="textEdit_profile_tool_description">
+            <property name="maximumSize">
+             <size>
+              <width>16777215</width>
+              <height>80</height>
+             </size>
+            </property>
+            <property name="placeholderText">
+             <string>Дополнительное описание задачи...</string>
+            </property>
+           </widget>
+          </item>
+         </layout>
+        </widget>
+       </item>
+      </layout>
+     </widget>
+     <widget class="QWidget" name="tab_product">
+      <attribute name="title">
+       <string>Другие задачи</string>
+      </attribute>
+      <layout class="QVBoxLayout" name="verticalLayout_2">
+       <item>
+        <widget class="QGroupBox" name="groupBox_product">
+         <property name="title">
+          <string>Выбор изделия</string>
+         </property>
+         <layout class="QFormLayout" name="formLayout_instrument_2">
+          <item row="0" column="0">
+           <widget class="QLabel" name="label_product">
+            <property name="text">
+             <string>Изделие</string>
+            </property>
+           </widget>
+          </item>
+          <item row="0" column="1">
+           <widget class="QComboBox" name="comboBox_product">
+            <property name="placeholderText">
+             <string>Выберите изделие...</string>
+            </property>
+           </widget>
+          </item>
+         </layout>
+        </widget>
+       </item>
+       <item>
+        <widget class="QGroupBox" name="groupBox_product_component">
+         <property name="title">
+          <string>Компоненты требующие работы</string>
+         </property>
+         <layout class="QVBoxLayout" name="verticalLayout_components_2">
+          <item>
+           <widget class="QScrollArea" name="scrollArea_product_component">
+            <property name="widgetResizable">
+             <bool>true</bool>
+            </property>
+            <widget class="QWidget" name="widget_product_content">
+             <property name="geometry">
+              <rect>
+               <x>0</x>
+               <y>0</y>
+               <width>536</width>
+               <height>117</height>
+              </rect>
+             </property>
+             <layout class="QVBoxLayout" name="verticalLayout_checkboxes_2"/>
+            </widget>
+           </widget>
+          </item>
+         </layout>
+        </widget>
+       </item>
+       <item>
+        <widget class="QGroupBox" name="groupBox_product_param">
+         <property name="title">
+          <string>Параметры задачи</string>
+         </property>
+         <layout class="QFormLayout" name="formLayout_params_2">
+          <item row="1" column="0">
+           <widget class="QLabel" name="label_product_deadline">
+            <property name="text">
+             <string>Срок:</string>
+            </property>
+           </widget>
+          </item>
+          <item row="1" column="1">
+           <widget class="QDateEdit" name="dateEdit_product_deadline">
+            <property name="calendarPopup">
+             <bool>true</bool>
+            </property>
+            <property name="date">
+             <date>
+              <year>2025</year>
+              <month>2</month>
+              <day>1</day>
+             </date>
+            </property>
+           </widget>
+          </item>
+          <item row="2" column="0">
+           <widget class="QLabel" name="label_product_description">
+            <property name="text">
+             <string>Описание:</string>
+            </property>
+           </widget>
+          </item>
+          <item row="2" column="1">
+           <widget class="QTextEdit" name="textEdit_product_description">
+            <property name="maximumSize">
+             <size>
+              <width>16777215</width>
+              <height>80</height>
+             </size>
+            </property>
+            <property name="placeholderText">
+             <string>Дополнительное описание задачи...</string>
+            </property>
+           </widget>
+          </item>
+          <item row="0" column="1">
+           <widget class="QComboBox" name="comboBox_product_department">
+            <property name="placeholderText">
+             <string>Выберите отдел...</string>
+            </property>
+           </widget>
+          </item>
+          <item row="0" column="0">
+           <widget class="QLabel" name="label_product_department">
+            <property name="text">
+             <string>Отдел:</string>
+            </property>
+           </widget>
+          </item>
+         </layout>
+        </widget>
+       </item>
+      </layout>
+     </widget>
     </widget>
    </item>
    <item>
@@ -153,7 +274,7 @@
      <item>
       <spacer name="horizontalSpacer">
        <property name="orientation">
-        <enum>Qt::Horizontal</enum>
+        <enum>Qt::Orientation::Horizontal</enum>
        </property>
        <property name="sizeHint" stdset="0">
         <size>
@@ -172,11 +293,11 @@
      </item>
      <item>
       <widget class="QPushButton" name="pushButton_create">
-       <property name="text">
-        <string>Создать</string>
-       </property>
        <property name="enabled">
         <bool>false</bool>
+       </property>
+       <property name="text">
+        <string>Создать</string>
        </property>
       </widget>
      </item>
@@ -185,22 +306,5 @@
   </layout>
  </widget>
  <resources/>
- <connections>
-  <connection>
-   <sender>pushButton_cancel</sender>
-   <signal>clicked()</signal>
-   <receiver>DialogCreateTask</receiver>
-   <slot>reject()</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>514</x>
-     <y>469</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>299</x>
-     <y>249</y>
-    </hint>
-   </hints>
-  </connection>
- </connections>
+ <connections/>
 </ui>

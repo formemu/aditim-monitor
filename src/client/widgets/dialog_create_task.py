@@ -5,17 +5,7 @@ from typing import Dict, List, Optional
 
 from PySide6.QtCore import QDate, QFile, Signal, Slot
 from PySide6.QtUiTools import QUiLoader
-from PySide6.QtWidgets import (
-    QCheckBox,
-    QComboBox,
-    QDateEdit,
-    QDialog,
-    QGroupBox,
-    QPushButton,
-    QTextEdit,
-    QVBoxLayout,
-    QWidget,
-)
+from PySide6.QtWidgets import (QCheckBox, QDialog, QVBoxLayout, QWidget)
 
 from ..api_client import ApiClient
 from ..references_manager import references_manager
@@ -65,10 +55,7 @@ class DialogCreateTask(QDialog):
         """Загрузка UI из файла."""
         from ..constant import UI_PATHS_ABS as UI_PATHS
         ui_file = QFile(UI_PATHS["DIALOG_CREATE_TASK"])
-        
-        if not ui_file.open(QFile.ReadOnly):
-            raise FileNotFoundError(f"Не удалось открыть UI файл: {UI_PATHS['DIALOG_CREATE_TASK']}")
-        
+                
         loader = QUiLoader()
         self.ui = loader.load(ui_file, None)  # Загружаем без родителя
         ui_file.close()
@@ -77,7 +64,7 @@ class DialogCreateTask(QDialog):
             raise RuntimeError("Не удалось загрузить UI из файла")
         
         # Устанавливаем заголовок и свойства диалога
-        self.setWindowTitle("Создание задачи для инструмента")
+        self.setWindowTitle("Создание задачи")
         self.setModal(True)
         
         # Установка layout для диалога
@@ -89,24 +76,19 @@ class DialogCreateTask(QDialog):
     def setup_ui(self) -> None:
         """Настройка элементов интерфейса."""
         # Подключение сигналов
-        self.ui.comboBox_profile.currentTextChanged.connect(self.on_profile_changed)
-        self.ui.comboBox_tool.currentTextChanged.connect(self.on_tool_changed)
+        self.ui.comboBox_profile_tool_profile.currentTextChanged.connect(self.on_profile_changed)
+        self.ui.comboBox_profile_tool_tool.currentTextChanged.connect(self.on_tool_changed)
         self.ui.pushButton_create.clicked.connect(self.create_task)
-        
-        # Подключаем кнопку отмены явно
         self.ui.pushButton_cancel.clicked.connect(self.reject)
         
         # Настройка даты по умолчанию (неделя от сегодня)
         default_date = date.today() + timedelta(days=7)
-        self.ui.dateEdit_deadline.setDate(QDate.fromString(default_date.isoformat(), "yyyy-MM-dd"))
+        self.ui.dateEdit_profile_tool_deadline.setDate(QDate.fromString(default_date.isoformat(), "yyyy-MM-dd"))
+        self.ui.dateEdit_product_deadline.setDate(QDate.fromString(default_date.isoformat(), "yyyy-MM-dd"))
         
         # Минимальная дата - сегодня
-        self.ui.dateEdit_deadline.setMinimumDate(QDate.currentDate())
-        
-        # Скрываем поле отдела для задач инструмента
-        self.ui.label_department.setVisible(False)
-        self.ui.comboBox_department.setVisible(False)
-            
+        self.ui.dateEdit_profile_tool_deadline.setMinimumDate(QDate.currentDate())
+        self.ui.dateEdit_product_deadline.setMinimumDate(QDate.currentDate())
 
     
     def load_initial_data(self) -> None:
@@ -124,12 +106,12 @@ class DialogCreateTask(QDialog):
     
     def populate_profile_combo(self) -> None:
         """Заполнение комбобокса профилей."""
-        self.ui.comboBox_profile.clear()
+        self.ui.comboBox_profile_tool_profile.clear()
         
         # Добавляем placeholder, если нет данных
         if not self.array_profile_tool:
-            self.ui.comboBox_profile.addItem("Нет доступных профилей", None)
-            self.ui.comboBox_profile.setEnabled(False)
+            self.ui.comboBox_profile_tool_profile.addItem("Нет доступных профилей", None)
+            self.ui.comboBox_profile_tool_profile.setEnabled(False)
             return
         
         # Получаем уникальные профили
@@ -140,7 +122,7 @@ class DialogCreateTask(QDialog):
                 profile = references_manager.get_profile_by_id(profile_id)
                 if profile:
                     dict_profile_used[profile_id] = profile
-                    self.ui.comboBox_profile.addItem(
+                    self.ui.comboBox_profile_tool_profile.addItem(
                         profile["article"], profile_id
                     )
     
@@ -148,28 +130,28 @@ class DialogCreateTask(QDialog):
     def on_profile_changed(self, profile_article: str) -> None:
         """Обработка изменения профиля."""
         if not profile_article:
-            self.ui.comboBox_tool.clear()
-            self.ui.comboBox_tool.setEnabled(False)
+            self.ui.comboBox_profile_tool_tool.clear()
+            self.ui.comboBox_profile_tool_tool.setEnabled(False)
             self.clear_components()
             return
         
         # Получаем ID выбранного профиля
-        profile_id = self.ui.comboBox_profile.currentData()
+        profile_id = self.ui.comboBox_profile_tool_profile.currentData()
         
         # Заполняем инструменты для данного профиля
         self.populate_tool_combo(profile_id)
-        self.ui.comboBox_tool.setEnabled(True)
+        self.ui.comboBox_profile_tool_tool.setEnabled(True)
     
     def populate_tool_combo(self, profile_id: int) -> None:
         """Заполнение комбобокса инструментов для профиля."""
-        self.ui.comboBox_tool.clear()
-        
+        self.ui.comboBox_profile_tool_tool.clear()
+
         # Фильтруем инструменты по профилю
         for profile_tool in self.array_profile_tool:
             if profile_tool["profile_id"] == profile_id:
                 # Используем ID инструмента как название (можно потом улучшить)
                 tool_name = f"Инструмент {profile_tool['dimension']}"
-                self.ui.comboBox_tool.addItem(
+                self.ui.comboBox_profile_tool_tool.addItem(
                     tool_name, profile_tool["id"]
                 )
     
@@ -186,7 +168,7 @@ class DialogCreateTask(QDialog):
     
     def load_tool_components(self) -> None:
         """Загрузка компонентов для выбранного инструмента."""
-        profile_tool_id = self.ui.comboBox_tool.currentData()
+        profile_tool_id = self.ui.comboBox_profile_tool_tool.currentData()
         if not profile_tool_id:
             return
         
@@ -210,7 +192,7 @@ class DialogCreateTask(QDialog):
         """Создание чекбоксов для компонентов."""
         self.clear_components()
         
-        layout = self.ui.scrollAreaWidgetContents.layout()
+        layout = self.ui.widget_profile_tool_content.layout()
         
         for component in array_component:
             checkbox = QCheckBox()
@@ -232,7 +214,7 @@ class DialogCreateTask(QDialog):
     
     def clear_components(self) -> None:
         """Очистка списка компонентов."""
-        layout = self.ui.scrollAreaWidgetContents.layout()
+        layout = self.ui.widget_profile_tool_content.layout()
         
         # Удаляем все чекбоксы
         for checkbox in self.dict_component_checkbox.values():
@@ -254,7 +236,7 @@ class DialogCreateTask(QDialog):
         )
         
         # Проверяем, заполнены ли обязательные поля
-        has_tool = bool(self.ui.comboBox_tool.currentText())
+        has_tool = bool(self.ui.comboBox_profile_tool_tool.currentText())
         
         self.ui.pushButton_create.setEnabled(
             has_selected_components and has_tool
@@ -264,9 +246,9 @@ class DialogCreateTask(QDialog):
     def create_task(self) -> None:
         """Создание новой задачи."""
         # Собираем данные формы
-        profile_tool_id = self.ui.comboBox_tool.currentData()
-        deadline = self.ui.dateEdit_deadline.date().toString("yyyy-MM-dd")
-        description = self.ui.textEdit_description.toPlainText().strip()
+        profile_tool_id = self.ui.comboBox_profile_tool_tool.currentData()
+        deadline = self.ui.dateEdit_profile_tool_deadline.date().toString("yyyy-MM-dd")
+        description = self.ui.textEdit_profile_tool_description.toPlainText().strip()
         
         # Получаем выбранные компоненты
         array_component_id = [
