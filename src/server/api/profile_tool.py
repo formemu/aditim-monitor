@@ -32,7 +32,6 @@ def get_profile_tool(db: Session = Depends(get_db)):
         })
     return result
 
-
 @router.get("/profile-tool/{tool_id}/component", response_model=List[dict])
 def get_profile_tool_component(tool_id: int, db: Session = Depends(get_db)):
     """Get component of a profile tool"""
@@ -50,7 +49,6 @@ def get_profile_tool_component(tool_id: int, db: Session = Depends(get_db)):
             "status": component.status.name if component.status else "Неизвестно"
         })
     return result
-
 
 @router.post("/profile-tool", response_model=dict)
 def create_profile_tool(tool_data: dict, db: Session = Depends(get_db)):
@@ -97,7 +95,6 @@ def create_profile_tool(tool_data: dict, db: Session = Depends(get_db)):
     except Exception as e:
         db.rollback()
         raise HTTPException(status_code=500, detail=f"Error creating profile tool: {str(e)}")
-
 
 @router.post("/profile-tool/{tool_id}/component", response_model=dict)
 def create_profile_tool_component(tool_id: int, component_data: dict, db: Session = Depends(get_db)):
@@ -147,8 +144,7 @@ def create_profile_tool_component(tool_id: int, component_data: dict, db: Sessio
         db.rollback()
         raise HTTPException(status_code=500, detail=f"Error creating component: {str(e)}")
 
-
-@router.delete("/profile-tool/by-profile/{profile_id}", response_model=dict, status_code=status.HTTP_200_OK)
+@router.delete("/profile-tool/{profile_id}", response_model=dict, status_code=status.HTTP_200_OK)
 def delete_profile_tool_by_profile(profile_id: int, db: Session = Depends(get_db)):
     """Удалить все инструменты профиля и их компоненты по profile_id (единственное число)"""
     list_tool = db.query(ProfileTool).filter(ProfileTool.profile_id == profile_id).all()
@@ -166,7 +162,6 @@ def delete_profile_tool_by_profile(profile_id: int, db: Session = Depends(get_db
         count_tool_deleted += 1
     db.commit()
     return {"success": True, "deleted_tools": count_tool_deleted, "deleted_components": count_component_deleted}
-
 
 @router.delete("/profile-tool/{tool_id}/component", response_model=dict, status_code=status.HTTP_200_OK)
 def delete_profile_tool_component(tool_id: int, db: Session = Depends(get_db)):
