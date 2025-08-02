@@ -9,18 +9,18 @@ from datetime import datetime
 
 from ..constant import UI_PATHS_ABS as UI_PATHS, get_style_path
 from ..widgets.dialog_create_task import DialogCreateTask
-from ..api_client import ApiClient
+from ..api.api_task import ApiTask
 from ..style_util import load_styles_with_constants
 from ..references_manager import references_manager
 from ..async_util import run_async
 
 
-class TasksContent(QWidget):
+class WindowTask(QWidget):
     """Виджет содержимого задач"""
     
-    def __init__(self, api_client: ApiClient = None):
+    def __init__(self):
         super().__init__()
-        self.api_client = api_client or ApiClient()
+        self.api_task = ApiTask()
         self.current_tasks_data = None  # Кэш данных задач (None для первой загрузки)
         self.selected_row = None  # Запоминаем выбранную строку
         self.load_ui()
@@ -98,7 +98,7 @@ class TasksContent(QWidget):
             array_component_data = task_data.pop("array_component_data", [])
             
             # Создаем задачу на сервере (без компонентов)
-            response = self.api_client.create_task(task_data)
+            response = self.api_task.create_task(task_data)
             print(f"TasksContent: Ответ сервера при создании задачи: {response}")
             
             # FastAPI возвращает объект напрямую, не в обертке success/data
@@ -129,7 +129,7 @@ class TasksContent(QWidget):
                             print(f"Предупреждение: неизвестный тип компонента: {component_data}")
                             continue
                         print(f"TasksContent: Создаем компонент для задачи {task_id}: {comp_request}")
-                        comp_response = self.api_client.create_task_component(comp_request)
+                        comp_response = self.api_task.create_task_component(comp_request)
                         print(f"TasksContent: Ответ при создании компонента: {comp_response}")
                         
                         if comp_response and 'id' in comp_response:
@@ -191,7 +191,7 @@ class TasksContent(QWidget):
             return
 
         try:
-            self.api_client.delete_task(task['id'])
+            self.api_task.delete_task(task['id'])
             QMessageBox.information(self, "Удаление", "Задача успешно удалена.")
             self.refresh_data()
         except Exception as e:
@@ -257,15 +257,15 @@ class TasksContent(QWidget):
         # Логика: если profile_tool_id != NULL → артикул профиля, иначе название изделия
         if task.get('profile_tool_id'):
             # Получаем артикул профиля через кэшированные данные
-            tool_data = references_manager.get_profile_tool_by_id(task['profile_tool_id'])
+            tool_data = references_manager.get_profile_tool().get(task['profile_tool_id'])
             if tool_data and tool_data.get('profile_id'):
-                profile_data = references_manager.get_profile_by_id(tool_data['profile_id'])
+                profile_data = references_manager.get_profile().get(tool_data['profile_id'])
                 if profile_data:
                     return profile_data.get('article', f"Профиль {task['profile_tool_id']}")
             return f"Профиль {task['profile_tool_id']}"
         else:
             # Получаем название изделия из кэша
-            product_data = references_manager.get_product(task.get('product_id'))
+            product_data = references_manager.get_product().get(task.get('product_id'))
             if product_data:
                 return product_data.get('name', f"Изделие {task.get('product_id', 'N/A')}")
             return f"Изделие {task.get('product_id', 'N/A')}"
@@ -273,7 +273,7 @@ class TasksContent(QWidget):
     def get_status_name(self, status_id):
         """Получает название статуса по ID"""
         try:
-            status_data = references_manager.get_task_status_by_id(status_id)
+            status_data = references_manager.get_task_status().get(status_id)
             return status_data.get('name', '-') if status_data else '-'
         except:
             return '-'
@@ -289,7 +289,7 @@ class TasksContent(QWidget):
     def load_task_components(self, task_id):
         """Загружает компоненты задачи"""
         try:
-            components = self.api_client.get_task_component(task_id=task_id)
+            components = self.api_task.get_task_component(task_id=task_id)
             task_components = [c for c in components if c.get('task_id') == task_id]
             self.update_components_table(task_components)
             
@@ -343,7 +343,7 @@ class TasksContent(QWidget):
             
             # Запускаем асинхронную загрузку
             run_async(
-                self.api_client.get_task,
+                self.api_task.get_task,
                 on_success=self.on_tasks_loaded,
                 on_error=self.on_tasks_load_error
             )

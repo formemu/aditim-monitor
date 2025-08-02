@@ -9,7 +9,7 @@ from PySide6.QtCore import Signal, QFile, Qt
 from PySide6.QtUiTools import QUiLoader
 
 from ..constant import UI_PATHS_ABS as UI_PATHS
-from ..api_client import ApiClient
+from ..api.api_product import ApiProduct
 from ..references_manager import references_manager
 from ..style_util import load_styles_with_constants
 
@@ -19,10 +19,10 @@ class DialogCreateProduct(QDialog):
     
     product_created = Signal(dict)  # Сигнал об успешном создании изделия
 
-    def __init__(self, api_client: ApiClient, parent=None):
+    def __init__(self, parent=None):
         super().__init__(parent)
-        self.api_client = api_client
-        
+        self.api_product = ApiProduct()
+
         # Загружаем UI файл
         self.load_ui()
        
@@ -80,13 +80,6 @@ class DialogCreateProduct(QDialog):
 
     def add_component_row_data(self, row: int, name: str = "", quantity: int = 1):
         """Добавляет данные в строку компонента"""
-        # Временно отключаем обработчик для избежания рекурсии
-        try:
-            self.ui.tableWidget_components.itemChanged.disconnect(self.on_component_item_changed)
-        except TypeError:
-            # Сигнал не был подключен
-            pass
-        
         # Название компонента (редактируемое поле)
         name_item = QTableWidgetItem(name)
         name_item.setFlags(name_item.flags() | Qt.ItemIsEditable)
@@ -199,8 +192,8 @@ class DialogCreateProduct(QDialog):
             data = self.collect_data()
             
             # Создаем изделие
-            product_result = self.api_client.create_product(data['product'])
-            
+            product_result = self.api_product.create_product(data['product'])
+
             if not product_result or 'id' not in product_result:
                 QMessageBox.critical(self, "Ошибка", "Не удалось создать изделие")
                 return
@@ -210,7 +203,7 @@ class DialogCreateProduct(QDialog):
             # Добавляем компоненты
             for component in data['components']:
                 try:
-                    self.api_client.create_product_component(product_id, component)
+                    self.api_product.create_product_component(product_id, component)
                 except Exception as comp_error:
                     QMessageBox.warning(
                         self, 

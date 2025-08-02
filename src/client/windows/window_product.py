@@ -7,7 +7,8 @@ from PySide6.QtCore import QFile, Qt, QTimer
 from PySide6.QtUiTools import QUiLoader
 
 from ..constant import UI_PATHS_ABS as UI_PATHS, get_style_path
-from ..api_client import ApiClient
+from ..api.api_product import ApiProduct
+from ..api.api_profile_tool import ApiProfileTool
 from ..style_util import load_styles_with_constants
 from ..async_util import run_async
 from ..references_manager import references_manager
@@ -15,13 +16,14 @@ from ..widgets.dialog_create_profile_tool import DialogCreateProfileTool
 from ..widgets.dialog_create_product import DialogCreateProduct
 
 
-class ProductsContent(QWidget):
+class WindowProduct(QWidget):
     """Виджет содержимого изделий с вкладками"""
     
-    def __init__(self, api_client: ApiClient = None):
+    def __init__(self):
         super().__init__()
-        self.api_client = api_client or ApiClient()
-        
+        self.api_product = ApiProduct()
+        self.api_profile_tool = ApiProfileTool()
+
         # Больше не нужно кэшировать справочники - используем references_manager
         self.current_product_id = None  # ID текущего выбранного изделия
         self.current_tool_id = None  # ID текущего выбранного инструмента профиля
@@ -78,7 +80,6 @@ class ProductsContent(QWidget):
         self.update_timer = QTimer()
         self.update_timer.timeout.connect(self.load_current_tab_data_async)
 
-
     def setup_tables(self):
         """Настройка параметров таблиц"""
         # Таблица инструментов профилей (убраны ненужные колонки)
@@ -117,7 +118,7 @@ class ProductsContent(QWidget):
     def load_profile_tool_from_server(self):
         """Загружает инструменты профилей с сервера"""
         try:
-            list_tool = self.api_client.get_profile_tool()
+            list_tool = self.api_profile_tool.get_profile_tool()
             self.update_table_tool(list_tool)
                 
         except Exception as e:
@@ -167,7 +168,7 @@ class ProductsContent(QWidget):
     def load_product_from_server(self):
         """Загружает изделия с сервера"""
         try:
-            list_product = self.api_client.get_product()
+            list_product = self.api_product.get_product()
             self.update_table_product(list_product)
                 
         except Exception as e:
@@ -225,10 +226,10 @@ class ProductsContent(QWidget):
         """Загружает компоненты для выбранного элемента"""
         try:
             if item_type == "product":
-                list_component = self.api_client.get_product_component(item_id)
+                list_component = self.api_product.get_product_component(item_id)
                 self.ui.label_selected_item.setText(f"Изделие ID: {item_id}")
             elif item_type == "profile_tool":
-                list_component = self.api_client.get_profile_tool_component(item_id)
+                list_component = self.api_profile_tool.get_profile_tool_component(item_id)
                 self.ui.label_selected_item.setText(f"Инструмент ID: {item_id}")
             else:
                 return
@@ -272,12 +273,12 @@ class ProductsContent(QWidget):
     def load_data_async(self):
         """Асинхронная загрузка данных с сервера"""
         run_async(
-            self.api_client.get_profile_tool,
+            self.api_profile_tool.get_profile_tool,
             on_success=self.on_profile_tool_loaded,
             on_error=self.on_data_load_error
         )
         run_async(
-            self.api_client.get_product,
+            self.api_product.get_product,
             on_success=self.on_product_loaded,
             on_error=self.on_data_load_error
         )
@@ -294,14 +295,14 @@ class ProductsContent(QWidget):
         if current_tab_index == 0:
             # Загружаем только инструменты профилей
             try:
-                list_tool = self.api_client.get_profile_tool()
+                list_tool = self.api_profile_tool.get_profile_tool()
                 self.on_profile_tool_loaded(list_tool)
             except Exception as e:
                 self.on_data_load_error(e)
         elif current_tab_index == 1:
             # Загружаем только изделия
             try:
-                list_product = self.api_client.get_product()
+                list_product = self.api_product.get_product()
                 self.on_product_loaded(list_product)
             except Exception as e:
                 self.on_data_load_error(e)
@@ -352,7 +353,7 @@ class ProductsContent(QWidget):
     def on_profile_tool_add_clicked(self):
         """Обработчик кнопки добавления инструмента профиля"""
         try:
-            dialog = DialogCreateProfileTool(self.api_client, self)
+            dialog = DialogCreateProfileTool(self)
             dialog.profile_tool_created.connect(self.on_profile_tool_created)
             
             if dialog.exec() == QDialog.Accepted:
@@ -423,7 +424,7 @@ class ProductsContent(QWidget):
     def on_product_add_clicked(self):
         """Обработчик кнопки добавления изделия"""
         try:
-            dialog = DialogCreateProduct(self.api_client, self)
+            dialog = DialogCreateProduct(self)
             dialog.product_created.connect(self.on_product_created)
             
             if dialog.exec() == QDialog.Accepted:
@@ -461,7 +462,7 @@ class ProductsContent(QWidget):
             # Показываем описание компонента (если есть)
             if self.current_product_id:
                 try:
-                    list_component = self.api_client.get_product_component(self.current_product_id)
+                    list_component = self.api_product.get_product_component(self.current_product_id)
                     component = next((c for c in list_component if c.get('id') == component_id), None)
                     if component:
                         self.ui.label_component_description.setText(f"Описание: {component.get('description', '-')}")
@@ -469,7 +470,7 @@ class ProductsContent(QWidget):
                     pass
             elif self.current_tool_id:
                 try:
-                    list_component = self.api_client.get_profile_tool_component(self.current_tool_id)
+                    list_component = self.api_profile_tool.get_profile_tool_component(self.current_tool_id)
                     component = next((c for c in list_component if c.get('id') == component_id), None)
                     if component:
                         self.ui.label_component_description.setText(f"Описание: {component.get('description', '-')}")

@@ -1,5 +1,5 @@
-from .window_profile import ProfilesContent
-from .window_product import ProductsContent
-from .window_task import TasksContent
+from .window_profile import WindowProfile
+from .window_product import WindowProduct
+from .window_task import WindowTask
 
-__all__ = ['ProfilesContent', 'ProductsContent', 'TasksContent']
+__all__ = ['WindowProfile', 'WindowProduct', 'WindowTask']

@@ -7,7 +7,8 @@ from PySide6.QtCore import QDate, QFile, Signal, Slot
 from PySide6.QtUiTools import QUiLoader
 from PySide6.QtWidgets import (QCheckBox, QDialog, QVBoxLayout, QWidget, QSpinBox)
 
-from ..api_client import ApiClient
+from ..api.api_profile_tool import ApiProfileTool
+from ..api.api_product import ApiProduct
 from ..references_manager import references_manager
 
 
@@ -20,8 +21,9 @@ class DialogCreateTask(QDialog):
         super().__init__(parent)
         
         self.ui: QWidget = None
-        self.api_client = ApiClient()
-        
+        self.api_profile_tool = ApiProfileTool()
+        self.api_product = ApiProduct()
+
         # Данные для работы
         self.array_profile_tool: List[Dict] = []
         self.dict_component_checkbox: Dict[int, QCheckBox] = {}
@@ -110,11 +112,11 @@ class DialogCreateTask(QDialog):
         """Загрузка начальных данных."""
         try:
             # Загружаем профили и инструменты
-            self.array_profile_tool = self.api_client.get_profile_tool()
+            self.array_profile_tool = self.api_profile_tool.get_profile_tool()
             self.populate_profile_combo()
             
             # Загружаем изделия
-            self.array_product = self.api_client.get_product()
+            self.array_product = self.api_product.get_product()
             self.populate_product_combo()
             
             # Загружаем отделы для изделий
@@ -141,7 +143,7 @@ class DialogCreateTask(QDialog):
         for profile_tool in self.array_profile_tool:
             profile_id = profile_tool["profile_id"]
             if profile_id not in dict_profile_used:
-                profile = references_manager.get_profile_by_id(profile_id)
+                profile = references_manager.get_profile().get(profile_id)
                 if profile:
                     dict_profile_used[profile_id] = profile
                     self.ui.comboBox_profile_tool_profile.addItem(
@@ -228,7 +230,7 @@ class DialogCreateTask(QDialog):
             return
         
         # Получаем компоненты инструмента
-        array_component = self.api_client.get_profile_tool_component(
+        array_component = self.api_profile_tool.get_profile_tool_component(
             profile_tool_id
         )
         
@@ -267,7 +269,7 @@ class DialogCreateTask(QDialog):
             return
         
         # Получаем компоненты изделия
-        array_component = self.api_client.get_product_component(product_id)
+        array_component = self.api_product.get_product_component(product_id)
         
         # Создаем чекбоксы для компонентов
         self.create_product_component_checkbox(array_component)

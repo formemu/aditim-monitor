@@ -44,16 +44,6 @@ def create_profile(profile: ProfileCreate, db: Session = Depends(get_db)):
     db.refresh(db_profile)
     return db_profile
 
-
-# @router.get("/profile/{profile_id}", response_model=ProfileResponse) # НЕ ИСПОЛЬЗУЕТСЯ
-# def get_profile_by_id(profile_id: int, db: Session = Depends(get_db)):
-#     """Get profile by ID (единственное число)"""
-#     profile = db.query(Profile).filter(Profile.id == profile_id).first()
-#     if not profile:
-#         raise HTTPException(status_code=404, detail="Profile not found")
-#     return profile
-
-
 @router.delete("/profile/{profile_id}", response_model=dict)
 def delete_profile(profile_id: int, db: Session = Depends(get_db)):
     """Удалить профиль по profile_id (единственное число)"""

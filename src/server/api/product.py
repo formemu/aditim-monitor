@@ -32,14 +32,6 @@ def create_product(product: ProductCreate, db: Session = Depends(get_db)):
     return db_product
 
 
-# @router.get("/product/{product_id}", response_model=ProductResponse) # НЕ ИСПОЛЬЗУЕТСЯ
-# def get_product_by_id(product_id: int, db: Session = Depends(get_db)):
-#     """Get product by ID """
-#     product = db.query(Product).filter(Product.id == product_id).first()
-#     if not product:
-#         raise HTTPException(status_code=404, detail="Product not found")
-#     return product
-
 
 @router.get("/product/{product_id}/component", response_model=List[ProductComponentResponse])
 def get_product_component(product_id: int, db: Session = Depends(get_db)):

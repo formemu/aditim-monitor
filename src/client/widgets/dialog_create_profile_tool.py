@@ -13,7 +13,7 @@ from PySide6.QtGui import QPixmap
 import base64
 
 from ..constant import UI_PATHS_ABS as UI_PATHS
-from ..api_client import ApiClient
+from ..api.api_profile_tool import ApiProfileTool
 from ..references_manager import references_manager
 from ..style_util import load_styles_with_constants
 
@@ -23,9 +23,9 @@ class DialogCreateProfileTool(QDialog):
     
     profile_tool_created = Signal(dict)  # Сигнал об успешном создании инструмента
 
-    def __init__(self, api_client: ApiClient, parent=None):
+    def __init__(self, parent=None):
         super().__init__(parent)
-        self.api_client = api_client
+        self.api_profile_tool = ApiProfileTool()
         self.selected_profile = None  # Выбранный профиль
         self.component_widgets = []   # Список виджетов компонентов (checkbox, combobox)
         
@@ -92,9 +92,6 @@ class DialogCreateProfileTool(QDialog):
         
         self.ui.comboBox_dimension.addItems(dimension_list)
 
-
-
-
     def on_profile_search_changed(self, text: str):
         """Обработчик изменения поискового запроса"""
         self.ui.listWidget_profile_results.clear()
@@ -112,7 +109,6 @@ class DialogCreateProfileTool(QDialog):
             item.setData(Qt.UserRole, profile)
             self.ui.listWidget_profile_results.addItem(item)
         
-
     def on_profile_selected(self, item):
         """Обработчик выбора профиля из списка"""
         profile_data = item.data(Qt.UserRole)
@@ -136,7 +132,7 @@ class DialogCreateProfileTool(QDialog):
         """Загружает и отображает эскиз профиля"""
         try:
             # Получаем данные профиля из references_manager
-            profile = references_manager.get_profile_by_id(profile_id)
+            profile = references_manager.get_profile().get(profile_id)
             
             if profile and profile.get('sketch'):
                 # Конвертируем base64 в QPixmap
@@ -173,7 +169,7 @@ class DialogCreateProfileTool(QDialog):
         try:
             component_type = references_manager.get_component_type()
             statuses = references_manager.get_status()
-            default_status_id = references_manager.get_default_status_id()
+            default_status_id = references_manager.get_status().get(1)
             
             # Очищаем таблицу
             self.ui.tableWidget_components.setRowCount(0)
@@ -227,7 +223,7 @@ class DialogCreateProfileTool(QDialog):
             tool_data = self.validate_and_get_data()
             
             # Отправляем запрос на сервер для создания инструмента
-            result = self.api_client.create_profile_tool(tool_data)
+            result = self.api_profile_tool.create_profile_tool(tool_data)
             tool_id = result.get('id')
             
             if not tool_id:
@@ -237,7 +233,7 @@ class DialogCreateProfileTool(QDialog):
             selected_components = self.get_selected_components()
             for component_data in selected_components:
                 try:
-                    self.api_client.create_profile_tool_component(tool_id, component_data)
+                    self.api_profile_tool.create_profile_tool_component(tool_id, component_data)
                 except Exception as comp_error:
                     # Продолжаем создание остальных компонентов
                     pass

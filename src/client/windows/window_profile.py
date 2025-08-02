@@ -12,18 +12,20 @@ from PySide6.QtGui import QPixmap
 
 from ..constant import UI_PATHS_ABS as UI_PATHS, ICON_PATHS_ABS as ICON_PATHS, get_style_path
 from ..widgets.dialog_create_profile import DialogCreateProfile
-from ..api_client import ApiClient
+from ..api.api_profile import ApiProfile
+from ..api.api_profile_tool import ApiProfileTool
 from ..style_util import load_styles_with_constants
 from ..async_util import run_async
 
 
-class ProfilesContent(QWidget):
+class WindowProfile(QWidget):
     """Виджет содержимого профилей"""
-    
-    def __init__(self, api_client: ApiClient = None):
+
+    def __init__(self):
         super().__init__()
-        self.api_client = api_client or ApiClient()
-        self.current_profiles_data = None  # Кэш данных профилей (None для первой загрузки)
+        self.api_profile = ApiProfile()
+        self.api_profile_tool = ApiProfileTool()
+        self.current_profile_data = None  # Кэш данных профилей (None для первой загрузки)
         self.selected_row = None  # Запоминаем выбранную строку
         self.load_ui()
         self.setup_ui()
@@ -68,7 +70,7 @@ class ProfilesContent(QWidget):
         
         # Настройка автоматического обновления каждые 5 секунд с умной проверкой
         self.update_timer = QTimer()
-        self.update_timer.timeout.connect(self.load_profiles_async)
+        self.update_timer.timeout.connect(self.load_profile)
         # НЕ запускаем таймер сразу, он будет запущен при активации окна
         # self.update_timer.start(5000)  # 5000 мс = 5 секунд
 
@@ -111,7 +113,7 @@ class ProfilesContent(QWidget):
         """Добавление нового профиля"""
         try:
             # Создаем диалог создания профиля
-            dialog = DialogCreateProfile(self.api_client, self)
+            dialog = DialogCreateProfile(self)
             
             # Подключаем сигнал успешного создания профиля
             dialog.profile_created.connect(self.on_profile_created)
@@ -126,8 +128,8 @@ class ProfilesContent(QWidget):
         """Обработчик успешного создания профиля"""
         try:
             # Принудительно перезагружаем список профилей с сервера
-            self.current_profiles_data = []  # Сбрасываем кэш для принудительного обновления
-            self.load_profiles_from_server()
+            self.current_profile_data = []  # Сбрасываем кэш для принудительного обновления
+            self.load_profile_from_server()
             
             # Находим и выделяем новый профиль в таблице
             for row in range(self.ui.tableWidget_profiles.rowCount()):
@@ -141,24 +143,24 @@ class ProfilesContent(QWidget):
 
     def refresh_data(self):
         """Публичный метод для принудительного обновления данных"""
-        self.current_profiles_data = []  # Сбрасываем кэш
-        self.load_profiles_from_server()
+        self.current_profile_data = []  # Сбрасываем кэш
+        self.load_profile_from_server()
 
-    def load_profiles_from_server(self):
+    def load_profile_from_server(self):
         """Загружает профили с сервера"""
         try:
-            profiles = self.api_client.get_profile()
-            self.update_profiles_table(profiles)
+            profile = self.api_profile.get_profile()
+            self.update_profile_table(profile)
         except Exception as e:
             QMessageBox.warning(self, "Предупреждение", f"Не удалось загрузить профили с сервера: {e}")
 
-    def update_profiles_table(self, profiles):
+    def update_profile_table(self, profiles):
         """Обновляет таблицу профилей с проверкой изменений"""
         # Проверяем если таблица пустая - обновляем принудительно
         is_table_empty = self.ui.tableWidget_profiles.rowCount() == 0
         
         # Сравниваем новые данные с кэшем (None означает первую загрузку)
-        if self.current_profiles_data is not None and profiles == self.current_profiles_data and not is_table_empty:
+        if self.current_profile_data is not None and profiles == self.current_profile_data and not is_table_empty:
             return  # Данные не изменились и таблица не пустая, не обновляем
         
         # Сохраняем текущее выделение
@@ -168,7 +170,7 @@ class ProfilesContent(QWidget):
             current_selection = selected_items[0].row()
         
         # Обновляем кэш
-        self.current_profiles_data = profiles
+        self.current_profile_data = profiles
         
         # Очищаем таблицу
         self.ui.tableWidget_profiles.setRowCount(0)
@@ -192,24 +194,13 @@ class ProfilesContent(QWidget):
             self.ui.tableWidget_profiles.selectRow(current_selection)
             self.selected_row = current_selection
 
-    def load_profiles_async(self):
-        """Асинхронная загрузка профилей с сервера"""
+    def load_profile(self):
+        """загрузка профилей с сервера"""
         try:
-            profiles = self.api_client.get_profile()
-            self.on_profiles_loaded(profiles)
+            profile = self.api_profile.get_profile()
+            self.update_profile_table(profile)
         except Exception as e:
-            self.on_profiles_load_error(e)
-
-    def on_profiles_loaded(self, profiles):
-        """Обработчик успешной загрузки профилей"""
-        try:
-            self.update_profiles_table(profiles)
-        except Exception as e:
-            print(f"Ошибка обновления UI: {e}")
-
-    def on_profiles_load_error(self, error):
-        """Обработчик ошибки загрузки профилей"""
-        print(f"Ошибка загрузки профилей: {error}")
+            print(f"Ошибка загрузки профилей: {e}")
 
     def on_edit_clicked(self):
         """Редактирование профиля"""
@@ -224,8 +215,8 @@ class ProfilesContent(QWidget):
 
         row = selected_items[0].row()
         profile = None
-        if self.current_profiles_data and row < len(self.current_profiles_data):
-            profile = self.current_profiles_data[row]
+        if self.current_profile_data and row < len(self.current_profile_data):
+            profile = self.current_profile_data[row]
         if not profile:
             QMessageBox.warning(self, "Удаление профиля", "Не удалось получить данные профиля.")
             return
@@ -259,16 +250,16 @@ class ProfilesContent(QWidget):
         try:
             # Удаляем инструменты и их компоненты, если выбрано
             if delete_tools:
-                # Получаем все инструменты профиля (единственное число)
-                tools = self.api_client.get_profile_tool()
+                # Получаем все инструменты профиля
+                tools = self.api_profile_tool.get_profile_tool()
                 profile_tool = [t for t in tools if t.get('profile_id') == profile['id']]
                 for tool in profile_tool:
-                    # Удаляем компоненты инструмента (единственное число)
-                    self.api_client.delete_profile_tool_component(tool['id'])
-                # Удаляем инструменты профиля (единственное число)
-                self.api_client.delete_profile_tool_by_profile(profile['id'])
-            # Удаляем сам профиль (единственное число)
-            self.api_client.delete_profile(profile['id'])
+                    # Удаляем компоненты инструмента
+                    self.api_profile_tool.delete_profile_tool_component(tool['id'])
+                # Удаляем инструменты профиля
+                self.api_profile_tool.delete_profile_tool(profile['id'])
+            # Удаляем сам профиль
+            self.api_profile.delete_profile(profile['id'])
             QMessageBox.information(self, "Удаление", "Профиль успешно удалён.")
             self.refresh_data()
         except Exception as e:
@@ -298,8 +289,8 @@ class ProfilesContent(QWidget):
 
             # Подгружаем и отображаем эскиз профиля
             profile = None
-            if self.current_profiles_data and row < len(self.current_profiles_data):
-                profile = self.current_profiles_data[row]
+            if self.current_profile_data and row < len(self.current_profile_data):
+                profile = self.current_profile_data[row]
             self.load_and_show_sketch(profile)
         else:
             self.selected_row = None
@@ -359,7 +350,7 @@ class ProfilesContent(QWidget):
         if not self.update_timer.isActive():
             self.update_timer.start(5000)  # 5 секунд
             # Сразу загружаем данные при активации
-            self.load_profiles_async()
+            self.load_profile()
 
     def stop_auto_refresh(self):
         """Останавливает автоматическое обновление данных"""

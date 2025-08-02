@@ -3,8 +3,8 @@
 """
 
 import httpx
-from typing import List, Optional, Dict, Any
-from .constant import API_BASE_URL, API_TIMEOUT
+from typing import List, Dict, Any
+from ..constant import API_BASE_URL, API_TIMEOUT
 
 
 class ApiClient:
@@ -36,22 +36,6 @@ class ApiClient:
         """Создание новой задачи"""
         return self._request("POST", "api/task/", json=task_data)
     
-    # def get_tasks( # НЕ ИСПОЛЬЗУЕТСЯ
-    #     self, 
-    #     status_id: Optional[int] = None,
-    #     department_id: Optional[int] = None,
-    #     limit: Optional[int] = None
-    # ) -> List[Dict[Any, Any]]:
-    #     """Получение списка задач с фильтрацией"""
-    #     params = {}
-    #     if status_id:
-    #         params["status_id"] = status_id
-    #     if department_id:
-    #         params["department_id"] = department_id
-    #     if limit:
-    #         params["limit"] = limit
-            
-    #     return self._request("GET", "/api/tasks/", params=params)
     
     def update_task(self, task_id: int, task_data: Dict[str, Any]) -> Dict[Any, Any]:
         """Обновление задачи"""

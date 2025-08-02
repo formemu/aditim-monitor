@@ -11,7 +11,8 @@ from PySide6.QtWidgets import QApplication
 import base64
 import io
 from ..style_util import load_styles_with_constants
-from ..api_client import ApiClient
+from ..api.api_profile import ApiProfile
+from ..constant import UI_PATHS_ABS
 
 
 class DialogCreateProfile(QDialog):
@@ -19,9 +20,9 @@ class DialogCreateProfile(QDialog):
     
     profile_created = Signal(dict)  # Сигнал об успешном создании профиля
 
-    def __init__(self, api_client: ApiClient, parent=None):
+    def __init__(self, parent=None):
         super().__init__(parent)
-        self.api_client = api_client
+        self.api_profile = ApiProfile()
         self.image_data = None  # Храним данные изображения
         
         # Загружаем UI файл
@@ -32,8 +33,8 @@ class DialogCreateProfile(QDialog):
 
     def load_ui(self):
         """Загружает UI из файла"""
-        ui_file_path = "src/client/ui/dialog_create_profile.ui"
-        ui_file = QFile(ui_file_path)
+        ui_file = QFile(UI_PATHS_ABS["DIALOG_CREATE_PROFILE"])
+        ui_file.open(QFile.ReadOnly)
         
         loader = QUiLoader()
         self.ui = loader.load(ui_file, self)
@@ -63,8 +64,8 @@ class DialogCreateProfile(QDialog):
             profile_data = self.validate_and_get_data()
             
             # Отправляем запрос на сервер
-            result = self.api_client.create_profile(profile_data)
-            
+            result = self.api_profile.create_profile(profile_data)
+
             # Уведомляем об успехе
             QMessageBox.information(
                 self, 
