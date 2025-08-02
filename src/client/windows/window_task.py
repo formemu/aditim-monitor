@@ -29,8 +29,8 @@ class WindowTask(QWidget):
     # ИНИЦИАЛИЗАЦИЯ И ЗАГРУЗКА ИНТЕРФЕЙСА
     # =============================================================================
 
+
     def load_ui(self):
-        """Загрузка UI из файла"""
         ui_file = QFile(UI_PATHS["TASK_CONTENT"])
         ui_file.open(QFile.ReadOnly)
         loader = QUiLoader()
@@ -76,36 +76,18 @@ class WindowTask(QWidget):
         self.load_tasks_from_server()
 
     def load_tasks_from_server(self):
-        """Асинхронная загрузка задач с сервера"""
+        """Загрузка задач с сервера"""
         if not self.ui.tableWidget_tasks.isEnabled():
             return
-        self._load_data_async(self.api_task.get_task, self.update_tasks_table)
-
-    def _load_data_async(self, fetch_func, update_callback):
-        """Унифицированная асинхронная загрузка с обработкой ошибок"""
+        
         try:
             self.ui.tableWidget_tasks.setEnabled(False)
-            run_async(
-                fetch_func,
-                on_success=lambda data: self._on_data_loaded(data, update_callback),
-                on_error=self._on_data_load_error
-            )
+            tasks = self.api_task.get_task()
+            self.ui.tableWidget_tasks.setEnabled(True)
+            self.update_tasks_table(tasks)
         except Exception as e:
-            self._on_data_load_error(e)
-
-    def _on_data_loaded(self, data, update_callback):
-        """Обработчик успешной загрузки данных"""
-        self.ui.tableWidget_tasks.setEnabled(True)
-        try:
-            update_callback(data)
-        except Exception as e:
-            self._on_data_load_error(e)
-
-    def _on_data_load_error(self, error):
-        """Обработчик ошибки загрузки"""
-        self.ui.tableWidget_tasks.setEnabled(True)
-        QMessageBox.warning(self, "Предупреждение", f"Ошибка загрузки: {error}")
-
+            self.ui.tableWidget_tasks.setEnabled(True)
+            QMessageBox.warning(self, "Предупреждение", f"Ошибка загрузки: {e}")
 
     # =============================================================================
     # ОТОБРАЖЕНИЕ ДАННЫХ: ТАБЛИЦЫ И ИНФОРМАЦИОННЫЕ ПАНЕЛИ
