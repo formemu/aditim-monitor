@@ -21,10 +21,15 @@ class WindowProfile(QWidget):
         super().__init__()
         self.api_profile = ApiProfile()
         self.api_profile_tool = ApiProfileTool()
-        self.current_profile_data = None
-        self.selected_row = None
+        self.current_profile_data = None  # Кэш данных профилей
+        self.selected_row = None  # Индекс выбранной строки
         self.load_ui()
         self.setup_ui()
+
+
+    # =============================================================================
+    # ИНИЦИАЛИЗАЦИЯ И ЗАГРУЗКА ИНТЕРФЕЙСА
+    # =============================================================================
 
     def load_ui(self):
         """Загрузка UI из файла"""
@@ -53,12 +58,17 @@ class WindowProfile(QWidget):
         table.setSelectionBehavior(QAbstractItemView.SelectRows)
         table.setSelectionMode(QAbstractItemView.SingleSelection)
         table.setFocusPolicy(Qt.NoFocus)
-        table.setColumnWidth(0, 150)
-        table.horizontalHeader().setStretchLastSection(True)
+        table.setColumnWidth(0, 150)  # Артикул
+        table.horizontalHeader().setStretchLastSection(True)  # Описание
 
         # Таймер автообновления
         self.update_timer = QTimer()
         self.update_timer.timeout.connect(self.load_profile)
+
+
+    # =============================================================================
+    # РАБОТА С ЛОГОТИПОМ И ЭСКИЗАМИ
+    # =============================================================================
 
     def load_logo(self):
         """Загрузка логотипа ADITIM"""
@@ -75,6 +85,46 @@ class WindowProfile(QWidget):
         except Exception as e:
             print(f"Ошибка загрузки логотипа: {e}")
             self.ui.label_logo.setText("ADITIM\nЛОГОТИП")
+
+    def set_sketch_placeholder(self):
+        """Установка иконки-заглушки для эскиза"""
+        placeholder_path = ICON_PATHS.get("SKETCH_PLACEHOLDER")
+        if placeholder_path and os.path.exists(placeholder_path):
+            pixmap = QPixmap(placeholder_path)
+            scaled = pixmap.scaled(120, 120, Qt.KeepAspectRatio, Qt.SmoothTransformation)
+            self.ui.label_sketch.setPixmap(scaled)
+        else:
+            self.ui.label_sketch.clear()
+
+    def load_and_show_sketch(self, profile):
+        """Отображение эскиза профиля"""
+        if not profile or not profile.get('sketch'):
+            self.set_sketch_placeholder()
+            self.ui.label_sketch.setText("Эскиз не найден")
+            return
+        sketch_data = profile['sketch']
+        base64_data = sketch_data.split(',')[1] if sketch_data.startswith('data:image') else sketch_data
+        try:
+            image_data = base64.b64decode(base64_data)
+            pixmap = QPixmap()
+            if pixmap.loadFromData(image_data) and not pixmap.isNull():
+                scaled = pixmap.scaled(200, 150, Qt.KeepAspectRatio, Qt.SmoothTransformation)
+                self.ui.label_sketch.setPixmap(scaled)
+                self.ui.label_sketch.setText("")
+            else:
+                self._set_sketch_error()
+        except Exception:
+            self._set_sketch_error()
+
+    def _set_sketch_error(self):
+        """Установка заглушки при ошибке загрузки эскиза"""
+        self.set_sketch_placeholder()
+        self.ui.label_sketch.setText("Ошибка загрузки эскиза")
+
+
+    # =============================================================================
+    # УПРАВЛЕНИЕ ДАННЫМИ: ЗАГРУЗКА И ОБНОВЛЕНИЕ
+    # =============================================================================
 
     def refresh_data(self):
         """Принудительное обновление данных"""
@@ -100,6 +150,11 @@ class WindowProfile(QWidget):
             update_callback(data)
         except Exception as e:
             QMessageBox.warning(self, "Предупреждение", f"Ошибка загрузки: {e}")
+
+
+    # =============================================================================
+    # ОТОБРАЖЕНИЕ ДАННЫХ: ТАБЛИЦА ПРОФИЛЕЙ
+    # =============================================================================
 
     def update_profile_table(self, profiles):
         """Обновление таблицы с защитой от дублей"""
@@ -129,6 +184,11 @@ class WindowProfile(QWidget):
                 table.setItem(row, col_idx, cell)
         if prev_selection is not None and prev_selection < len(data):
             table.selectRow(prev_selection)
+
+
+    # =============================================================================
+    # ОБРАБОТЧИКИ СОБЫТИЙ: УПРАВЛЕНИЕ ПРОФИЛЯМИ
+    # =============================================================================
 
     def on_add_clicked(self):
         """Открытие диалога добавления профиля"""
@@ -169,12 +229,9 @@ class WindowProfile(QWidget):
         profile = self.current_profile_data[row]
         article = profile.get('article', '-')
         desc = profile.get('description', '-')
-
         if not self._confirm_deletion(article, desc):
             return
-
         delete_tools = self._confirm_delete_tools()
-
         try:
             if delete_tools:
                 self._delete_profile_tools(profile['id'])
@@ -215,6 +272,11 @@ class WindowProfile(QWidget):
             self.api_profile_tool.delete_profile_tool_component(tool['id'])
         self.api_profile_tool.delete_profile_tool(profile_id)
 
+
+    # =============================================================================
+    # ОБРАБОТЧИКИ СОБЫТИЙ: ВЫДЕЛЕНИЕ И ПОИСК
+    # =============================================================================
+
     def on_selection_changed(self):
         """Обработка выбора строки"""
         row = self._get_selected_row()
@@ -237,41 +299,6 @@ class WindowProfile(QWidget):
             self.set_sketch_placeholder()
             self.ui.label_sketch.setText("")
 
-    def load_and_show_sketch(self, profile):
-        """Отображение эскиза профиля"""
-        if not profile or not profile.get('sketch'):
-            self.set_sketch_placeholder()
-            self.ui.label_sketch.setText("Эскиз не найден")
-            return
-        sketch_data = profile['sketch']
-        base64_data = sketch_data.split(',')[1] if sketch_data.startswith('data:image') else sketch_data
-        try:
-            image_data = base64.b64decode(base64_data)
-            pixmap = QPixmap()
-            if pixmap.loadFromData(image_data) and not pixmap.isNull():
-                scaled = pixmap.scaled(200, 150, Qt.KeepAspectRatio, Qt.SmoothTransformation)
-                self.ui.label_sketch.setPixmap(scaled)
-                self.ui.label_sketch.setText("")
-            else:
-                self._set_sketch_error()
-        except Exception:
-            self._set_sketch_error()
-
-    def _set_sketch_error(self):
-        """Установка заглушки при ошибке загрузки эскиза"""
-        self.set_sketch_placeholder()
-        self.ui.label_sketch.setText("Ошибка загрузки эскиза")
-
-    def set_sketch_placeholder(self):
-        """Установка иконки-заглушки"""
-        placeholder_path = ICON_PATHS.get("SKETCH_PLACEHOLDER")
-        if placeholder_path and os.path.exists(placeholder_path):
-            pixmap = QPixmap(placeholder_path)
-            scaled = pixmap.scaled(120, 120, Qt.KeepAspectRatio, Qt.SmoothTransformation)
-            self.ui.label_sketch.setPixmap(scaled)
-        else:
-            self.ui.label_sketch.clear()
-
     def on_search_changed(self, text):
         """Фильтрация таблицы по артикулу"""
         self._filter_table(self.ui.tableWidget_profiles, text.lower())
@@ -283,6 +310,11 @@ class WindowProfile(QWidget):
             visible = item and text in item.text().lower()
             table.setRowHidden(row, not visible)
 
+
+    # =============================================================================
+    # ОБРАБОТЧИКИ ДОПОЛНИТЕЛЬНЫХ ДЕЙСТВИЙ
+    # =============================================================================
+
     def on_sketch_open_clicked(self):
         """Открытие эскиза"""
         QMessageBox.information(self, "Эскиз", "Открытие эскиза")
@@ -290,6 +322,11 @@ class WindowProfile(QWidget):
     def on_autocad_open_clicked(self):
         """Открытие чертежа в AutoCAD"""
         QMessageBox.information(self, "AutoCAD", "Открытие в AutoCAD")
+
+
+    # =============================================================================
+    # УПРАВЛЕНИЕ АВТООБНОВЛЕНИЕМ
+    # =============================================================================
 
     def start_auto_refresh(self):
         """Запуск автообновления"""
