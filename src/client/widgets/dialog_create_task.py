@@ -5,7 +5,7 @@ from typing import Dict, List, Optional
 
 from PySide6.QtCore import QDate, QFile, Signal, Slot
 from PySide6.QtUiTools import QUiLoader
-from PySide6.QtWidgets import (QCheckBox, QDialog, QVBoxLayout, QWidget)
+from PySide6.QtWidgets import (QCheckBox, QDialog, QVBoxLayout, QWidget, QSpinBox)
 
 from ..api_client import ApiClient
 from ..references_manager import references_manager
@@ -29,6 +29,8 @@ class DialogCreateTask(QDialog):
         # Данные для работы с изделиями
         self.array_product: List[Dict] = []
         self.dict_product_component_checkbox: Dict[int, QCheckBox] = {}
+        self.dict_product_component_spinbox: Dict[int, QSpinBox] = {} 
+        
         
         self.load_ui()
         self.setup_ui()
@@ -301,17 +303,40 @@ class DialogCreateTask(QDialog):
         layout = self.ui.widget_product_content.layout()
         
         for component in array_component:
+            # Создаем горизонтальный layout для чекбокса и спинбокса
+            from PySide6.QtWidgets import QHBoxLayout, QWidget, QSpinBox
+            
+            container_widget = QWidget()
+            horizontal_layout = QHBoxLayout(container_widget)
+            horizontal_layout.setContentsMargins(0, 0, 0, 0)
+            
+            # Чекбокс
             checkbox = QCheckBox()
-            
-            # Получаем название компонента
             component_name = component.get("component_name", "Неизвестный компонент")
-            quantity = component.get("quantity", 1)
-            
-            checkbox.setText(f"{component_name} (кол-во: {quantity})")
+            checkbox.setText(component_name)
             checkbox.stateChanged.connect(self.on_product_component_selection_changed)
             
-            layout.addWidget(checkbox)
+            # SpinBox для количества
+            spinbox = QSpinBox()
+            spinbox.setMinimum(1)
+            spinbox.setMaximum(999)
+            spinbox.setValue(component.get("quantity", 1))  # Количество по умолчанию из API
+            spinbox.setSuffix(" шт.")
+            spinbox.setMinimumWidth(80)
+            
+            # Добавляем в горизонтальный layout
+            horizontal_layout.addWidget(checkbox)
+            horizontal_layout.addWidget(spinbox)
+            horizontal_layout.addStretch()  # Растягиваем свободное пространство
+            
+            # Добавляем контейнер в основной layout
+            layout.addWidget(container_widget)
+            
+            # Сохраняем ссылки
             self.dict_product_component_checkbox[component["id"]] = checkbox
+            # Создаем новый словарь для спинбоксов изделий
+            self.dict_product_component_spinbox[component["id"]] = spinbox
+    
         # Обновляем состояние кнопки создания
         self.update_create_button_state()
 
@@ -332,10 +357,15 @@ class DialogCreateTask(QDialog):
         
         # Удаляем все чекбоксы
         for checkbox in self.dict_product_component_checkbox.values():
-            layout.removeWidget(checkbox)
+            layout.removeWidget(checkbox.parentWidget())
             checkbox.deleteLater()
-        
+
+        for spinbox in self.dict_product_component_spinbox.values():
+            layout.removeWidget(checkbox.parentWidget())
+            spinbox.deleteLater()
+
         self.dict_product_component_checkbox.clear()
+        self.dict_product_component_spinbox.clear()
 
     @Slot()
     def on_profile_tool_component_selection_changed(self) -> None:
@@ -436,20 +466,23 @@ class DialogCreateTask(QDialog):
         deadline = self.ui.dateEdit_product_deadline.date().toString("yyyy-MM-dd")
         description = self.ui.textEdit_product_description.toPlainText().strip()
         
-        # Получаем выбранные компоненты
-        array_component_id = [
-            component_id for component_id, checkbox 
-            in self.dict_product_component_checkbox.items()
-            if checkbox.isChecked()
-        ]
-        
+        # Получаем выбранные компоненты с количеством из SpinBox
+        array_component_data = []
+        for component_id, checkbox in self.dict_product_component_checkbox.items():
+            if checkbox.isChecked():
+                spinbox = self.dict_product_component_spinbox[component_id]
+                array_component_data.append({
+                    "product_component_id": component_id,
+                    "quantity": spinbox.value()
+                })
+
         # Создаем данные задачи для API
         task_data = {
             "product_id": product_id,
             "department_id": department_id,
             "deadline_on": deadline,
             "stage": description if description else None,
-            "array_component_id": array_component_id
+            "array_component_data": array_component_data
         }
         
         # Отправляем сигнал с данными

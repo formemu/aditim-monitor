@@ -39,7 +39,8 @@ class TaskComponent(Base):
     # Ссылка на компонент изделия (если задача для изделия)
     product_component_id = Column(Integer, ForeignKey("product_component.id"), nullable=True)
     description = Column(Text, nullable=True)
-    
+    quantity = Column(Integer, nullable=False, default=1)
+
     # Relationships
     task = relationship("Task", back_populates="component")
     profile_tool_component = relationship("ProfileToolComponent", back_populates="task_component")

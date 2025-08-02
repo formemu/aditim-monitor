@@ -95,7 +95,7 @@ class TasksContent(QWidget):
             print(f"TasksContent: Получены данные для создания задачи: {task_data}")
             
             # Извлекаем компоненты отдельно
-            array_component_id = task_data.pop("array_component_id", [])
+            array_component_data = task_data.pop("array_component_data", [])
             
             # Создаем задачу на сервере (без компонентов)
             response = self.api_client.create_task(task_data)
@@ -108,20 +108,36 @@ class TasksContent(QWidget):
                 print(f"TasksContent: Задача создана успешно с ID: {task_id}")
                 
                 # Если есть компоненты, создаем их для задачи
-                if array_component_id:
-                    for component_id in array_component_id:
-                        component_data = {
-                            "task_id": task_id,
-                            "profile_tool_component_id": component_id
-                        }
-                        print(f"TasksContent: Создаем компонент {component_id} для задачи {task_id}")
-                        comp_response = self.api_client.create_task_component(component_data)
+                if array_component_data:
+                    for component_data in array_component_data:
+                        # Определяем тип компонента и создаем соответствующую структуру
+                        if "profile_tool_component_id" in component_data:
+                            # Компонент инструмента профиля
+                            comp_request = {
+                                "task_id": task_id,
+                                "profile_tool_component_id": component_data["profile_tool_component_id"],
+                                "quantity": component_data.get("quantity", 1)
+                            }
+                        elif "product_component_id" in component_data:
+                            # Компонент изделия
+                            comp_request = {
+                                "task_id": task_id,
+                                "product_component_id": component_data["product_component_id"],
+                                "quantity": component_data.get("quantity", 1)
+                            }
+                        else:
+                            print(f"Предупреждение: неизвестный тип компонента: {component_data}")
+                            continue
+                        print(f"TasksContent: Создаем компонент для задачи {task_id}: {comp_request}")
+                        comp_response = self.api_client.create_task_component(comp_request)
                         print(f"TasksContent: Ответ при создании компонента: {comp_response}")
                         
                         if comp_response and 'id' in comp_response:
-                            print(f"Компонент {component_id} добавлен к задаче {task_id}")
+                            comp_id = comp_request.get('profile_tool_component_id') or comp_request.get('product_component_id')
+                            print(f"Компонент {comp_id} добавлен к задаче {task_id}")
                         else:
-                            print(f"Предупреждение: не удалось добавить компонент {component_id}: {comp_response}")
+                            comp_id = comp_request.get('profile_tool_component_id') or comp_request.get('product_component_id')
+                            print(f"Предупреждение: не удалось добавить компонент {comp_id}: {comp_response}")
                 
                 # Принудительно перезагружаем список задач с сервера
                 self.current_tasks_data = []  # Сбрасываем кэш для принудительного обновления
@@ -328,21 +344,21 @@ class TasksContent(QWidget):
             # Запускаем асинхронную загрузку
             run_async(
                 self.api_client.get_task,
-                on_success=self._on_tasks_loaded,
-                on_error=self._on_tasks_load_error
+                on_success=self.on_tasks_loaded,
+                on_error=self.on_tasks_load_error
             )
         except Exception as e:
-            self._on_tasks_load_error(e)
+            self.on_tasks_load_error(e)
 
-    def _on_tasks_loaded(self, tasks):
+    def on_tasks_loaded(self, tasks):
         """Обработчик успешной загрузки задач"""
         try:
             self.ui.tableWidget_tasks.setEnabled(True)
             self.update_tasks_table(tasks)
         except Exception as e:
-            self._on_tasks_load_error(e)
+            self.on_tasks_load_error(e)
 
-    def _on_tasks_load_error(self, error):
+    def on_tasks_load_error(self, error):
         """Обработчик ошибки загрузки задач"""
         self.ui.tableWidget_tasks.setEnabled(True)
         QMessageBox.warning(self, "Предупреждение", f"Не удалось загрузить задачи с сервера: {error}")

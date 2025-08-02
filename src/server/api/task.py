@@ -12,6 +12,7 @@ from ..models.product import Product
 from ..models.profile_tool import ProfileTool
 from ..models.task import TaskComponent
 from ..models.directory import DirTaskStatus
+from ..models.task import TaskComponent
 from ..schemas.task import TaskCreate, TaskUpdate, TaskResponse
 
 router = APIRouter(prefix="/api/task", tags=["task"])
@@ -31,7 +32,6 @@ def get_task_list(
     
     task = query.order_by(Task.position).limit(limit).all()
     return task
-
 
 @router.post("/", response_model=TaskResponse)
 def create_task(task: TaskCreate, db: Session = Depends(get_db)):
@@ -70,9 +70,7 @@ def create_task(task: TaskCreate, db: Session = Depends(get_db)):
     
     return db_task
 
-
 # === Task Component endpoints ===
-
 @router.get("/task-component")
 def get_task_component_list(task_id: Optional[int] = None, db: Session = Depends(get_db)):
     """Get all task components, optionally filtered by task_id"""
@@ -92,9 +90,9 @@ def get_task_component_list(task_id: Optional[int] = None, db: Session = Depends
                 "id": comp.id,
                 "task_id": comp.task_id,
                 "profile_tool_component_id": comp.profile_tool_component_id,
-                "product_component_id": comp.product_component_id
+                "product_component_id": comp.product_component_id,
+                "quantity": comp.quantity
             }
-            
             # Определяем тип компонента и получаем данные
             if comp.profile_tool_component_id and comp.profile_tool_component:
                 # Компонент инструмента профиля
@@ -108,7 +106,7 @@ def get_task_component_list(task_id: Optional[int] = None, db: Session = Depends
             elif comp.product_component_id and comp.product_component:
                 # Компонент изделия
                 comp_dict["name"] = comp.product_component.component_name
-                comp_dict["quantity"] = comp.product_component.quantity or 1
+                comp_dict["quantity"] = comp.quantity or 1
                 
             else:
                 # Компонент без связи
@@ -124,26 +122,40 @@ def get_task_component_list(task_id: Optional[int] = None, db: Session = Depends
         traceback.print_exc()
         return []
 
-
 @router.post("/task-component")
 def create_task_component(component_data: dict, db: Session = Depends(get_db)):
     """Create new task component"""
     try:
-        from ..models.task import TaskComponent
+        # Определяем тип компонента и создаем соответствующую запись
+        component = TaskComponent(task_id=component_data["task_id"])
         
-        component = TaskComponent(
-            task_id=component_data["task_id"],
-            profile_tool_component_id=component_data["profile_tool_component_id"]
-        )
+        # Проверяем какой тип компонента передан
+        if "profile_tool_component_id" in component_data and component_data["profile_tool_component_id"]:
+            # Компонент инструмента профиля
+            component.profile_tool_component_id = component_data["profile_tool_component_id"]
+            
+        elif "product_component_id" in component_data and component_data["product_component_id"]:
+            # Компонент изделия
+            component.product_component_id = component_data["product_component_id"]
+            component.quantity = component_data["quantity"]
+
+        else:
+            raise HTTPException(
+                status_code=400, 
+                detail="Необходимо указать profile_tool_component_id или product_component_id"
+            )
         
         db.add(component)
         db.commit()
         db.refresh(component)
         
+        # Формируем ответ с учетом типа компонента
         result = {
             "id": component.id,
             "task_id": component.task_id,
-            "profile_tool_component_id": component.profile_tool_component_id
+            "profile_tool_component_id": component.profile_tool_component_id,
+            "product_component_id": component.product_component_id,
+            "quantity": component.quantity
         }
         return result
         
@@ -152,7 +164,6 @@ def create_task_component(component_data: dict, db: Session = Depends(get_db)):
         traceback.print_exc()
         raise HTTPException(status_code=400, detail=str(e))
 
-
 @router.get("/{task_id}", response_model=TaskResponse)
 def get_task_by_id(task_id: int, db: Session = Depends(get_db)):
     """Get task by ID"""
@@ -160,7 +171,6 @@ def get_task_by_id(task_id: int, db: Session = Depends(get_db)):
     if not task:
         raise HTTPException(status_code=404, detail="Task not found")
     return task
-
 
 @router.put("/{task_id}", response_model=TaskResponse)
 def update_task(task_id: int, task_update: TaskUpdate, db: Session = Depends(get_db)):
@@ -177,7 +187,6 @@ def update_task(task_id: int, task_update: TaskUpdate, db: Session = Depends(get
     db.refresh(task)
     return task
 
-
 @router.delete("/{task_id}")
 def delete_task(task_id: int, db: Session = Depends(get_db)):
     """Delete task"""
@@ -188,7 +197,6 @@ def delete_task(task_id: int, db: Session = Depends(get_db)):
     db.delete(task)
     db.commit()
     return {"message": "Task deleted successfully"}
-
 
 @router.put("/{task_id}/position")
 def update_task_position(task_id: int, position: int, db: Session = Depends(get_db)):
