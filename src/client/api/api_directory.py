@@ -24,3 +24,7 @@ class ApiDirectory(ApiClient):
     def get_component_type(self) -> List[Dict[Any, Any]]:
         """Получение типов компонентов"""
         return self._request("GET", "/api/directory/dir_component_type")
+
+    def get_tool_dimension(self) -> List[Dict[Any, Any]]:
+        """Получение размерностей инструментов"""
+        return self._request("GET", "/api/directory/dir_tool_dimension")

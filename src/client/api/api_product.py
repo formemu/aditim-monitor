@@ -24,3 +24,7 @@ class ApiProduct(ApiClient):
     def create_product_component(self, product_id: int, component_data: Dict[str, Any]) -> Dict[Any, Any]:
         """Создание компонента продукта"""
         return self._request("POST", f"/api/product/{product_id}/component", json=component_data)
+
+    def delete_product(self, product_id: int) -> None:
+        """Удаление продукта"""
+        self._request("DELETE", f"/api/product/{product_id}")

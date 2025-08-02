@@ -31,6 +31,14 @@ def create_product(product: ProductCreate, db: Session = Depends(get_db)):
     db.refresh(db_product)
     return db_product
 
+@router.delete("/product/{product_id}", response_model=dict)
+def delete_product(product_id: int, db: Session = Depends(get_db)):
+    db_product = db.query(Product).filter(Product.id == product_id).first()
+    if not db_product:
+        raise HTTPException(status_code=404, detail="Product not found")
+    db.delete(db_product)
+    db.commit()
+    return {"detail": "Product deleted successfully"}
 
 
 @router.get("/product/{product_id}/component", response_model=List[ProductComponentResponse])
@@ -54,4 +62,17 @@ def create_product_component(
     db.refresh(db_component)
     return db_component
 
+
+@router.delete("/product/{product_id}/component/{component_id}")
+def delete_product_component(
+    product_id: int, component_id: int, db: Session = Depends(get_db)):
+    db_component = db.query(ProductComponent).filter(
+        ProductComponent.id == component_id,
+        ProductComponent.product_id == product_id
+    ).first()
+    if not db_component:
+        raise HTTPException(status_code=404, detail="Component not found")
+    db.delete(db_component)
+    db.commit()
+    return {"detail": "Component deleted successfully"}
 

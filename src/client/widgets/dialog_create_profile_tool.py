@@ -90,6 +90,7 @@ class DialogCreateProfileTool(QDialog):
         for dim_id, dim_data in dimension_dict.items():
             dimension_list.append(dim_data.get('dimension', ''))
         
+
         self.ui.comboBox_dimension.addItems(dimension_list)
 
     def on_profile_search_changed(self, text: str):

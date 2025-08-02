@@ -160,9 +160,9 @@ class ReferencesManager:
     
     def load_dimension_sync(self):
         """Синхронная загрузка размерностей инструментов"""
+        print(1)
         try:
-            response = self.api_directory.get_tool_dimension()
-            dimension = response['data']
+            dimension = self.api_directory.get_tool_dimension()
             self.dimension = {
                 dim['id']: {
                     'dimension': dim['dimension'],
