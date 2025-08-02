@@ -16,7 +16,6 @@ from ..style_util import load_styles_with_constants
 
 class WindowProfile(QWidget):
     """Виджет содержимого профилей с таблицей, фильтрацией и просмотром эскизов"""
-
     def __init__(self):
         super().__init__()
         self.api_profile = ApiProfile()
@@ -26,11 +25,9 @@ class WindowProfile(QWidget):
         self.load_ui()
         self.setup_ui()
 
-
     # =============================================================================
     # ИНИЦИАЛИЗАЦИЯ И ЗАГРУЗКА ИНТЕРФЕЙСА
     # =============================================================================
-
     def load_ui(self):
         """Загрузка UI из файла"""
         ui_file = QFile(UI_PATHS["PROFILE_CONTENT"])
@@ -43,7 +40,6 @@ class WindowProfile(QWidget):
         """Настройка UI компонентов"""
         self.ui.setStyleSheet(load_styles_with_constants(get_style_path("MAIN")))
         self.load_logo()
-
         # Подключение сигналов
         self.ui.pushButton_profile_add.clicked.connect(self.on_add_clicked)
         self.ui.pushButton_profile_edit.clicked.connect(self.on_edit_clicked)
@@ -51,8 +47,7 @@ class WindowProfile(QWidget):
         self.ui.pushButton_sketch_open.clicked.connect(self.on_sketch_open_clicked)
         self.ui.pushButton_autocad_open.clicked.connect(self.on_autocad_open_clicked)
         self.ui.tableWidget_profiles.itemSelectionChanged.connect(self.on_selection_changed)
-        self.ui.lineEdit_search.textChanged.connect(self.on_search_changed)
-
+        self.ui.lineEdit_search.textChanged.connect(lambda text: self._filter_table(self.ui.tableWidget_profiles, text.lower()))
         # Настройка таблицы
         table = self.ui.tableWidget_profiles
         table.setSelectionBehavior(QAbstractItemView.SelectRows)
@@ -60,16 +55,13 @@ class WindowProfile(QWidget):
         table.setFocusPolicy(Qt.NoFocus)
         table.setColumnWidth(0, 150)  # Артикул
         table.horizontalHeader().setStretchLastSection(True)  # Описание
-
         # Таймер автообновления
         self.update_timer = QTimer()
-        self.update_timer.timeout.connect(self.load_profile)
-
+        self.update_timer.timeout.connect(self.load_data_from_server)
 
     # =============================================================================
     # РАБОТА С ЛОГОТИПОМ И ЭСКИЗАМИ
     # =============================================================================
-
     def load_logo(self):
         """Загрузка логотипа ADITIM"""
         logo_path = ICON_PATHS.get("ADITIM_LOGO_MAIN")
@@ -121,41 +113,25 @@ class WindowProfile(QWidget):
         self.set_sketch_placeholder()
         self.ui.label_sketch.setText("Ошибка загрузки эскиза")
 
-
     # =============================================================================
     # УПРАВЛЕНИЕ ДАННЫМИ: ЗАГРУЗКА И ОБНОВЛЕНИЕ
     # =============================================================================
-
     def refresh_data(self):
         """Принудительное обновление данных"""
         self.current_profile_data = []
-        self.load_profile_from_server()
+        self.load_data_from_server()
 
-    def load_profile_from_server(self):
+    def load_data_from_server(self):
         """Загрузка профилей с сервера"""
-        self._load_data(self.api_profile.get_profile, self.update_profile_table)
-
-    def load_profile(self):
-        """Автообновление: загрузка профилей"""
         try:
             profiles = self.api_profile.get_profile()
             self.update_profile_table(profiles)
         except Exception as e:
-            print(f"Ошибка загрузки профилей: {e}")
-
-    def _load_data(self, fetch_func, update_callback):
-        """Унифицированная загрузка данных с обработкой ошибок"""
-        try:
-            data = fetch_func()
-            update_callback(data)
-        except Exception as e:
             QMessageBox.warning(self, "Предупреждение", f"Ошибка загрузки: {e}")
-
 
     # =============================================================================
     # ОТОБРАЖЕНИЕ ДАННЫХ: ТАБЛИЦА ПРОФИЛЕЙ
     # =============================================================================
-
     def update_profile_table(self, profiles):
         """Обновление таблицы с защитой от дублей"""
         if self._should_skip_update(self.current_profile_data, profiles):
@@ -185,11 +161,9 @@ class WindowProfile(QWidget):
         if prev_selection is not None and prev_selection < len(data):
             table.selectRow(prev_selection)
 
-
     # =============================================================================
     # ОБРАБОТЧИКИ СОБЫТИЙ: УПРАВЛЕНИЕ ПРОФИЛЯМИ
     # =============================================================================
-
     def on_add_clicked(self):
         """Открытие диалога добавления профиля"""
         self._open_dialog(DialogCreateProfile, 'profile_created', self.on_profile_created)
@@ -272,11 +246,9 @@ class WindowProfile(QWidget):
             self.api_profile_tool.delete_profile_tool_component(tool['id'])
         self.api_profile_tool.delete_profile_tool(profile_id)
 
-
     # =============================================================================
     # ОБРАБОТЧИКИ СОБЫТИЙ: ВЫДЕЛЕНИЕ И ПОИСК
     # =============================================================================
-
     def on_selection_changed(self):
         """Обработка выбора строки"""
         row = self._get_selected_row()
@@ -299,10 +271,6 @@ class WindowProfile(QWidget):
             self.set_sketch_placeholder()
             self.ui.label_sketch.setText("")
 
-    def on_search_changed(self, text):
-        """Фильтрация таблицы по артикулу"""
-        self._filter_table(self.ui.tableWidget_profiles, text.lower())
-
     def _filter_table(self, table, text):
         """Фильтрация строк таблицы по тексту в первом столбце"""
         for row in range(table.rowCount()):
@@ -310,11 +278,9 @@ class WindowProfile(QWidget):
             visible = item and text in item.text().lower()
             table.setRowHidden(row, not visible)
 
-
     # =============================================================================
     # ОБРАБОТЧИКИ ДОПОЛНИТЕЛЬНЫХ ДЕЙСТВИЙ
     # =============================================================================
-
     def on_sketch_open_clicked(self):
         """Открытие эскиза"""
         QMessageBox.information(self, "Эскиз", "Открытие эскиза")
@@ -323,16 +289,14 @@ class WindowProfile(QWidget):
         """Открытие чертежа в AutoCAD"""
         QMessageBox.information(self, "AutoCAD", "Открытие в AutoCAD")
 
-
     # =============================================================================
     # УПРАВЛЕНИЕ АВТООБНОВЛЕНИЕМ
     # =============================================================================
-
     def start_auto_refresh(self):
         """Запуск автообновления"""
         if not self.update_timer.isActive():
             self.update_timer.start(5000)
-            self.load_profile()
+            self.load_data_from_server()
 
     def stop_auto_refresh(self):
         """Остановка автообновления"""

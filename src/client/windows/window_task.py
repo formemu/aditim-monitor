@@ -10,12 +10,10 @@ from ..widgets.dialog_create_task import DialogCreateTask
 from ..api.api_task import ApiTask
 from ..style_util import load_styles_with_constants
 from ..references_manager import references_manager
-from ..async_util import run_async
 
 
 class WindowTask(QWidget):
     """Виджет содержимого задач"""
-
     def __init__(self):
         super().__init__()
         self.api_task = ApiTask()
@@ -24,13 +22,11 @@ class WindowTask(QWidget):
         self.load_ui()
         self.setup_ui()
 
-
     # =============================================================================
     # ИНИЦИАЛИЗАЦИЯ И ЗАГРУЗКА ИНТЕРФЕЙСА
     # =============================================================================
-
-
     def load_ui(self):
+        """Загрузка UI из файла"""
         ui_file = QFile(UI_PATHS["TASK_CONTENT"])
         ui_file.open(QFile.ReadOnly)
         loader = QUiLoader()
@@ -40,14 +36,12 @@ class WindowTask(QWidget):
     def setup_ui(self):
         """Настройка UI компонентов"""
         self.ui.setStyleSheet(load_styles_with_constants(get_style_path("MAIN")))
-
         # Подключение сигналов
         self.ui.pushButton_task_add.clicked.connect(self.on_add_clicked)
         self.ui.pushButton_task_edit.clicked.connect(self.on_edit_clicked)
         self.ui.pushButton_task_delete.clicked.connect(self.on_delete_clicked)
         self.ui.tableWidget_tasks.itemSelectionChanged.connect(self.on_selection_changed)
-        self.ui.lineEdit_search.textChanged.connect(self.on_search_changed)
-
+        self.ui.lineEdit_search.textChanged.connect(lambda text: self._filter_table(self.ui.tableWidget_tasks, text.lower()))
         # Настройка таблицы задач
         table = self.ui.tableWidget_tasks
         table.setSelectionBehavior(QAbstractItemView.SelectRows)
@@ -55,44 +49,34 @@ class WindowTask(QWidget):
         table.setFocusPolicy(Qt.NoFocus)
         for col, width in enumerate([180, 120, 120, 80, 100, 120]):
             table.setColumnWidth(col, width)
-
         # Настройка таблицы компонентов
         comp_table = self.ui.tableWidget_components
         for col, width in enumerate([30, 180, 60]):
             comp_table.setColumnWidth(col, width)
-
         # Таймер автообновления
         self.update_timer = QTimer()
-        self.update_timer.timeout.connect(self.load_tasks_from_server)
-
+        self.update_timer.timeout.connect(self.load_data_from_server)
 
     # =============================================================================
     # УПРАВЛЕНИЕ ДАННЫМИ: ЗАГРУЗКА И ОБНОВЛЕНИЕ
     # =============================================================================
-
     def refresh_data(self):
         """Принудительное обновление данных"""
         self.current_tasks_data = []
-        self.load_tasks_from_server()
+        self.load_data_from_server()
 
-    def load_tasks_from_server(self):
+    def load_data_from_server(self):
         """Загрузка задач с сервера"""
-        if not self.ui.tableWidget_tasks.isEnabled():
-            return
-        
         try:
-            self.ui.tableWidget_tasks.setEnabled(False)
             tasks = self.api_task.get_task()
-            self.ui.tableWidget_tasks.setEnabled(True)
+            print(tasks)
             self.update_tasks_table(tasks)
         except Exception as e:
-            self.ui.tableWidget_tasks.setEnabled(True)
             QMessageBox.warning(self, "Предупреждение", f"Ошибка загрузки: {e}")
 
     # =============================================================================
     # ОТОБРАЖЕНИЕ ДАННЫХ: ТАБЛИЦЫ И ИНФОРМАЦИОННЫЕ ПАНЕЛИ
     # =============================================================================
-
     def update_tasks_table(self, tasks):
         """Обновление таблицы задач с проверкой изменений"""
         if self._should_skip_update(self.current_tasks_data, tasks):
@@ -200,11 +184,9 @@ class WindowTask(QWidget):
         """Очистка таблицы компонентов"""
         self.ui.tableWidget_components.setRowCount(0)
 
-
     # =============================================================================
     # ОБРАБОТЧИКИ СОБЫТИЙ: УПРАВЛЕНИЕ ЗАДАЧАМИ
     # =============================================================================
-
     def on_add_clicked(self):
         """Открытие диалога создания задачи"""
         self._open_dialog(DialogCreateTask, 'task_created', self.on_task_created)
@@ -294,11 +276,9 @@ class WindowTask(QWidget):
         )
         return reply == QMessageBox.Yes
 
-
     # =============================================================================
     # ОБРАБОТЧИКИ СОБЫТИЙ: ВЫДЕЛЕНИЕ И ПОИСК
     # =============================================================================
-
     def on_selection_changed(self):
         """Обработка выбора задачи"""
         row = self._get_selected_row()
@@ -312,10 +292,6 @@ class WindowTask(QWidget):
             self.clear_task_info_panel()
             self.clear_components_table()
 
-    def on_search_changed(self, text):
-        """Фильтрация по названию задачи"""
-        self._filter_table(self.ui.tableWidget_tasks, text.lower())
-
     def _filter_table(self, table, text):
         """Фильтрация строк таблицы по первому столбцу"""
         for row in range(table.rowCount()):
@@ -323,16 +299,14 @@ class WindowTask(QWidget):
             visible = item and text in item.text().lower()
             table.setRowHidden(row, not visible)
 
-
     # =============================================================================
     # УПРАВЛЕНИЕ АВТООБНОВЛЕНИЕМ
     # =============================================================================
-
     def start_auto_refresh(self):
         """Запуск автообновления"""
         if not self.update_timer.isActive():
             self.update_timer.start(5000)
-            self.load_tasks_from_server()
+            self.load_data_from_server()
 
     def stop_auto_refresh(self):
         """Остановка автообновления"""
