@@ -169,8 +169,8 @@ class DialogCreateProfileTool(QDialog):
         """Загружает типы компонентов в таблицу"""
         try:
             component_type = references_manager.get_component_type()
-            statuses = references_manager.get_status()
-            default_status_id = references_manager.get_status().get(1)
+            statuses = references_manager.get_component_status()
+            default_status_id = references_manager.get_component_status().get(1)
             
             # Очищаем таблицу
             self.ui.tableWidget_components.setRowCount(0)

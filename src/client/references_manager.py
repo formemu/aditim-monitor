@@ -38,7 +38,7 @@ class ReferencesManager:
         self.profile = {}             # {id: {article, description, sketch}}
         self.component_type = {}      # {id: {name, description}}
         self.profile_dimension = {}   # {profile_id: [dimensions]}
-        self.status = {}            # {id: name} - статусы компонентов
+        self.component_status = {}            # {id: name} - статусы компонентов
         self.profile_tool = {}       # {id: {profile_id, dimension_id, description}}
         self.product = {}            # {id: {name, description, department_id}}
         self.task_status = {}       # {id: name} - статусы задач
@@ -56,19 +56,19 @@ class ReferencesManager:
 
         self.initialized = True
     
-    def load_all_references_sync(self):
-        self.load_department_sync()
-        self.load_profile_sync()
-        self.load_component_type_sync()
-        self.load_status_sync()
-        self.load_profile_tool_sync()
-        self.load_product_sync()
-        self.load_task_status_sync()
-        self.load_dimension_sync()
+    def load_all_references(self):
+        self.load_department()
+        self.load_profile()
+        self.load_component_type()
+        self.load_component_status()
+        self.load_profile_tool()
+        self.load_product()
+        self.load_task_status()
+        self.load_dimension()
     
     # Базовые методы загрузки
-    def load_department_sync(self):
-        """Синхронная загрузка департаментов"""
+    def load_department(self):
+        """загрузка департаментов"""
         try:
             department = self.api_directory.get_department()
             self.department = {dept['id']: dept['name'] for dept in department}
@@ -76,8 +76,8 @@ class ReferencesManager:
         except Exception as e:
             self.department_loaded = False
     
-    def load_profile_sync(self):
-        """Синхронная загрузка профилей"""
+    def load_profile(self):
+        """загрузка профилей"""
         try:
             profiles = self.api_profile.get_profile()
             self.profile = {
@@ -92,8 +92,8 @@ class ReferencesManager:
         except Exception as e:
             self.profile_loaded = False
 
-    def load_component_type_sync(self):
-        """Синхронная загрузка типов компонентов"""
+    def load_component_type(self):
+        """загрузка типов компонентов"""
         try:
             component_types = self.api_directory.get_component_type()
             self.component_type = {
@@ -107,18 +107,18 @@ class ReferencesManager:
         except Exception as e:
             self.component_type_loaded = False
     
-    def load_status_sync(self):
-        """Синхронная загрузка статусов"""
+    def load_component_status(self):
+        """загрузка статусов"""
         try:
             # Загружаем статусы компонентов из API
             status = self.api_directory.get_component_status()
-            self.status = {status['id']: status['name'] for status in status}
+            self.component_status = {status['id']: status['name'] for status in status}
             self.status_loaded = True
         except Exception as e:
             self.status_loaded = False
 
-    def load_profile_tool_sync(self):
-        """Синхронная загрузка инструментов профилей"""
+    def load_profile_tool(self):
+        """загрузка инструментов профилей"""
         try:
             profile_tools = self.api_profile_tool.get_profile_tool()
             self.profile_tools = {
@@ -133,8 +133,8 @@ class ReferencesManager:
         except Exception as e:
             self.profile_tool_loaded = False
 
-    def load_product_sync(self):
-        """Синхронная загрузка изделий"""
+    def load_product(self):
+        """загрузка изделий"""
         try:
             product = self.api_product.get_product()
             self.product = {
@@ -149,8 +149,8 @@ class ReferencesManager:
         except Exception as e:
             self.product_loaded = False
 
-    def load_task_status_sync(self):
-        """Синхронная загрузка статусов задач"""
+    def load_task_status(self):
+        """загрузка статусов задач"""
         try:
             task_status = self.api_directory.get_task_status()
             self.task_status = {status['id']: status['name'] for status in task_status}
@@ -158,8 +158,8 @@ class ReferencesManager:
         except Exception as e:
             self.task_status_loaded = False
     
-    def load_dimension_sync(self):
-        """Синхронная загрузка размерностей инструментов"""
+    def load_dimension(self):
+        """загрузка размерностей инструментов"""
         try:
             dimension = self.api_directory.get_tool_dimension()
             self.dimension = {
@@ -186,9 +186,9 @@ class ReferencesManager:
         """Возвращает словарь типов компонентов {id: {name, description}}"""
         return self.component_type.copy()
 
-    def get_status(self) -> Dict[int, str]:
+    def get_component_status(self) -> Dict[int, str]:
         """Возвращает словарь статусов компонентов {id: name}"""
-        return self.status.copy()
+        return self.component_status.copy()
 
     def get_profile_tool(self) -> Dict[int, Dict[str, Any]]:
         """Возвращает словарь инструментов профилей {id: {profile_id, dimension_id, description}}"""
@@ -211,7 +211,7 @@ class ReferencesManager:
         """Асинхронное обновление справочника департаментов"""
         def _refresh():
             self.department_loaded = False
-            self.load_department_sync()
+            self.load_department()
             return self.department
         
         run_async(
@@ -224,7 +224,7 @@ class ReferencesManager:
         """Асинхронное обновление справочника профилей"""
         def _refresh():
             self.profile_loaded = False
-            self.load_profile_sync()
+            self.load_profile()
             return self.profile
         
         run_async(
@@ -246,7 +246,7 @@ class ReferencesManager:
             self.task_status_loaded = False
             self.profile_dimension.clear()
             
-            self.load_all_references_sync()
+            self.load_all_references()
             return True
         
         # Запускаем обновление асинхронно

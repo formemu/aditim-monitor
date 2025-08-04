@@ -21,7 +21,7 @@ def main():
     app.setAttribute(Qt.ApplicationAttribute.AA_EnableHighDpiScaling, True)
     app.setAttribute(Qt.ApplicationAttribute.AA_UseHighDpiPixmaps, True)
     
-    references_manager.load_all_references_sync()
+    references_manager.load_all_references()
 
     # Создание и отображение главного окна
     window = MainWindow()

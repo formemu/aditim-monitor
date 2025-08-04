@@ -1,8 +1,9 @@
 """
 Содержимое задач для ADITIM Monitor Client
 """
-from PySide6.QtWidgets import QWidget, QMessageBox, QTableWidgetItem, QAbstractItemView
+from PySide6.QtWidgets import QWidget, QMessageBox, QTableWidgetItem, QAbstractItemView,  QMenu
 from PySide6.QtCore import QFile, Qt, QTimer
+from PySide6.QtGui import QAction
 from PySide6.QtUiTools import QUiLoader
 from datetime import datetime
 from ..constant import UI_PATHS_ABS as UI_PATHS, get_style_path
@@ -36,6 +37,9 @@ class WindowTask(QWidget):
     def setup_ui(self):
         """Настройка UI компонентов"""
         self.ui.setStyleSheet(load_styles_with_constants(get_style_path("MAIN")))
+        # Настройка контекстного меню для таблицы задач
+        self.ui.tableWidget_tasks.setContextMenuPolicy(Qt.CustomContextMenu)
+        self.ui.tableWidget_tasks.customContextMenuRequested.connect(self._show_context_menu)
         # Подключение сигналов
         self.ui.pushButton_task_add.clicked.connect(self.on_add_clicked)
         self.ui.pushButton_task_edit.clicked.connect(self.on_edit_clicked)
@@ -274,6 +278,41 @@ class WindowTask(QWidget):
             QMessageBox.Yes | QMessageBox.No, QMessageBox.No
         )
         return reply == QMessageBox.Yes
+
+    def _show_context_menu(self, pos):
+        """Показать контекстное меню для изменения статуса задачи"""
+        table = self.ui.tableWidget_tasks
+        index = table.indexAt(pos)
+        if not index.isValid():
+            return
+
+        row = index.row()
+        task = self.current_tasks_data[row]
+        status_dict = references_manager.get_task_status()
+
+        menu = QMenu(table)
+        menu.addSeparator()
+        status_menu = QMenu("Изменить статус", menu)
+
+        current_status_id = task.get('task_status_id')
+        for status_id, status_name in status_dict.items():
+            action = QAction(status_name, status_menu)
+            action.setCheckable(True)
+            action.setChecked(status_id == current_status_id)
+            action.triggered.connect(lambda checked, sid=status_id, r=row: self._change_task_status(r, sid))
+            status_menu.addAction(action)
+
+        menu.addMenu(status_menu)
+        menu.exec(table.viewport().mapToGlobal(pos))
+
+    def _change_task_status(self, row, status_id):
+        """Изменить статус задачи через API"""
+        task = self.current_tasks_data[row]
+        try:
+            self.api_task.update_task_status(task['id'], status_id)
+            self.refresh_data()
+        except Exception as e:
+            QMessageBox.critical(self, "Ошибка", f"Не удалось изменить статус: {e}")
 
     # =============================================================================
     # ОБРАБОТЧИКИ СОБЫТИЙ: ВЫДЕЛЕНИЕ И ПОИСК

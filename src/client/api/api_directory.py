@@ -13,10 +13,6 @@ class ApiDirectory(ApiClient):
         """Получение всех подразделений"""
         return self._request("GET", "/api/directory/dir_department")
     
-    def get_status(self) -> List[Dict[Any, Any]]:
-        """Получение всех статусов задач"""
-        return self._request("GET", "/api/directory/dir_task_status")
-    
     def get_component_status(self) -> List[Dict[Any, Any]]:
         """Получение всех статусов компонентов"""
         return self._request("GET", "/api/directory/dir_component_status")
@@ -28,3 +24,7 @@ class ApiDirectory(ApiClient):
     def get_tool_dimension(self) -> List[Dict[Any, Any]]:
         """Получение размерностей инструментов"""
         return self._request("GET", "/api/directory/dir_tool_dimension")
+
+    def get_task_status(self) -> List[Dict[Any, Any]]:
+        """Получение статусов задач"""
+        return self._request("GET", "/api/directory/dir_task_status")
