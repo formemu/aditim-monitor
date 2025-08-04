@@ -46,6 +46,30 @@
 			}
 		},
 		{
+			"label": "Run Django Server",
+			"type": "shell",
+			"command": "${workspaceFolder}/.venv/Scripts/python.exe",
+			"args": [
+				"manage.py",
+				"runserver",
+				"0.0.0.0:8080"
+			],
+			"group": "build",
+			"isBackground": true,
+			"problemMatcher": [],
+			"presentation": {
+				"echo": true,
+				"reveal": "always",
+				"focus": false,
+				"panel": "dedicated",
+				"showReuseMessage": true,
+				"clear": false
+			},
+			"options": {
+				"cwd": "${workspaceFolder}/src/django_server"
+			}
+		},
+		{
 			"label": "Run Server and Client",
 			"dependsOrder": "parallel",
 			"dependsOn": [

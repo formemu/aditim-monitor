@@ -133,11 +133,12 @@ def create_task_component(component_data: dict, db: Session = Depends(get_db)):
         if "profile_tool_component_id" in component_data and component_data["profile_tool_component_id"]:
             # Компонент инструмента профиля
             component.profile_tool_component_id = component_data["profile_tool_component_id"]
+            component.quantity = component_data.get("quantity", 1)
             
         elif "product_component_id" in component_data and component_data["product_component_id"]:
             # Компонент изделия
             component.product_component_id = component_data["product_component_id"]
-            component.quantity = component_data["quantity"]
+            component.quantity = component_data.get("quantity", 1)
 
         else:
             raise HTTPException(

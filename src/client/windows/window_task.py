@@ -69,7 +69,6 @@ class WindowTask(QWidget):
         """Загрузка задач с сервера"""
         try:
             tasks = self.api_task.get_task()
-            print(tasks)
             self.update_tasks_table(tasks)
         except Exception as e:
             QMessageBox.warning(self, "Предупреждение", f"Ошибка загрузки: {e}")
