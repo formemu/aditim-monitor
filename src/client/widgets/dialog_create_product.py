@@ -80,6 +80,7 @@ class DialogCreateProduct(QDialog):
 
     def add_component_row_data(self, row: int, name: str = "", quantity: int = 1):
         """Добавляет данные в строку компонента"""
+        self.ui.tableWidget_components.itemChanged.disconnect()  # обязательно!!!
         # Название компонента (редактируемое поле)
         name_item = QTableWidgetItem(name)
         name_item.setFlags(name_item.flags() | Qt.ItemIsEditable)
@@ -104,6 +105,7 @@ class DialogCreateProduct(QDialog):
         text = item.text().strip()
         
         if text:  # Если строка заполнена
+            
             # Проверяем, нужно ли добавить новую пустую строку
             is_last_row = row == self.ui.tableWidget_components.rowCount() - 1
             if is_last_row:
