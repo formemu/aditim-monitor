@@ -5,7 +5,13 @@
 {% block content %}
 <div class="row">
     <div class="col-12">
-        <h1>Список задач</h1>
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <h1>Список задач</h1>
+            <div class="d-flex align-items-center">
+                <span id="last-update" class="badge bg-secondary me-2">Обновлено: --:--</span>
+                <span id="update-status" class="badge bg-success">Автообновление включено</span>
+            </div>
+        </div>
         
         <!-- Форма фильтрации -->
         <div class="search-form">
@@ -40,8 +46,9 @@
         </div>
 
         <!-- Список задач -->
+        <div id="tasks-container">
         {% for task in page_obj %}
-        <div class="card task-card">
+        <div class="card task-card" data-task-id="{{ task.id }}">
             <div class="card-body">
                 <div class="row align-items-center">
                     <div class="col-md-6">
@@ -53,7 +60,7 @@
                         <p class="text-muted mb-0">Департамент: {{ task.department.name }}</p>
                     </div>
                     <div class="col-md-2">
-                        <span class="badge bg-info status-badge">{{ task.task_status.name }}</span>
+                        <span class="badge bg-info status-badge">{{ task.status.name }}</span>
                     </div>
                     <div class="col-md-2">
                         <small class="text-muted">Позиция: {{ task.position }}</small>
@@ -71,6 +78,7 @@
             Задачи не найдены.
         </div>
         {% endfor %}
+        </div>
 
         <!-- Пагинация -->
         {% if page_obj.has_other_pages %}
@@ -96,4 +104,159 @@
         {% endif %}
     </div>
 </div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+let updateInterval;
+let isUpdating = false;
+
+// Получение текущих параметров фильтрации из URL
+function getCurrentFilters() {
+    const urlParams = new URLSearchParams(window.location.search);
+    return {
+        status: urlParams.get('status') || '',
+        department: urlParams.get('department') || '',
+        search: urlParams.get('search') || '',
+        page: urlParams.get('page') || '1'
+    };
+}
+
+// Обновление времени последнего обновления
+function updateLastUpdateTime() {
+    const now = new Date();
+    const timeString = now.toLocaleTimeString('ru-RU', { 
+        hour: '2-digit', 
+        minute: '2-digit',
+        second: '2-digit'
+    });
+    document.getElementById('last-update').textContent = `Обновлено: ${timeString}`;
+}
+
+// Обновление статуса подключения
+function updateConnectionStatus(isConnected, isLoading = false) {
+    const statusElement = document.getElementById('update-status');
+    if (isLoading) {
+        statusElement.textContent = 'Обновление...';
+        statusElement.className = 'badge bg-warning';
+    } else if (isConnected) {
+        statusElement.textContent = 'Автообновление включено';
+        statusElement.className = 'badge bg-success';
+    } else {
+        statusElement.textContent = 'Ошибка подключения';
+        statusElement.className = 'badge bg-danger';
+    }
+}
+
+// Обновление контейнера с задачами
+function updateTasksContainer(tasks) {
+    const container = document.getElementById('tasks-container');
+    
+    if (tasks.length === 0) {
+        container.innerHTML = '<div class="alert alert-info">Задачи не найдены.</div>';
+        return;
+    }
+    
+    let html = '';
+    tasks.forEach(task => {
+        html += `
+        <div class="card task-card" data-task-id="${task.id}">
+            <div class="card-body">
+                <div class="row align-items-center">
+                    <div class="col-md-6">
+                        <h5 class="card-title mb-1">
+                            <a href="${task.url}" class="text-decoration-none">
+                                ${task.name}
+                            </a>
+                        </h5>
+                        <p class="text-muted mb-0">Департамент: ${task.department}</p>
+                    </div>
+                    <div class="col-md-2">
+                        <span class="badge bg-info status-badge">${task.status}</span>
+                    </div>
+                    <div class="col-md-2">
+                        <small class="text-muted">Позиция: ${task.position}</small>
+                    </div>
+                    <div class="col-md-2">
+                        ${task.deadline_on ? `<small class="text-muted">Срок: ${task.deadline_on}</small>` : ''}
+                    </div>
+                </div>
+            </div>
+        </div>`;
+    });
+    
+    container.innerHTML = html;
+}
+
+// Загрузка обновленных данных
+async function loadUpdatedData() {
+    if (isUpdating) return;
+    
+    isUpdating = true;
+    updateConnectionStatus(true, true);
+    
+    try {
+        const filters = getCurrentFilters();
+        const params = new URLSearchParams(filters);
+        
+        const response = await fetch(`/api/task/live/?${params}`);
+        if (!response.ok) throw new Error('Network response was not ok');
+        
+        const data = await response.json();
+        
+        // Обновляем контейнер с задачами
+        updateTasksContainer(data.tasks);
+        
+        // Обновляем время последнего обновления
+        updateLastUpdateTime();
+        
+        // Обновляем статус подключения
+        updateConnectionStatus(true, false);
+        
+        console.log(`Обновлено ${data.tasks.length} задач в ${new Date().toLocaleTimeString()}`);
+        
+    } catch (error) {
+        console.error('Ошибка при обновлении данных:', error);
+        updateConnectionStatus(false, false);
+    } finally {
+        isUpdating = false;
+    }
+}
+
+// Запуск автообновления
+function startAutoUpdate() {
+    // Первоначальная загрузка
+    loadUpdatedData();
+    
+    // Обновление каждую минуту (60000 мс)
+    updateInterval = setInterval(loadUpdatedData, 60000);
+    
+    console.log('Автообновление запущено (каждую минуту)');
+}
+
+// Остановка автообновления
+function stopAutoUpdate() {
+    if (updateInterval) {
+        clearInterval(updateInterval);
+        updateInterval = null;
+    }
+}
+
+// Инициализация при загрузке страницы
+document.addEventListener('DOMContentLoaded', function() {
+    startAutoUpdate();
+    
+    // Остановка автообновления при переходе на другую страницу
+    window.addEventListener('beforeunload', stopAutoUpdate);
+    
+    // Возобновление автообновления при возврате на вкладку
+    document.addEventListener('visibilitychange', function() {
+        if (document.hidden) {
+            stopAutoUpdate();
+        } else {
+            startAutoUpdate();
+        }
+    });
+});
+</script>
 {% endblock %}
