@@ -7,7 +7,7 @@
 # Импортируем словари цветов и шрифтов из constants.py
 from .constant import COLORS, FONTS
 
-def load_styles_with_constants(qss_file_path: str) -> str:
+def load_styles(qss_file_path: str) -> str:
     """
     Загружает QSS-файл и подставляет значения цветовых и шрифтовых констант.
     

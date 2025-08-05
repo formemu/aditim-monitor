@@ -11,7 +11,7 @@ from ..constant import UI_PATHS_ABS as UI_PATHS, ICON_PATHS_ABS as ICON_PATHS, g
 from ..widgets.dialog_create_profile import DialogCreateProfile
 from ..api.api_profile import ApiProfile
 from ..api.api_profile_tool import ApiProfileTool
-from ..style_util import load_styles_with_constants
+from ..style_util import load_styles
 
 
 class WindowProfile(QWidget):
@@ -38,7 +38,7 @@ class WindowProfile(QWidget):
 
     def setup_ui(self):
         """Настройка UI компонентов"""
-        self.ui.setStyleSheet(load_styles_with_constants(get_style_path("MAIN")))
+        self.ui.setStyleSheet(load_styles(get_style_path("MAIN")))
         self.load_logo()
         # Подключение сигналов
         self.ui.pushButton_profile_add.clicked.connect(self.on_add_clicked)

@@ -10,7 +10,7 @@ from PySide6.QtGui import QPixmap, QClipboard
 from PySide6.QtWidgets import QApplication
 import base64
 import io
-from ..style_util import load_styles_with_constants
+from ..style_util import load_styles
 from ..api.api_profile import ApiProfile
 from ..constant import UI_PATHS_ABS
 

@@ -9,7 +9,7 @@ from PySide6.QtUiTools import QUiLoader
 from PySide6.QtGui import QPixmap
 
 from ..constant import UI_PATHS_ABS as UI_PATHS, ICON_PATHS_ABS as ICON_PATHS, get_style_path
-from ..style_util import load_styles_with_constants
+from ..style_util import load_styles
 
 
 class HomePage(QWidget):
@@ -56,7 +56,7 @@ class HomePage(QWidget):
     def apply_home_page_styles(self):
         """Применяет стили к главной странице"""
         style_path = get_style_path("HOME_PAGE")
-        style_sheet = load_styles_with_constants(style_path)
+        style_sheet = load_styles(style_path)
         self.ui.setStyleSheet(style_sheet)
 
     def load_logo(self):

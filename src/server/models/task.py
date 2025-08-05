@@ -16,7 +16,7 @@ class Task(Base):
     department_id = Column(Integer, ForeignKey("dir_department.id"), nullable=False)
     stage = Column(String, nullable=True)
     deadline_on = Column(Date, nullable=True)
-    position = Column(Integer, nullable=False, default=0)
+    position = Column(Integer, nullable=True)
     status_id = Column(Integer, ForeignKey("dir_task_status.id"), nullable=False, default=1)
     created_at = Column(DateTime, server_default=func.now())
     

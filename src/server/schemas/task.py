@@ -38,7 +38,7 @@ class TaskResponse(BaseModel):
     department_id: int
     stage: Optional[str] = None
     deadline_on: Optional[date] = None
-    position: int = 0
+    position: Optional[int] = None
     status_id: int = 1
     created_at: datetime
     

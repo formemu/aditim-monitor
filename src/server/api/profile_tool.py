@@ -17,18 +17,17 @@ router = APIRouter(prefix="/api", tags=["profile-tool"])
 
 @router.get("/profile-tool", response_model=List[dict])
 def get_profile_tool(db: Session = Depends(get_db)):
-    """Get all profile tool with profile information"""
+    """Получить все инструменты профиля с информацией о профиле"""
     list_tool = db.query(ProfileTool).all()
     result = []
     for tool in list_tool:
         result.append({
             "id": tool.id,
+            "name": f"{tool.profile.article} {tool.dimension.dimension}",
             "profile_id": tool.profile_id,
-            "profile_article": tool.profile.article if tool.profile else "Неизвестно",
-            "profile_description": tool.profile.description if tool.profile else "",
-            "dimension": tool.dimension.dimension if tool.dimension else "Неизвестно",
-            "description": tool.description or "",
-            "components_count": len(tool.component)
+            "profile_article": tool.profile.article,
+            "dimension": tool.dimension.dimension,
+            "description": tool.description
         })
     return result
 

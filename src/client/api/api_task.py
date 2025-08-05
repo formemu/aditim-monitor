@@ -25,6 +25,10 @@ class ApiTask(ApiClient):
         """Обновление статуса задачи"""
         return self._request("PATCH", f"api/task/{task_id}/status", json={"status_id": status_id})
 
+    def update_task_position(self, task_id: int, position: int) -> Dict[Any, Any]:
+        """Обновление позиции задачи"""
+        return self._request("PATCH", f"api/task/{task_id}/position", json={"position": position})
+
     def delete_task(self, task_id: int) -> Dict[Any, Any]:
         """Удаление задачи"""
         return self._request("DELETE", f"api/task/{task_id}")

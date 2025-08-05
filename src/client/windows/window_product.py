@@ -7,7 +7,7 @@ from PySide6.QtUiTools import QUiLoader
 from ..constant import UI_PATHS_ABS as UI_PATHS, get_style_path
 from ..api.api_product import ApiProduct
 from ..api.api_profile_tool import ApiProfileTool
-from ..style_util import load_styles_with_constants
+from ..style_util import load_styles
 from ..references_manager import references_manager
 from ..widgets.dialog_create_profile_tool import DialogCreateProfileTool
 from ..widgets.dialog_create_product import DialogCreateProduct
@@ -39,7 +39,7 @@ class WindowProduct(QWidget):
 
     def setup_ui(self):
         """Настройка UI компонентов"""
-        self.ui.setStyleSheet(load_styles_with_constants(get_style_path("MAIN")))
+        self.ui.setStyleSheet(load_styles(get_style_path("MAIN")))
         # Общие подключения
         self.ui.pushButton_component_add.clicked.connect(self.on_component_add_clicked)
         self.ui.pushButton_component_edit.clicked.connect(self.on_component_edit_clicked)

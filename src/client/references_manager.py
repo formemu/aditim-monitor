@@ -120,14 +120,16 @@ class ReferencesManager:
     def load_profile_tool(self):
         """загрузка инструментов профилей"""
         try:
-            profile_tools = self.api_profile_tool.get_profile_tool()
-            self.profile_tools = {
+            profile_tool = self.api_profile_tool.get_profile_tool()
+            self.profile_tool = {
                 tool['id']: {
                     'profile_id': tool['profile_id'],
-                    'dimension_id': tool.get('dimension_id'),
-                    'description': tool.get('description', '')
+                    'name': tool.get('name'),
+                    'article': tool.get('profile_article'),
+                    'dimension': tool.get('dimension'),
+                    'description': tool.get('description')
                 }
-                for tool in profile_tools
+                for tool in profile_tool
             }
             self.profile_tool_loaded = True
         except Exception as e:
@@ -192,7 +194,7 @@ class ReferencesManager:
 
     def get_profile_tool(self) -> Dict[int, Dict[str, Any]]:
         """Возвращает словарь инструментов профилей {id: {profile_id, dimension_id, description}}"""
-        return self.profile_tools.copy()
+        return self.profile_tool.copy()
 
     def get_product(self) -> Dict[int, Dict[str, Any]]:
         """Возвращает словарь изделий {id: {name, description, department_id}}"""

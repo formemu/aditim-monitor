@@ -18,19 +18,36 @@ router = APIRouter(prefix="/api/task", tags=["task"])
 # ----------------------------------------------------------------------
 # Получение списка задач
 # ----------------------------------------------------------------------
-@router.get("/", response_model=List[TaskResponse])
-def get_task_list(
+@router.get("/", response_model=List[dict])
+def get_task(
     status: Optional[str] = None,
-    limit: int = 100,
+    limit: int = 20,
     db: Session = Depends(get_db)
 ):
-    """Получить список задач с необязательным фильтром по статусу"""
+    """Получить список задач с необязательным фильтром
+    по статусу (возвращает список словарей)"""
     query = db.query(Task)
     if status:
         query = query.join(DirTaskStatus).filter(DirTaskStatus.name == status)
-    tasks = query.order_by(Task.position).limit(limit).all()
-    return tasks
+    list_task = query.order_by(Task.position).limit(limit).all()
+    result = []
 
+    for task in list_task:
+
+        result.append({
+            "id": task.id,
+            "product_id": task.product_id,
+            "profile_tool_id": task.profile_tool_id,
+            "department_id": task.department_id,
+            "department": task.department.name,
+            "stage": task.stage,
+            "deadline_on": task.deadline_on.strftime("%d.%m.%Y"),
+            "position": task.position,
+            "status_id": task.status_id,
+            "status": task.status.name,
+            "created_at": task.created_at.strftime("%d.%m.%Y")
+        })
+    return result
 # ----------------------------------------------------------------------
 # Получение задачи по ID
 # ----------------------------------------------------------------------
@@ -116,27 +133,53 @@ def update_task_status(
     db: Session = Depends(get_db)
 ):
     """Обновить статус задачи"""
-    task = db.query(Task).filter(Task.id == task_id).first()
-    if not task:
-        raise HTTPException(status_code=404, detail="Задача не найдена")
-    task.status_id = request.status_id
-    db.commit()
-    db.refresh(task)
-    return {"message": "Статус задачи обновлен", "task_id": task_id, "status_id": request.status_id}
+    try:
+        task = db.query(Task).filter(Task.id == task_id).first()
+        if not task:
+            raise HTTPException(status_code=404, detail="Задача не найдена")
+        task.status_id = request.status_id
+        db.commit()
+        db.refresh(task)
+        return {
+            "message": "Статус задачи обновлен",
+            "task_id": task_id,
+            "status_id": request.status_id,
+            "position": task.position
+        }
+    except Exception as e:
+        import traceback
+        traceback.print_exc()
+        raise HTTPException(status_code=500, detail=f"Ошибка обновления статуса: {e}")
 
 # ----------------------------------------------------------------------
 # Обновление позиции задачи
 # ----------------------------------------------------------------------
-@router.put("/{task_id}/position")
-def update_task_position(task_id: int, position: int, db: Session = Depends(get_db)):
-    """Обновить позицию задачи в очереди"""
-    task = db.query(Task).filter(Task.id == task_id).first()
-    if not task:
-        raise HTTPException(status_code=404, detail="Задача не найдена")
-    task.position = position
-    db.commit()
-    return {"message": "Позиция задачи обновлена"}
-
+# ----------------------------------------------------------------------
+# Обновление позиции задачи (меняет только позицию)
+# ----------------------------------------------------------------------
+@router.patch("/{task_id}/position")
+def update_task_position(
+    task_id: int,
+    position: int,
+    db: Session = Depends(get_db)
+):
+    """Обновить позицию задачи"""
+    try:
+        task = db.query(Task).filter(Task.id == task_id).first()
+        if not task:
+            raise HTTPException(status_code=404, detail="Задача не найдена")
+        task.position = position
+        db.commit()
+        db.refresh(task)
+        return {
+            "message": "Позиция задачи обновлена",
+            "task_id": task_id,
+            "position": position
+        }
+    except Exception as e:
+        import traceback
+        traceback.print_exc()
+        raise HTTPException(status_code=500, detail=f"Ошибка обновления позиции: {e}")
 # ----------------------------------------------------------------------
 # Удаление задачи
 # ----------------------------------------------------------------------

@@ -11,7 +11,7 @@ from PySide6.QtUiTools import QUiLoader
 from ..constant import UI_PATHS_ABS as UI_PATHS
 from ..api.api_product import ApiProduct
 from ..references_manager import references_manager
-from ..style_util import load_styles_with_constants
+from ..style_util import load_styles
 
 
 class DialogCreateProduct(QDialog):

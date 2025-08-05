@@ -9,7 +9,7 @@ from datetime import datetime
 from ..constant import UI_PATHS_ABS as UI_PATHS, get_style_path
 from ..widgets.dialog_create_task import DialogCreateTask
 from ..api.api_task import ApiTask
-from ..style_util import load_styles_with_constants
+from ..style_util import load_styles
 from ..references_manager import references_manager
 
 
@@ -18,11 +18,10 @@ class WindowTask(QWidget):
     def __init__(self):
         super().__init__()
         self.api_task = ApiTask()
-        self.current_tasks_data = None  # Кэш задач
+        self.task_data = None  # Кэш задач
         self.selected_row = None  # Индекс выбранной строки
         self.load_ui()
         self.setup_ui()
-
     # =============================================================================
     # ИНИЦИАЛИЗАЦИЯ И ЗАГРУЗКА ИНТЕРФЕЙСА
     # =============================================================================
@@ -36,10 +35,10 @@ class WindowTask(QWidget):
 
     def setup_ui(self):
         """Настройка UI компонентов"""
-        self.ui.setStyleSheet(load_styles_with_constants(get_style_path("MAIN")))
+        self.ui.setStyleSheet(load_styles(get_style_path("MAIN")))
         # Настройка контекстного меню для таблицы задач
         self.ui.tableWidget_tasks.setContextMenuPolicy(Qt.CustomContextMenu)
-        self.ui.tableWidget_tasks.customContextMenuRequested.connect(self._show_context_menu)
+        self.ui.tableWidget_tasks.customContextMenuRequested.connect(self.show_context_menu)
         # Подключение сигналов
         self.ui.pushButton_task_add.clicked.connect(self.on_add_clicked)
         self.ui.pushButton_task_edit.clicked.connect(self.on_edit_clicked)
@@ -59,100 +58,90 @@ class WindowTask(QWidget):
             comp_table.setColumnWidth(col, width)
         # Таймер автообновления
         self.update_timer = QTimer()
-        self.update_timer.timeout.connect(self.load_data_from_server)
-
+        self.update_timer.timeout.connect(self.refresh_data)
     # =============================================================================
     # УПРАВЛЕНИЕ ДАННЫМИ: ЗАГРУЗКА И ОБНОВЛЕНИЕ
     # =============================================================================
     def refresh_data(self):
         """Принудительное обновление данных"""
-        self.current_tasks_data = []
+        self.task_data = []
+        self.dict_task_position = {}
         self.load_data_from_server()
+        self.create_dict_task_position()
 
     def load_data_from_server(self):
         """Загрузка задач с сервера"""
         try:
-            tasks = self.api_task.get_task()
-            self.update_tasks_table(tasks)
+            task = self.api_task.get_task()
+            if self.skip_update(self.task_data, task):
+                return
+            self.task_data = task
+            self.update_tasks_table(self.task_data)
         except Exception as e:
             QMessageBox.warning(self, "Предупреждение", f"Ошибка загрузки: {e}")
 
+    def create_dict_task_position(self):
+        """Формирует словарь: задача_id -> позиция"""
+        if not self.task_data:
+            return {}
+        self.dict_task_position = {}
+        for task in self.task_data:
+            self.dict_task_position[task.get('id')] = task.get('position')
+        return self.dict_task_position
     # =============================================================================
     # ОТОБРАЖЕНИЕ ДАННЫХ: ТАБЛИЦЫ И ИНФОРМАЦИОННЫЕ ПАНЕЛИ
     # =============================================================================
-    def update_tasks_table(self, tasks):
-        """Обновление таблицы задач с проверкой изменений"""
-        if self._should_skip_update(self.current_tasks_data, tasks):
-            return
-        self.current_tasks_data = tasks
-        self._update_table_with_selection(
-            table=self.ui.tableWidget_tasks,
-            data=tasks,
-            columns=[
-                lambda t: self.get_task_display_name(t),
-                lambda t: self.get_status_name(t.get('task_status_id')),
-                lambda t: self.get_department_name(t.get('department_id')),
-                lambda t: str(t.get('position', '-')),
-                lambda t: self._format_date(t.get('deadline_on')),
-                lambda t: self._format_date(t.get('created_at'), full=True)
-            ]
-        )
+    def update_tasks_table(self, list_task):
+        """Обновление таблицы задач"""
+        table = self.ui.tableWidget_tasks
+        table.setRowCount(len(list_task))
 
-    def _should_skip_update(self, current_data, new_data):
+        for row, task in enumerate(list_task):
+            # Название задачи
+            name = self.get_task_name(task)
+            table.setItem(row, 0, QTableWidgetItem(name))
+            # Статус
+            status = task.get('status')
+            table.setItem(row, 1, QTableWidgetItem(status))
+            # Отдел
+            department = task.get('department')
+            table.setItem(row, 2, QTableWidgetItem(department))
+            # Позиция
+            position = str(task.get('position'))
+            table.setItem(row, 3, QTableWidgetItem(position))
+            # Срок
+            deadline = task.get('deadline_on')
+            table.setItem(row, 4, QTableWidgetItem(deadline))
+            # Дата создания
+            created = task.get('created_at')
+            table.setItem(row, 5, QTableWidgetItem(created))
+
+    def skip_update(self, current_data, new_data):
         """Проверка, нужно ли обновлять таблицу"""
-        is_empty = self.ui.tableWidget_tasks.rowCount() == 0
-        return current_data is not None and new_data == current_data and not is_empty
+        is_table_empty = self.ui.tableWidget_tasks.rowCount() == 0
+        # Если таблица пуста — всегда обновляем
+        if is_table_empty:
+            return False
+        # Если данные не изменились и таблица не пуста — пропускаем обновление
+        if current_data is not None and new_data == current_data:
+            return True
+        # В остальных случаях — обновляем
+        return False
 
-    def _update_table_with_selection(self, table, data, columns):
-        """Обновляет таблицу и восстанавливает выделение"""
-        prev_selection = self.selected_row
-        table.setRowCount(0)
-        table.setRowCount(len(data))
-        for row, item in enumerate(data):
-            for col_idx, getter in enumerate(columns):
-                cell = QTableWidgetItem(getter(item))
-                cell.setFlags(cell.flags() & ~Qt.ItemIsEditable)
-                table.setItem(row, col_idx, cell)
-        if prev_selection is not None and prev_selection < len(data):
-            table.selectRow(prev_selection)
-
-    def _format_date(self, date_str, full=False):
-        """Форматирует ISO-дату в читаемый вид"""
-        if not date_str:
-            return "-"
-        try:
-            dt = datetime.fromisoformat(date_str.replace('Z', '+00:00'))
-            fmt = '%d.%m.%Y %H:%M' if full else '%d.%m.%Y'
-            return dt.strftime(fmt)
-        except:
-            return "-"
-
-    def get_task_display_name(self, task):
+    def get_task_name(self, task):
         """Возвращает название задачи: артикул профиля или имя изделия"""
         if task.get('profile_tool_id'):
-            tool_data = references_manager.get_profile_tool().get(task['profile_tool_id'])
-            if tool_data and tool_data.get('profile_id'):
-                profile = references_manager.get_profile().get(tool_data['profile_id'])
-                return profile.get('article', f"Профиль {task['profile_tool_id']}")
-            return f"Профиль {task['profile_tool_id']}"
-        product = references_manager.get_product().get(task.get('product_id'))
-        return product.get('name', f"Изделие {task.get('product_id', 'N/A')}")
-
-    def get_status_name(self, status_id):
-        """Получение названия статуса по ID"""
-        return references_manager.get_task_status().get(status_id, {}).get('name', '-')
-
-    def get_department_name(self, department_id):
-        """Получение названия отдела по ID"""
-        return references_manager.get_department().get(department_id, '-')
+            profile_tool = references_manager.get_profile_tool().get(task['profile_tool_id'])
+            return f"Инструмент {profile_tool['name']})"
+        return references_manager.get_product().get(f"Изделие {task.get('product_id', 'N/A')}")
 
     def update_task_info_panel(self, task):
         """Обновление панели информации о задаче"""
-        name = self.get_task_display_name(task)
-        status = self.get_status_name(task.get('task_status_id'))
-        dept = self.get_department_name(task.get('department_id'))
-        deadline = self._format_date(task.get('deadline_on'))
-        created = self._format_date(task.get('created_at'), full=True)
+        name = self.get_task_name(task)
+        dept = task.get('department')
+        deadline = task.get('deadline_on')
+        created = task.get('created_at')
+        status = task.get('status', '-')
         self.ui.label_task_name.setText(f"Название: {name}")
         self.ui.label_task_department.setText(f"Отдел: {dept} | Статус: {status} | Срок: {deadline} | Создано: {created}")
 
@@ -186,7 +175,6 @@ class WindowTask(QWidget):
     def clear_components_table(self):
         """Очистка таблицы компонентов"""
         self.ui.tableWidget_components.setRowCount(0)
-
     # =============================================================================
     # ОБРАБОТЧИКИ СОБЫТИЙ: УПРАВЛЕНИЕ ЗАДАЧАМИ
     # =============================================================================
@@ -254,9 +242,10 @@ class WindowTask(QWidget):
         if row is None:
             QMessageBox.warning(self, "Удаление", "Выберите задачу для удаления.")
             return
-        task = self.current_tasks_data[row]
-        task_name = self.get_task_display_name(task)
-        if not self._confirm_deletion(f"Задачу\nНазвание: {task_name}"):
+        task = self.task_data[row]
+        task_name = self.get_task_name(task)
+
+        if not self.confirm_deletion(f"Задачу\nНазвание: {task_name}"):
             return
         try:
             self.api_task.delete_task(task['id'])
@@ -270,7 +259,7 @@ class WindowTask(QWidget):
         selected = self.ui.tableWidget_tasks.selectedItems()
         return selected[0].row() if selected else None
 
-    def _confirm_deletion(self, item_name):
+    def confirm_deletion(self, item_name):
         """Запрос подтверждения удаления"""
         reply = QMessageBox.question(
             self, "Удалить",
@@ -279,7 +268,7 @@ class WindowTask(QWidget):
         )
         return reply == QMessageBox.Yes
 
-    def _show_context_menu(self, pos):
+    def show_context_menu(self, pos):
         """Показать контекстное меню для изменения статуса задачи"""
         table = self.ui.tableWidget_tasks
         index = table.indexAt(pos)
@@ -287,11 +276,10 @@ class WindowTask(QWidget):
             return
 
         row = index.row()
-        task = self.current_tasks_data[row]
+        task = self.task_data[row]
         status_dict = references_manager.get_task_status()
 
         menu = QMenu(table)
-        menu.addSeparator()
         status_menu = QMenu("Изменить статус", menu)
 
         current_status_id = task.get('task_status_id')
@@ -299,21 +287,20 @@ class WindowTask(QWidget):
             action = QAction(status_name, status_menu)
             action.setCheckable(True)
             action.setChecked(status_id == current_status_id)
-            action.triggered.connect(lambda checked, sid=status_id, r=row: self._change_task_status(r, sid))
+            action.triggered.connect(lambda checked, sid=status_id, r=row: self.change_task_status(r, sid))
             status_menu.addAction(action)
 
         menu.addMenu(status_menu)
         menu.exec(table.viewport().mapToGlobal(pos))
 
-    def _change_task_status(self, row, status_id):
+    def change_task_status(self, row, status_id):
         """Изменить статус задачи через API"""
-        task = self.current_tasks_data[row]
+        task = self.task_data[row]
         try:
             self.api_task.update_task_status(task['id'], status_id)
             self.refresh_data()
         except Exception as e:
             QMessageBox.critical(self, "Ошибка", f"Не удалось изменить статус: {e}")
-
     # =============================================================================
     # ОБРАБОТЧИКИ СОБЫТИЙ: ВЫДЕЛЕНИЕ И ПОИСК
     # =============================================================================
@@ -322,7 +309,7 @@ class WindowTask(QWidget):
         row = self._get_selected_row()
         if row is not None:
             self.selected_row = row
-            task = self.current_tasks_data[row]
+            task = self.task_data[row]
             self.update_task_info_panel(task)
             self.load_task_components(task['id'])
         else:
@@ -336,7 +323,6 @@ class WindowTask(QWidget):
             item = table.item(row, 0)
             visible = item and text in item.text().lower()
             table.setRowHidden(row, not visible)
-
     # =============================================================================
     # УПРАВЛЕНИЕ АВТООБНОВЛЕНИЕМ
     # =============================================================================

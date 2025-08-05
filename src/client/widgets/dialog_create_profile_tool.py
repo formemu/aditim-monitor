@@ -15,7 +15,7 @@ import base64
 from ..constant import UI_PATHS_ABS as UI_PATHS
 from ..api.api_profile_tool import ApiProfileTool
 from ..references_manager import references_manager
-from ..style_util import load_styles_with_constants
+from ..style_util import load_styles
 
 
 class DialogCreateProfileTool(QDialog):
