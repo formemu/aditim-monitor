@@ -50,12 +50,6 @@ class WindowTask(QWidget):
         table.setSelectionBehavior(QAbstractItemView.SelectRows)
         table.setSelectionMode(QAbstractItemView.SingleSelection)
         table.setFocusPolicy(Qt.NoFocus)
-        for col, width in enumerate([180, 120, 120, 80, 100, 120]):
-            table.setColumnWidth(col, width)
-        # Настройка таблицы компонентов
-        comp_table = self.ui.tableWidget_components
-        for col, width in enumerate([30, 180, 60]):
-            comp_table.setColumnWidth(col, width)
         # Таймер автообновления
         self.update_timer = QTimer()
         self.update_timer.timeout.connect(self.refresh_data)
@@ -71,14 +65,11 @@ class WindowTask(QWidget):
 
     def load_data_from_server(self):
         """Загрузка задач с сервера"""
-        try:
-            task = self.api_task.get_task()
-            if self.skip_update(self.task_data, task):
-                return
-            self.task_data = task
-            self.update_task_table(self.task_data)
-        except Exception as e:
-            QMessageBox.warning(self, "Предупреждение", f"Ошибка загрузки: {e}")
+        task = self.api_task.get_task()
+        if self.skip_update(self.task_data, task):
+            return
+        self.task_data = task
+        self.update_task_table(self.task_data)
 
     def create_dict_task_position(self):
         """Формирует словарь: задача_id -> позиция"""
@@ -168,12 +159,8 @@ class WindowTask(QWidget):
 
     def load_task_components(self, task_id):
         """Загрузка компонентов задачи по её идентификатору. """
-        try:
-            list_component = self.api_task.get_task_component(task_id)
-            self.update_components_table(list_component)
-        except Exception as error:
-            self.clear_components_table()
-            print(f"Ошибка загрузки компонентов задачи: {error}")
+        list_component = self.api_task.get_task_component(task_id)
+        self.update_components_table(list_component)
 
     def update_components_table(self, list_component):
         """Обновление таблицы компонентов"""
@@ -217,12 +204,8 @@ class WindowTask(QWidget):
     def on_create_task(self):
         """Открытие диалога создания задачи"""
         dialog = DialogCreateTask(self)
-        dialog.task_created.connect(self.on_task_created)
+        dialog.task_created.connect(self.refresh_data)
         dialog.exec()
-
-    def on_task_created(self):
-        """Обработка успешного создания задачи"""
-        self.refresh_data()
 
     def on_edit_clicked(self):
         """Редактирование задачи"""
