@@ -38,8 +38,6 @@ def get_task(
             "id": task.id,
             "product_id": task.product_id,
             "profile_tool_id": task.profile_tool_id,
-            "department_id": task.department_id,
-            "department": task.department.name,
             "stage": task.stage,
             "deadline_on": task.deadline_on.strftime("%d.%m.%Y"),
             "position": task.position,
@@ -48,6 +46,7 @@ def get_task(
             "created_at": task.created_at.strftime("%d.%m.%Y")
         })
     return result
+
 # ----------------------------------------------------------------------
 # Получение задачи по ID
 # ----------------------------------------------------------------------
@@ -67,47 +66,11 @@ def get_task_by_id(
 # ----------------------------------------------------------------------
 @router.post("/", response_model=TaskResponse)
 def create_task(task: TaskCreate, db: Session = Depends(get_db)):
-    """Создать новую задачу с корректной позицией для статуса 'в работе'"""
-    task_data = task.dict()
-
-    # Обработка продукта
-    if task.product_id and isinstance(task.product_id, str):
-        product_name = task.product_id
-        product = db.query(Product).filter(Product.name == product_name).first()
-        if not product:
-            product = Product(name=product_name, department_id=task.department_id)
-            db.add(product)
-            db.commit()
-            db.refresh(product)
-        task_data["product_id"] = product.id
-    elif task.product_id:
-        product = db.query(Product).filter(Product.id == task.product_id).first()
-        if not product:
-            raise HTTPException(status_code=404, detail="Продукт не найден")
-
-    # Проверка инструмента профиля
-    if task_data.get("profile_tool_id"):
-        profile_tool = db.query(ProfileTool).filter(ProfileTool.id == task_data["profile_tool_id"]).first()
-        if not profile_tool:
-            raise HTTPException(status_code=404, detail="Инструмент профиля не найден")
-
-    # Получаем id статуса "в работе"
-    dir_task_status = db.query(DirTaskStatus).filter(DirTaskStatus.name == "в работе").first()
-    in_work_status_id = dir_task_status.id if dir_task_status else None
-
-    # Назначаем позицию только если статус "в работе"
-    position = None
-    if task_data.get("status_id") == in_work_status_id:
-        max_position = db.query(Task).filter(Task.status_id == in_work_status_id).count()
-        position = max_position + 1
-    task_data["position"] = position
-
-    db_task = Task(**task_data)
+    db_task = Task(**task.dict())
     db.add(db_task)
     db.commit()
     db.refresh(db_task)
     return db_task
-
 # ----------------------------------------------------------------------
 # Обновление задачи
 # ----------------------------------------------------------------------
@@ -152,9 +115,6 @@ def update_task_status(
         raise HTTPException(status_code=500, detail=f"Ошибка обновления статуса: {e}")
 
 # ----------------------------------------------------------------------
-# Обновление позиции задачи
-# ----------------------------------------------------------------------
-# ----------------------------------------------------------------------
 # Обновление позиции задачи (меняет только позицию)
 # ----------------------------------------------------------------------
 @router.patch("/{task_id}/position")
@@ -180,6 +140,7 @@ def update_task_position(
         import traceback
         traceback.print_exc()
         raise HTTPException(status_code=500, detail=f"Ошибка обновления позиции: {e}")
+
 # ----------------------------------------------------------------------
 # Удаление задачи
 # ----------------------------------------------------------------------
@@ -192,7 +153,6 @@ def delete_task(task_id: int, db: Session = Depends(get_db)):
     db.delete(task)
     db.commit()
     return {"message": "Задача удалена"}
-
 
 # ----------------------------------------------------------------------
 # Получение компонентов задачи
@@ -239,6 +199,7 @@ def get_task_component_list(
         import traceback
         traceback.print_exc()
         raise HTTPException(status_code=500, detail="Internal server error")
+
 # ----------------------------------------------------------------------
 # Создание компонента задачи
 # ----------------------------------------------------------------------

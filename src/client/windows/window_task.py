@@ -40,11 +40,11 @@ class WindowTask(QWidget):
         self.ui.tableWidget_tasks.setContextMenuPolicy(Qt.CustomContextMenu)
         self.ui.tableWidget_tasks.customContextMenuRequested.connect(self.show_context_menu)
         # Подключение сигналов
-        self.ui.pushButton_task_add.clicked.connect(self.on_add_clicked)
+        self.ui.pushButton_task_add.clicked.connect(self.on_create_task)
         self.ui.pushButton_task_edit.clicked.connect(self.on_edit_clicked)
         self.ui.pushButton_task_delete.clicked.connect(self.on_delete_clicked)
         self.ui.tableWidget_tasks.itemSelectionChanged.connect(self.on_selection_changed)
-        self.ui.lineEdit_search.textChanged.connect(lambda text: self._filter_table(self.ui.tableWidget_tasks, text.lower()))
+        self.ui.lineEdit_search.textChanged.connect(lambda text: self.filter_table(self.ui.tableWidget_tasks, text.lower()))
         # Настройка таблицы задач
         table = self.ui.tableWidget_tasks
         table.setSelectionBehavior(QAbstractItemView.SelectRows)
@@ -88,6 +88,7 @@ class WindowTask(QWidget):
         for task in self.task_data:
             self.dict_task_position[task.get('id')] = task.get('position')
         return self.dict_task_position
+    
     # =============================================================================
     # ОТОБРАЖЕНИЕ ДАННЫХ: ТАБЛИЦЫ И ИНФОРМАЦИОННЫЕ ПАНЕЛИ
     # =============================================================================
@@ -103,18 +104,15 @@ class WindowTask(QWidget):
             # Статус
             status = task.get('status')
             table.setItem(row, 1, QTableWidgetItem(status))
-            # Отдел
-            department = task.get('department')
-            table.setItem(row, 2, QTableWidgetItem(department))
             # Позиция
             position = str(task.get('position'))
-            table.setItem(row, 3, QTableWidgetItem(position))
+            table.setItem(row, 2, QTableWidgetItem(position))
             # Срок
             deadline = task.get('deadline_on')
-            table.setItem(row, 4, QTableWidgetItem(deadline))
+            table.setItem(row, 3, QTableWidgetItem(deadline))
             # Дата создания
             created = task.get('created_at')
-            table.setItem(row, 5, QTableWidgetItem(created))
+            table.setItem(row, 4, QTableWidgetItem(created))
 
     def skip_update(self, current_data, new_data):
         """Проверка, нужно ли обновлять таблицу"""
@@ -138,135 +136,72 @@ class WindowTask(QWidget):
     def update_task_info_panel(self, task):
         """Обновление панели информации о задаче"""
         name = self.get_task_name(task)
-        dept = task.get('department')
         deadline = task.get('deadline_on')
         created = task.get('created_at')
         status = task.get('status', '-')
         self.ui.label_task_name.setText(f"Название: {name}")
-        self.ui.label_task_department.setText(f"Отдел: {dept} | Статус: {status} | Срок: {deadline} | Создано: {created}")
+        self.ui.label_task_info.setText(f"Статус: {status} | Срок: {deadline} | Создано: {created}")
 
     def clear_task_info_panel(self):
         """Очистка панели задачи"""
         self.ui.label_task_name.setText("Название: -")
-        self.ui.label_task_department.setText("Отдел: - | Статус: - | Срок: - | Создано: -")
+        self.ui.label_task_info.setText("Статус: - | Срок: - | Создано: -")
 
     def load_task_components(self, task_id):
-        """Загрузка компонентов задачи"""
+        """Загрузка компонентов задачи по её идентификатору. """
         try:
-            components = [c for c in self.api_task.get_task_component(task_id) if c.get('task_id') == task_id]
-            self.update_components_table(components)
-        except:
+            list_component = self.api_task.get_task_component(task_id)
+            self.update_components_table(list_component)
+        except Exception as error:
             self.clear_components_table()
+            print(f"Ошибка загрузки компонентов задачи: {error}")
 
     def update_components_table(self, components):
         """Обновление таблицы компонентов"""
         self.ui.tableWidget_components.setRowCount(len(components))
         for row, comp in enumerate(components):
             num_item = QTableWidgetItem(str(row + 1))
-            num_item.setFlags(num_item.flags() & ~Qt.ItemIsEditable)
             self.ui.tableWidget_components.setItem(row, 0, num_item)
-            name_item = QTableWidgetItem(comp.get('name', ''))
-            name_item.setFlags(name_item.flags() & ~Qt.ItemIsEditable)
+            name_item = QTableWidgetItem(comp.get('name'))
             self.ui.tableWidget_components.setItem(row, 1, name_item)
             qty_item = QTableWidgetItem(str(comp.get('quantity', 0)))
-            qty_item.setFlags(qty_item.flags() & ~Qt.ItemIsEditable)
             self.ui.tableWidget_components.setItem(row, 2, qty_item)
 
     def clear_components_table(self):
         """Очистка таблицы компонентов"""
         self.ui.tableWidget_components.setRowCount(0)
+    
     # =============================================================================
     # ОБРАБОТЧИКИ СОБЫТИЙ: УПРАВЛЕНИЕ ЗАДАЧАМИ
     # =============================================================================
-    def on_add_clicked(self):
+    def on_create_task(self):
         """Открытие диалога создания задачи"""
-        self._open_dialog(DialogCreateTask, 'task_created', self.on_task_created)
+        dialog = DialogCreateTask(self)
+        dialog.task_created.connect(self.on_task_created)
+        dialog.exec()
 
-    def on_task_created(self, task_data):
+    def on_task_created(self):
         """Обработка успешного создания задачи"""
-        try:
-            array_component_data = task_data.pop("array_component_data", [])
-            response = self.api_task.create_task(task_data)
-            if not response or 'id' not in response:
-                QMessageBox.critical(self, "Ошибка", f"Неожиданный ответ сервера: {response}")
-                return
-            task_id = response['id']
-            # Создание компонентов
-            for comp_data in array_component_data:
-                comp_request = self._build_component_request(comp_data, task_id)
-                if comp_request:
-                    comp_response = self.api_task.create_task_component(comp_request)
-                    if not (comp_response and 'id' in comp_response):
-                        print(f"Предупреждение: не удалось добавить компонент: {comp_request}")
-            # Обновление интерфейса
-            self.refresh_data()
-            QMessageBox.information(self, "Успех", "Задача создана успешно!")
-        except Exception as e:
-            QMessageBox.critical(self, "Ошибка", f"Не удалось создать задачу: {e}")
-
-    def _build_component_request(self, comp_data, task_id):
-        """Формирует запрос на создание компонента задачи"""
-        if "profile_tool_component_id" in comp_data:
-            return {
-                "task_id": task_id,
-                "profile_tool_component_id": comp_data["profile_tool_component_id"],
-                "quantity": comp_data.get("quantity", 1)
-            }
-        elif "product_component_id" in comp_data:
-            return {
-                "task_id": task_id,
-                "product_component_id": comp_data["product_component_id"],
-                "quantity": comp_data.get("quantity", 1)
-            }
-        return None
-
-    def _open_dialog(self, dialog_class, signal_name, callback):
-        """Унифицированное открытие диалога"""
-        try:
-            dialog = dialog_class(self)
-            getattr(dialog, signal_name).connect(callback)
-            dialog.exec()
-        except Exception as e:
-            QMessageBox.critical(self, "Ошибка", f"Не удалось открыть диалог: {e}")
+        self.refresh_data()
 
     def on_edit_clicked(self):
         """Редактирование задачи"""
-        if not self._get_selected_row():
+        if not self.get_selected_row():
             QMessageBox.warning(self, "Редактирование", "Выберите задачу для редактирования.")
         else:
             QMessageBox.information(self, "Редактировать", "Функция будет реализована позже")
 
     def on_delete_clicked(self):
         """Удаление задачи с подтверждением"""
-        row = self._get_selected_row()
-        if row is None:
-            QMessageBox.warning(self, "Удаление", "Выберите задачу для удаления.")
-            return
+        row = self.get_selected_row()
         task = self.task_data[row]
-        task_name = self.get_task_name(task)
+        self.api_task.delete_task(task['id'])
+        self.refresh_data()
 
-        if not self.confirm_deletion(f"Задачу\nНазвание: {task_name}"):
-            return
-        try:
-            self.api_task.delete_task(task['id'])
-            QMessageBox.information(self, "Удаление", "Задача успешно удалена.")
-            self.refresh_data()
-        except Exception as e:
-            QMessageBox.critical(self, "Ошибка", f"Не удалось удалить задачу: {e}")
-
-    def _get_selected_row(self):
+    def get_selected_row(self):
         """Возвращает индекс выбранной строки или None"""
         selected = self.ui.tableWidget_tasks.selectedItems()
         return selected[0].row() if selected else None
-
-    def confirm_deletion(self, item_name):
-        """Запрос подтверждения удаления"""
-        reply = QMessageBox.question(
-            self, "Удалить",
-            f"Вы действительно хотите удалить {item_name}?",
-            QMessageBox.Yes | QMessageBox.No, QMessageBox.No
-        )
-        return reply == QMessageBox.Yes
 
     def show_context_menu(self, pos):
         """Показать контекстное меню для изменения статуса задачи"""
@@ -301,12 +236,13 @@ class WindowTask(QWidget):
             self.refresh_data()
         except Exception as e:
             QMessageBox.critical(self, "Ошибка", f"Не удалось изменить статус: {e}")
+    
     # =============================================================================
     # ОБРАБОТЧИКИ СОБЫТИЙ: ВЫДЕЛЕНИЕ И ПОИСК
     # =============================================================================
     def on_selection_changed(self):
         """Обработка выбора задачи"""
-        row = self._get_selected_row()
+        row = self.get_selected_row()
         if row is not None:
             self.selected_row = row
             task = self.task_data[row]
@@ -317,7 +253,7 @@ class WindowTask(QWidget):
             self.clear_task_info_panel()
             self.clear_components_table()
 
-    def _filter_table(self, table, text):
+    def filter_table(self, table, text):
         """Фильтрация строк таблицы по первому столбцу"""
         for row in range(table.rowCount()):
             item = table.item(row, 0)

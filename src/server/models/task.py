@@ -13,7 +13,6 @@ class Task(Base):
     id = Column(Integer, primary_key=True, index=True)
     product_id = Column(Integer, ForeignKey("product.id"), nullable=True)
     profile_tool_id = Column(Integer, ForeignKey("profile_tool.id"), nullable=True)
-    department_id = Column(Integer, ForeignKey("dir_department.id"), nullable=False)
     stage = Column(String, nullable=True)
     deadline_on = Column(Date, nullable=True)
     position = Column(Integer, nullable=True)
@@ -23,7 +22,6 @@ class Task(Base):
     # Relationships
     product = relationship("Product", back_populates="task")
     profile_tool = relationship("ProfileTool", back_populates="task")
-    department = relationship("DirDepartment", back_populates="task")
     status = relationship("DirTaskStatus", back_populates="task")
     component = relationship("TaskComponent", back_populates="task", cascade="all, delete-orphan")
 

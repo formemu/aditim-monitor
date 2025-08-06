@@ -57,7 +57,7 @@
        <item>
         <spacer name="horizontalSpacer">
          <property name="orientation">
-          <enum>Qt::Horizontal</enum>
+          <enum>Qt::Orientation::Horizontal</enum>
          </property>
          <property name="sizeHint" stdset="0">
           <size>
@@ -86,10 +86,10 @@
         <bool>true</bool>
        </property>
        <property name="selectionMode">
-        <enum>QAbstractItemView::SingleSelection</enum>
+        <enum>QAbstractItemView::SelectionMode::SingleSelection</enum>
        </property>
        <property name="selectionBehavior">
-        <enum>QAbstractItemView::SelectRows</enum>
+        <enum>QAbstractItemView::SelectionBehavior::SelectRows</enum>
        </property>
        <property name="sortingEnabled">
         <bool>true</bool>
@@ -102,11 +102,6 @@
        <column>
         <property name="text">
          <string>Статус</string>
-        </property>
-       </column>
-       <column>
-        <property name="text">
-         <string>Отдел</string>
         </property>
        </column>
        <column>
@@ -131,10 +126,10 @@
    <item row="1" column="1">
     <layout class="QVBoxLayout" name="verticalLayout_right">
      <property name="sizeConstraint">
-      <enum>QLayout::SetFixedSize</enum>
+      <enum>QLayout::SizeConstraint::SetFixedSize</enum>
      </property>
      <item>
-      <widget class="QLabel" name="label_task_info">
+      <widget class="QLabel" name="label_task">
        <property name="minimumSize">
         <size>
          <width>350</width>
@@ -151,7 +146,7 @@
         <string>Информация о задаче</string>
        </property>
        <property name="alignment">
-        <set>Qt::AlignCenter</set>
+        <set>Qt::AlignmentFlag::AlignCenter</set>
        </property>
       </widget>
      </item>
@@ -175,7 +170,7 @@
       </widget>
      </item>
      <item>
-      <widget class="QLabel" name="label_task_department">
+      <widget class="QLabel" name="label_task_info">
        <property name="minimumSize">
         <size>
          <width>350</width>
@@ -211,7 +206,7 @@
         <string>Компоненты</string>
        </property>
        <property name="alignment">
-        <set>Qt::AlignCenter</set>
+        <set>Qt::AlignmentFlag::AlignCenter</set>
        </property>
       </widget>
      </item>
@@ -233,10 +228,10 @@
         <bool>true</bool>
        </property>
        <property name="selectionMode">
-        <enum>QAbstractItemView::SingleSelection</enum>
+        <enum>QAbstractItemView::SelectionMode::SingleSelection</enum>
        </property>
        <property name="selectionBehavior">
-        <enum>QAbstractItemView::SelectRows</enum>
+        <enum>QAbstractItemView::SelectionBehavior::SelectRows</enum>
        </property>
        <column>
         <property name="text">
@@ -273,14 +268,14 @@
         <string>ADITIM</string>
        </property>
        <property name="alignment">
-        <set>Qt::AlignCenter</set>
+        <set>Qt::AlignmentFlag::AlignCenter</set>
        </property>
       </widget>
      </item>
      <item>
       <spacer name="verticalSpacer">
        <property name="orientation">
-        <enum>Qt::Vertical</enum>
+        <enum>Qt::Orientation::Vertical</enum>
        </property>
        <property name="sizeHint" stdset="0">
         <size>

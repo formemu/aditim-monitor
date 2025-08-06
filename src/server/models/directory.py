@@ -15,7 +15,6 @@ class DirDepartment(Base):
     description = Column(Text)
     # Связи
     product = relationship("Product", back_populates="department")
-    task = relationship("Task", back_populates="department")
 
 
 class DirTaskStatus(Base):

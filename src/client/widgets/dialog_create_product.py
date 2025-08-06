@@ -12,6 +12,7 @@ from ..constant import UI_PATHS_ABS as UI_PATHS
 from ..api.api_product import ApiProduct
 from ..references_manager import references_manager
 from ..style_util import load_styles
+import warnings
 
 
 class DialogCreateProduct(QDialog):
@@ -80,12 +81,18 @@ class DialogCreateProduct(QDialog):
 
     def add_component_row_data(self, row: int, name: str = "", quantity: int = 1):
         """Добавляет данные в строку компонента"""
-        self.ui.tableWidget_components.itemChanged.disconnect()  # обязательно!!!
+        # эта заглушка нужна чтобы приложение не ругалось на то что вызывется disconnect
+        with warnings.catch_warnings(record=True):
+            try:
+                self.ui.tableWidget_components.itemChanged.disconnect(self.on_component_item_changed)
+            except TypeError:
+                pass
+            except RuntimeError:
+                pass
         # Название компонента (редактируемое поле)
         name_item = QTableWidgetItem(name)
         name_item.setFlags(name_item.flags() | Qt.ItemIsEditable)
         self.ui.tableWidget_components.setItem(row, 0, name_item)
-        
         # SpinBox для количества
         spinbox = QSpinBox()
         spinbox.setMinimum(1)
@@ -100,12 +107,9 @@ class DialogCreateProduct(QDialog):
         """Обработчик изменения элемента в таблице компонентов"""
         if item.column() != 0:  # Реагируем только на изменения в колонке "Название"
             return
-            
         row = item.row()
         text = item.text().strip()
-        
         if text:  # Если строка заполнена
-            
             # Проверяем, нужно ли добавить новую пустую строку
             is_last_row = row == self.ui.tableWidget_components.rowCount() - 1
             if is_last_row:

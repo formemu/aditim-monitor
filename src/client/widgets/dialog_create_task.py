@@ -9,7 +9,9 @@ from PySide6.QtWidgets import (QCheckBox, QDialog, QVBoxLayout, QWidget, QSpinBo
 
 from ..api.api_profile_tool import ApiProfileTool
 from ..api.api_product import ApiProduct
+from ..api.api_task import ApiTask
 from ..references_manager import references_manager
+from ..constant import UI_PATHS_ABS
 
 
 class DialogCreateTask(QDialog):
@@ -23,53 +25,29 @@ class DialogCreateTask(QDialog):
         self.ui: QWidget = None
         self.api_profile_tool = ApiProfileTool()
         self.api_product = ApiProduct()
+        self.api_task = ApiTask()
 
         # Данные для работы
-        self.array_profile_tool: List[Dict] = []
-        self.dict_component_checkbox: Dict[int, QCheckBox] = {}
+        self.profile_tool: Dict[str, str] = {}
+        self.dict_profile_tool_component_checkbox: Dict[int, QCheckBox] = {}
 
         # Данные для работы с изделиями
-        self.array_product: List[Dict] = []
+        self.product: Dict[str, str] = {}
         self.dict_product_component_checkbox: Dict[int, QCheckBox] = {}
         self.dict_product_component_spinbox: Dict[int, QSpinBox] = {} 
         
         
         self.load_ui()
         self.setup_ui()
-        
-        # Загружаем данные, но не блокируем создание диалога при ошибках
-        try:
-            self.load_initial_data()
-        except Exception as e:
-            print(f"Ошибка загрузки данных в диалоге: {e}")
-            # Диалог все равно должен показаться, даже если данные не загрузились
-    
-    def showEvent(self, event):
-        """Обработчик события показа диалога."""
-        # Устанавливаем явный размер
-        self.resize(600, 500)
-        self.setMinimumSize(600, 500)
-        
-        # Центрируем диалог относительно родителя
-        if self.parent():
-            parent_rect = self.parent().geometry()
-            x = parent_rect.x() + (parent_rect.width() - self.width()) // 2
-            y = parent_rect.y() + (parent_rect.height() - self.height()) // 2
-            self.move(x, y)
-        
-        super().showEvent(event)
-    
+   
     def load_ui(self) -> None:
         """Загрузка UI из файла."""
-        from ..constant import UI_PATHS_ABS as UI_PATHS
-        ui_file = QFile(UI_PATHS["DIALOG_CREATE_TASK"])
+        
+        ui_file = QFile(UI_PATHS_ABS["DIALOG_CREATE_TASK"])
                 
         loader = QUiLoader()
-        self.ui = loader.load(ui_file, None)  # Загружаем без родителя
+        self.ui = loader.load(ui_file)
         ui_file.close()
-        
-        if self.ui is None:
-            raise RuntimeError("Не удалось загрузить UI из файла")
         
         # Устанавливаем заголовок и свойства диалога
         self.setWindowTitle("Создание задачи")
@@ -89,10 +67,9 @@ class DialogCreateTask(QDialog):
         
         # Подключение сигналов для изделий
         self.ui.comboBox_product.currentTextChanged.connect(self.on_product_changed)
-        self.ui.comboBox_product_department.currentTextChanged.connect(self.on_department_changed)
 
         # Подключение сигналов для переключения вкладок
-        self.ui.tabWidget.currentChanged.connect(self.on_tab_changed)
+        self.ui.tabWidget.currentChanged.connect(self.update_create_button_state)
 
         # Общие кнопки
         self.ui.pushButton_create.clicked.connect(self.create_task)
@@ -107,84 +84,17 @@ class DialogCreateTask(QDialog):
         self.ui.dateEdit_profile_tool_deadline.setMinimumDate(QDate.currentDate())
         self.ui.dateEdit_product_deadline.setMinimumDate(QDate.currentDate())
 
-    
-    def load_initial_data(self) -> None:
-        """Загрузка начальных данных."""
-        try:
-            # Загружаем профили и инструменты
-            self.array_profile_tool = self.api_profile_tool.get_profile_tool()
-            self.populate_profile_combo()
-            
-            # Загружаем изделия
-            self.array_product = self.api_product.get_product()
-            self.populate_product_combo()
-            
-            # Загружаем отделы для изделий
-            self.populate_department_combo()
-            
-        except Exception as e:
-            print(f"Ошибка загрузки данных в диалоге: {e}")
-            # Устанавливаем пустые значения при ошибке
-            self.array_profile_tool = []
-            self.array_product = []
-    
-    def populate_profile_combo(self) -> None:
-        """Заполнение комбобокса профилей."""
-        self.ui.comboBox_profile_tool_profile.clear()
-        
-        # Добавляем placeholder, если нет данных
-        if not self.array_profile_tool:
-            self.ui.comboBox_profile_tool_profile.addItem("Нет доступных профилей", None)
-            self.ui.comboBox_profile_tool_profile.setEnabled(False)
-            return
-        
-        # Получаем уникальные профили
-        dict_profile_used = {}
-        for profile_tool in self.array_profile_tool:
-            profile_id = profile_tool["profile_id"]
-            if profile_id not in dict_profile_used:
-                profile = references_manager.get_profile().get(profile_id)
-                if profile:
-                    dict_profile_used[profile_id] = profile
-                    self.ui.comboBox_profile_tool_profile.addItem(
-                        profile["article"], profile_id
-                    )
-    
-    def populate_product_combo(self) -> None:
-        """Заполнение комбобокса изделий."""
-        self.ui.comboBox_product.clear()
-        
-        # Добавляем placeholder, если нет данных
-        if not self.array_product:
-            self.ui.comboBox_product.addItem("Нет доступных изделий", None)
-            self.ui.comboBox_product.setEnabled(False)
-            return
-        
-        # Заполняем изделиями
-        for product in self.array_product:
-            self.ui.comboBox_product.addItem(
-                product["name"], product["id"]
-            )
+        for profile_tool in self.api_profile_tool.get_profile_tool():
+            self.ui.comboBox_profile_tool_profile.addItem(profile_tool["profile_article"], profile_tool["profile_id"])
 
-    def populate_department_combo(self) -> None:
-        """Заполнение комбобокса отделов."""
-        self.ui.comboBox_product_department.clear()
-        
-        # Получаем отделы из справочника
-        dict_department = references_manager.get_department()
-        
-        if not dict_department:
-            self.ui.comboBox_product_department.addItem("Нет доступных отделов", None)
-            self.ui.comboBox_product_department.setEnabled(False)
-            return
-        
-                # Заполняем отделами
-        for dept_id, dept_name in dict_department.items():
-            if dept_id > 0:  # Пропускаем пустое значение
-                self.ui.comboBox_product_department.addItem(dept_name, dept_id)
+        for product in self.api_product.get_product():
+            self.ui.comboBox_product.addItem(product["name"], product["id"])
 
+    # =============================================================================
+    # Управление вкладкой с инструментами профиля
+    # =============================================================================
     @Slot(str)
-    def on_profile_changed(self, profile_article: str) -> None:
+    def on_profile_changed(self, profile_article: str):
         """Обработка изменения профиля."""
         if not profile_article:
             self.ui.comboBox_profile_tool_tool.clear()
@@ -196,22 +106,17 @@ class DialogCreateTask(QDialog):
         profile_id = self.ui.comboBox_profile_tool_profile.currentData()
         
         # Заполняем инструменты для данного профиля
-        self.populate_tool_combo(profile_id)
-        self.ui.comboBox_profile_tool_tool.setEnabled(True)
-    
-    def populate_tool_combo(self, profile_id: int) -> None:
-        """Заполнение комбобокса инструментов для профиля."""
         self.ui.comboBox_profile_tool_tool.clear()
-
         # Фильтруем инструменты по профилю
-        for profile_tool in self.array_profile_tool:
+        for profile_tool in self.api_profile_tool.get_profile_tool():
             if profile_tool["profile_id"] == profile_id:
                 # Используем ID инструмента как название (можно потом улучшить)
                 tool_name = f"Инструмент {profile_tool['dimension']}"
                 self.ui.comboBox_profile_tool_tool.addItem(
                     tool_name, profile_tool["id"]
                 )
-    
+        self.ui.comboBox_profile_tool_tool.setEnabled(True)
+
     @Slot(str)
     def on_tool_changed(self, tool_name: str) -> None:
         """Обработка изменения инструмента."""
@@ -221,19 +126,17 @@ class DialogCreateTask(QDialog):
             return
         
         # Загружаем компоненты для выбранного инструмента
-        self.load_tool_components()
+        self.load_tool_component()
     
-    def load_tool_components(self) -> None:
+    def load_tool_component(self) -> None:
         """Загрузка компонентов для выбранного инструмента."""
         profile_tool_id = self.ui.comboBox_profile_tool_tool.currentData()
         if not profile_tool_id:
             return
-        
         # Получаем компоненты инструмента
         array_component = self.api_profile_tool.get_profile_tool_component(
             profile_tool_id
         )
-        
         # Фильтруем только компоненты в разработке или изготовлении
         array_component_filtered = []
         for component in array_component:
@@ -241,9 +144,52 @@ class DialogCreateTask(QDialog):
             status_value = component.get("status", "")
             if status_value in ["в разработке", "изготовление"]:
                 array_component_filtered.append(component)
-        
         # Создаем чекбоксы для компонентов
         self.create_profile_tool_component_checkbox(array_component_filtered)
+
+    def create_profile_tool_component_checkbox(self, array_component: List[Dict]) -> None:
+        """Создание чекбоксов для компонентов."""
+        self.clear_profile_tool_component()
+        
+        layout = self.ui.widget_profile_tool_content.layout()
+        
+        for component in array_component:
+            checkbox = QCheckBox()
+            
+            # Получаем тип компонента как строку
+            type_name = component.get("component_type")
+            
+            # Получаем статус как строку
+            status_name = component.get("status")
+            
+            checkbox.setText(f"{type_name} ({status_name})")
+            checkbox.stateChanged.connect(self.on_profile_tool_component_selection_changed)
+            
+            layout.addWidget(checkbox)
+            self.dict_profile_tool_component_checkbox[component["id"]] = checkbox
+        
+        # Включаем кнопку создания, если есть компоненты
+        self.update_create_button_state()
+ 
+    def clear_profile_tool_component(self) -> None:
+        """Очистка списка компонентов."""
+        layout = self.ui.widget_profile_tool_content.layout()
+        
+        # Удаляем все чекбоксы
+        for checkbox in self.dict_profile_tool_component_checkbox.values():
+            layout.removeWidget(checkbox)
+            checkbox.deleteLater()
+        
+        self.dict_profile_tool_component_checkbox.clear()
+    
+    # =============================================================================
+    # Управление вкладкой с изделиями
+    # =============================================================================
+    
+    @Slot()
+    def on_profile_tool_component_selection_changed(self) -> None:
+        """Обработка изменения выбора компонентов инструмента."""
+        self.update_create_button_state()
 
     @Slot(str)
     def on_product_changed(self, product_name: str) -> None:
@@ -256,12 +202,6 @@ class DialogCreateTask(QDialog):
         # Загружаем компоненты для выбранного изделия
         self.load_product_component()
         
-    @Slot(str)
-    def on_department_changed(self, department_name: str) -> None:
-        """Обработка изменения отдела."""
-        # Обновляем состояние кнопки при изменении отдела
-        self.update_create_button_state()
-
     def load_product_component(self) -> None:
         """Загрузка компонентов для выбранного изделия."""
         product_id = self.ui.comboBox_product.currentData()
@@ -273,30 +213,6 @@ class DialogCreateTask(QDialog):
         
         # Создаем чекбоксы для компонентов
         self.create_product_component_checkbox(array_component)
-
-    def create_profile_tool_component_checkbox(self, array_component: List[Dict]) -> None:
-        """Создание чекбоксов для компонентов."""
-        self.clear_profile_tool_component()
-        
-        layout = self.ui.widget_profile_tool_content.layout()
-        
-        for component in array_component:
-            checkbox = QCheckBox()
-            
-            # Получаем тип компонента как строку
-            type_name = component.get("component_type", "Неизвестный тип")
-            
-            # Получаем статус как строку
-            status_name = component.get("status", "Неизвестный статус")
-            
-            checkbox.setText(f"{type_name} ({status_name})")
-            checkbox.stateChanged.connect(self.on_profile_tool_component_selection_changed)
-            
-            layout.addWidget(checkbox)
-            self.dict_component_checkbox[component["id"]] = checkbox
-        
-        # Включаем кнопку создания, если есть компоненты
-        self.update_create_button_state()
 
     def create_product_component_checkbox(self, array_component: List[Dict]) -> None:
         """Создание чекбоксов для компонентов изделия."""
@@ -342,17 +258,6 @@ class DialogCreateTask(QDialog):
         # Обновляем состояние кнопки создания
         self.update_create_button_state()
 
-    def clear_profile_tool_component(self) -> None:
-        """Очистка списка компонентов."""
-        layout = self.ui.widget_profile_tool_content.layout()
-        
-        # Удаляем все чекбоксы
-        for checkbox in self.dict_component_checkbox.values():
-            layout.removeWidget(checkbox)
-            checkbox.deleteLater()
-        
-        self.dict_component_checkbox.clear()
-
     def clear_product_component(self) -> None:
         """Очистка списка компонентов изделия."""
         layout = self.ui.widget_product_content.layout()
@@ -368,59 +273,33 @@ class DialogCreateTask(QDialog):
 
         self.dict_product_component_checkbox.clear()
         self.dict_product_component_spinbox.clear()
-
-    @Slot()
-    def on_profile_tool_component_selection_changed(self) -> None:
-        """Обработка изменения выбора компонентов инструмента."""
-        self.update_create_button_state()
-
+ 
     @Slot()
     def on_product_component_selection_changed(self) -> None:
         """Обработка изменения выбора компонентов изделия."""
         self.update_create_button_state()
     
+    # =============================================================================
+    # Дополнительное поведение
+    # =============================================================================
     def update_create_button_state(self) -> None:
         """Обновление состояния кнопки создания."""
         current_tab = self.ui.tabWidget.currentIndex()
         
         if current_tab == 0:  # Вкладка инструментов
-            # Проверяем ТОЛЬКО данные инструментов
-            has_selected_components = any(
-                cb.isChecked() for cb in self.dict_component_checkbox.values()
-            )
+            # Проверяем данные инструментов
+            has_selected = any(cb.isChecked() for cb in self.dict_profile_tool_component_checkbox.values())
             has_tool = bool(self.ui.comboBox_profile_tool_tool.currentText())
-            
-            # Кнопка активна только для инструментов
-            self.ui.pushButton_create.setEnabled(
-                has_selected_components and has_tool
-            )
+            self.ui.pushButton_create.setEnabled(has_selected and has_tool)
             
         elif current_tab == 1:  # Вкладка изделий
-            # Проверяем ТОЛЬКО данные изделий
-            has_selected_components = any(
-                cb.isChecked() for cb in self.dict_product_component_checkbox.values()
-            )
+            # Проверяем данные изделий
+            has_selected = any(cb.isChecked() for cb in self.dict_product_component_checkbox.values())
             has_product = bool(self.ui.comboBox_product.currentText())
-            has_department = bool(self.ui.comboBox_product_department.currentText())
-            
-            print(has_selected_components and has_product and has_department)
-
-
-            # Кнопка активна только для изделий
-            self.ui.pushButton_create.setEnabled(
-                has_selected_components and has_product and has_department
-            )
-        
-        else:
-            # Неизвестная вкладка
-            self.ui.pushButton_create.setEnabled(False)
-    
-    @Slot(int)
-    def on_tab_changed(self, index: int) -> None:
-        """Обработка переключения вкладок."""
-        # Обновляем состояние кнопки при переключении вкладок
-        self.update_create_button_state()
-
+            self.ui.pushButton_create.setEnabled(has_selected and has_product)
+    # =============================================================================
+    # Создание задачи
+    # =============================================================================
     @Slot()
     def create_task(self) -> None:
         """Создание новой задачи."""
@@ -432,42 +311,40 @@ class DialogCreateTask(QDialog):
             self.create_product_task()
 
     def create_profile_tool_task(self) -> None:
-        """Создание задачи для инструмента."""
+        """Создание задачи для инструмента с компонентами."""
         # Собираем данные формы
         profile_tool_id = self.ui.comboBox_profile_tool_tool.currentData()
         deadline = self.ui.dateEdit_profile_tool_deadline.date().toString("yyyy-MM-dd")
         description = self.ui.textEdit_profile_tool_description.toPlainText().strip()
-        
         # Получаем выбранные компоненты
-        array_component_id = [
-            component_id for component_id, checkbox 
-            in self.dict_component_checkbox.items()
-            if checkbox.isChecked()
-        ]
-        
-        # Создаем данные задачи для API
+        array_component_id = []
+        for component_id, checkbox in self.dict_profile_tool_component_checkbox.items():
+            if checkbox.isChecked():
+                array_component_id.append(component_id)
+        # Создаем задачу через API
         task_data = {
             "profile_tool_id": profile_tool_id,
             "deadline_on": deadline,
-            "department_id": 1,  # Временно используем ID=1, пока не добавим выбор отдела
-            "stage": description if description else None,
-            "array_component_id": array_component_id
+            "description": description if description else None,
+            "status_id": 1
         }
-        
-        # Отправляем сигнал с данными
-        self.task_created.emit(task_data)
-        
-        # Закрываем диалог
+        response = self.api_task.create_task(task_data)
+        task_id = response['id']
+        if task_id:
+            # Создаем компоненты задачи через API
+            for component_id in array_component_id:
+                comp_request = {
+                    "task_id": task_id,
+                    "profile_tool_component_id": component_id}
+                self.api_task.create_task_component(comp_request)
         self.accept()
 
     def create_product_task(self) -> None:
-        """Создание задачи для изделия."""
+        """Создание задачи для изделия с компонентами."""
         # Собираем данные формы
         product_id = self.ui.comboBox_product.currentData()
-        department_id = self.ui.comboBox_product_department.currentData()
         deadline = self.ui.dateEdit_product_deadline.date().toString("yyyy-MM-dd")
         description = self.ui.textEdit_product_description.toPlainText().strip()
-        
         # Получаем выбранные компоненты с количеством из SpinBox
         array_component_data = []
         for component_id, checkbox in self.dict_product_component_checkbox.items():
@@ -477,18 +354,21 @@ class DialogCreateTask(QDialog):
                     "product_component_id": component_id,
                     "quantity": spinbox.value()
                 })
-
-        # Создаем данные задачи для API
+        # Создаем задачу через API
         task_data = {
             "product_id": product_id,
-            "department_id": department_id,
             "deadline_on": deadline,
-            "stage": description if description else None,
-            "array_component_data": array_component_data
+            "description": description if description else None,
+            "status_id": 1
         }
-        
-        # Отправляем сигнал с данными
-        self.task_created.emit(task_data)
-        
-        # Закрываем диалог
+        response = self.api_task.create_task(task_data)
+        task_id = response['id']
+        if task_id:
+            # Создаем компоненты задачи через API
+            for comp_data in array_component_data:
+                comp_request = {
+                    "task_id": task_id,
+                    "product_component_id": comp_data["product_component_id"],
+                    "quantity": comp_data["quantity"] }
+                self.api_task.create_task_component(comp_request)
         self.accept()

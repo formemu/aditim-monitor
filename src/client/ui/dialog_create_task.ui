@@ -20,7 +20,7 @@
    <item>
     <widget class="QTabWidget" name="tabWidget">
      <property name="currentIndex">
-      <number>0</number>
+      <number>1</number>
      </property>
      <widget class="QWidget" name="tab_profile_tool">
       <attribute name="title">
@@ -191,7 +191,7 @@
                <x>0</x>
                <y>0</y>
                <width>536</width>
-               <height>117</height>
+               <height>128</height>
               </rect>
              </property>
              <layout class="QVBoxLayout" name="verticalLayout_checkboxes_2"/>
@@ -207,14 +207,14 @@
           <string>Параметры задачи</string>
          </property>
          <layout class="QFormLayout" name="formLayout_params_2">
-          <item row="1" column="0">
+          <item row="0" column="0">
            <widget class="QLabel" name="label_product_deadline">
             <property name="text">
              <string>Срок:</string>
             </property>
            </widget>
           </item>
-          <item row="1" column="1">
+          <item row="0" column="1">
            <widget class="QDateEdit" name="dateEdit_product_deadline">
             <property name="calendarPopup">
              <bool>true</bool>
@@ -228,14 +228,14 @@
             </property>
            </widget>
           </item>
-          <item row="2" column="0">
+          <item row="1" column="0">
            <widget class="QLabel" name="label_product_description">
             <property name="text">
              <string>Описание:</string>
             </property>
            </widget>
           </item>
-          <item row="2" column="1">
+          <item row="1" column="1">
            <widget class="QTextEdit" name="textEdit_product_description">
             <property name="maximumSize">
              <size>
@@ -245,20 +245,6 @@
             </property>
             <property name="placeholderText">
              <string>Дополнительное описание задачи...</string>
-            </property>
-           </widget>
-          </item>
-          <item row="0" column="1">
-           <widget class="QComboBox" name="comboBox_product_department">
-            <property name="placeholderText">
-             <string>Выберите отдел...</string>
-            </property>
-           </widget>
-          </item>
-          <item row="0" column="0">
-           <widget class="QLabel" name="label_product_department">
-            <property name="text">
-             <string>Отдел:</string>
             </property>
            </widget>
           </item>
