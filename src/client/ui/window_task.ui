@@ -184,7 +184,7 @@
         </size>
        </property>
        <property name="text">
-        <string>Отдел: -</string>
+        <string/>
        </property>
       </widget>
      </item>

@@ -18,7 +18,8 @@ class Task(Base):
     position = Column(Integer, nullable=True)
     status_id = Column(Integer, ForeignKey("dir_task_status.id"), nullable=False, default=1)
     created_at = Column(DateTime, server_default=func.now())
-    
+    description = Column(Text, nullable=True)
+
     # Relationships
     product = relationship("Product", back_populates="task")
     profile_tool = relationship("ProfileTool", back_populates="task")

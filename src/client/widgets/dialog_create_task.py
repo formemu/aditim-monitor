@@ -325,7 +325,7 @@ class DialogCreateTask(QDialog):
         task_data = {
             "profile_tool_id": profile_tool_id,
             "deadline_on": deadline,
-            "description": description if description else None,
+            "description": description,
             "status_id": 1
         }
         response = self.api_task.create_task(task_data)

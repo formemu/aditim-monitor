@@ -43,7 +43,8 @@ def get_task(
             "position": task.position,
             "status_id": task.status_id,
             "status": task.status.name,
-            "created_at": task.created_at.strftime("%d.%m.%Y")
+            "created_at": task.created_at.strftime("%d.%m.%Y"),
+            "description": task.description
         })
     return result
 

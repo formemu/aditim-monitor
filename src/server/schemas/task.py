@@ -8,37 +8,30 @@ from pydantic import BaseModel
 
 
 class TaskBase(BaseModel):
-    product_id: Optional[Union[int, str]] = None
+    product_id: Optional[int] = None
     profile_tool_id: Optional[int] = None
     stage: Optional[str] = None
     deadline_on: Optional[date] = None
     position: int = 0
     status_id: int = 1
-
+    description: Optional[str] = None
 
 class TaskCreate(TaskBase):
     pass
 
-
-class TaskUpdate(BaseModel):
+class TaskUpdate(TaskBase):
     product_id: Optional[int] = None
     profile_tool_id: Optional[int] = None
     stage: Optional[str] = None
     deadline_on: Optional[date] = None
     position: Optional[int] = None
     status_id: Optional[int] = None
+    description: Optional[str] = None
 
-
-class TaskResponse(BaseModel):
+class TaskResponse(TaskBase):
     id: int
-    product_id: Optional[int] = None
-    profile_tool_id: Optional[int] = None
-    stage: Optional[str] = None
-    deadline_on: Optional[date] = None
-    position: Optional[int] = None
-    status_id: int = 1
     created_at: datetime
-    
+
     class Config:
         from_attributes = True
 

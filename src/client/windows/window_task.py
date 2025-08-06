@@ -1,7 +1,7 @@
 """
 Содержимое задач для ADITIM Monitor Client
 """
-from PySide6.QtWidgets import QWidget, QMessageBox, QTableWidgetItem, QAbstractItemView,  QMenu
+from PySide6.QtWidgets import QWidget, QMessageBox, QTableWidgetItem, QAbstractItemView,  QMenu, QHeaderView
 from PySide6.QtCore import QFile, Qt, QTimer
 from PySide6.QtGui import QAction
 from PySide6.QtUiTools import QUiLoader
@@ -76,7 +76,7 @@ class WindowTask(QWidget):
             if self.skip_update(self.task_data, task):
                 return
             self.task_data = task
-            self.update_tasks_table(self.task_data)
+            self.update_task_table(self.task_data)
         except Exception as e:
             QMessageBox.warning(self, "Предупреждение", f"Ошибка загрузки: {e}")
 
@@ -92,27 +92,45 @@ class WindowTask(QWidget):
     # =============================================================================
     # ОТОБРАЖЕНИЕ ДАННЫХ: ТАБЛИЦЫ И ИНФОРМАЦИОННЫЕ ПАНЕЛИ
     # =============================================================================
-    def update_tasks_table(self, list_task):
-        """Обновление таблицы задач"""
+    def update_task_table(self, list_task):
+        """Обновление таблицы задач с корректным отображением и заполнением по ширине"""
         table = self.ui.tableWidget_tasks
         table.setRowCount(len(list_task))
+        table.setColumnCount(6) 
 
+        # Заголовки столбцов
+        table.setHorizontalHeaderLabels([
+            "Название", "Статус", "Позиция", "Срок", "Создано", "Описание"
+        ])
+
+        header = table.horizontalHeader()
+        
+        for col in range(table.columnCount() - 1):
+            header.setSectionResizeMode(col, QHeaderView.ResizeToContents)
+        header.setSectionResizeMode(table.columnCount() - 1, QHeaderView.Stretch)
         for row, task in enumerate(list_task):
             # Название задачи
             name = self.get_task_name(task)
             table.setItem(row, 0, QTableWidgetItem(name))
+
             # Статус
             status = task.get('status')
             table.setItem(row, 1, QTableWidgetItem(status))
+
             # Позиция
             position = str(task.get('position'))
             table.setItem(row, 2, QTableWidgetItem(position))
+
             # Срок
             deadline = task.get('deadline_on')
             table.setItem(row, 3, QTableWidgetItem(deadline))
+
             # Дата создания
             created = task.get('created_at')
             table.setItem(row, 4, QTableWidgetItem(created))
+            # Описание
+            description = task.get('description')
+            table.setItem(row, 5, QTableWidgetItem(description))
 
     def skip_update(self, current_data, new_data):
         """Проверка, нужно ли обновлять таблицу"""
@@ -130,15 +148,16 @@ class WindowTask(QWidget):
         """Возвращает название задачи: артикул профиля или имя изделия"""
         if task.get('profile_tool_id'):
             profile_tool = references_manager.get_profile_tool().get(task['profile_tool_id'])
-            return f"Инструмент {profile_tool['name']})"
-        return references_manager.get_product().get(f"Изделие {task.get('product_id', 'N/A')}")
+            return f"Инструмент {profile_tool['name']}"
+        product = references_manager.get_product().get(task.get('product_id'))
+        return f"Изделие {product['name']}" if product else "Изделие N/A"
 
     def update_task_info_panel(self, task):
         """Обновление панели информации о задаче"""
         name = self.get_task_name(task)
         deadline = task.get('deadline_on')
         created = task.get('created_at')
-        status = task.get('status', '-')
+        status = task.get('status')
         self.ui.label_task_name.setText(f"Название: {name}")
         self.ui.label_task_info.setText(f"Статус: {status} | Срок: {deadline} | Создано: {created}")
 
@@ -156,16 +175,37 @@ class WindowTask(QWidget):
             self.clear_components_table()
             print(f"Ошибка загрузки компонентов задачи: {error}")
 
-    def update_components_table(self, components):
+    def update_components_table(self, list_component):
         """Обновление таблицы компонентов"""
-        self.ui.tableWidget_components.setRowCount(len(components))
-        for row, comp in enumerate(components):
-            num_item = QTableWidgetItem(str(row + 1))
-            self.ui.tableWidget_components.setItem(row, 0, num_item)
-            name_item = QTableWidgetItem(comp.get('name'))
-            self.ui.tableWidget_components.setItem(row, 1, name_item)
-            qty_item = QTableWidgetItem(str(comp.get('quantity', 0)))
-            self.ui.tableWidget_components.setItem(row, 2, qty_item)
+        table = self.ui.tableWidget_components
+        table.setRowCount(len(list_component))
+
+        # Проверяем по первому элементу, какой тип компонента
+        if list_component and list_component[0].get('product_component_id'):
+            table.setColumnCount(3)
+            header = table.horizontalHeader()
+            header.setSectionResizeMode(0, QHeaderView.ResizeToContents)
+            header.setSectionResizeMode(1, QHeaderView.Stretch)
+            header.setSectionResizeMode(2, QHeaderView.ResizeToContents)
+            table.setHorizontalHeaderLabels(["№", "Название", "Количество"])
+            for row, comp in enumerate(list_component):
+                num_item = QTableWidgetItem(str(row + 1))
+                table.setItem(row, 0, num_item)
+                name_item = QTableWidgetItem(comp.get('name', ''))
+                table.setItem(row, 1, name_item)
+                qty_item = QTableWidgetItem(str(comp.get('quantity', '')))
+                table.setItem(row, 2, qty_item)
+        else:
+            table.setColumnCount(2)
+            header = table.horizontalHeader()
+            header.setSectionResizeMode(0, QHeaderView.ResizeToContents)
+            header.setSectionResizeMode(1, QHeaderView.Stretch)
+            table.setHorizontalHeaderLabels(["№", "Название"])
+            for row, comp in enumerate(list_component):
+                num_item = QTableWidgetItem(str(row + 1))
+                table.setItem(row, 0, num_item)
+                name_item = QTableWidgetItem(comp.get('name', ''))
+                table.setItem(row, 1, name_item)
 
     def clear_components_table(self):
         """Очистка таблицы компонентов"""
