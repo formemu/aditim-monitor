@@ -1,7 +1,7 @@
 """
 Содержимое изделий для ADITIM Monitor Client с вкладками и компонентами
 """
-from PySide6.QtWidgets import QWidget, QMessageBox, QTableWidgetItem, QAbstractItemView
+from PySide6.QtWidgets import QWidget, QMessageBox, QTableWidgetItem, QAbstractItemView, QHeaderView
 from PySide6.QtCore import QFile, Qt, QTimer
 from PySide6.QtUiTools import QUiLoader
 from ..constant import UI_PATHS_ABS as UI_PATHS, get_style_path
@@ -19,10 +19,9 @@ class WindowProduct(QWidget):
         super().__init__()
         self.api_product = ApiProduct()
         self.api_profile_tool = ApiProfileTool()
-        self.current_product_id = None
-        self.current_tool_id = None
-        self.current_data_tool = None
-        self.current_data_product = None
+        self.profile_tool_data = None # Кэш данных инструментов
+        self.product_data = None # Кэш данных изделий
+        self.tab_index = 0  # Индекс текущей вкладки
         self.load_ui()
         self.setup_ui()
 
@@ -44,27 +43,20 @@ class WindowProduct(QWidget):
         self.ui.pushButton_component_add.clicked.connect(self.on_component_add_clicked)
         self.ui.pushButton_component_edit.clicked.connect(self.on_component_edit_clicked)
         self.ui.pushButton_component_delete.clicked.connect(self.on_component_delete_clicked)
-        self.ui.tableWidget_component.itemSelectionChanged.connect(self.on_component_selection_changed)
         self.ui.tabWidget_products.currentChanged.connect(self.on_tab_changed)
         # Подключения: профили
         self.ui.pushButton_profile_tool_add.clicked.connect(self.on_profile_tool_add_clicked)
         self.ui.pushButton_profile_tool_edit.clicked.connect(self.on_profile_tool_edit_clicked)
         self.ui.pushButton_profile_tool_delete.clicked.connect(self.on_profile_tool_delete_clicked)
-        self.ui.tableWidget_profile_tool.itemSelectionChanged.connect(self.on_profile_tool_selection_changed)
-        self.ui.lineEdit_search_profile_tool.textChanged.connect(lambda text: self._filter_table(self.ui.tableWidget_profile_tool, text.lower()))
+        self.ui.tableWidget_profile_tool.itemSelectionChanged.connect(self.on_selection_changed)
+        self.ui.lineEdit_search_profile_tool.textChanged.connect(lambda text: self.filter_table(self.ui.tableWidget_profile_tool, text.lower()))
         # Подключения: изделия
         self.ui.pushButton_product_add.clicked.connect(self.on_product_add_clicked)
         self.ui.pushButton_product_edit.clicked.connect(self.on_product_edit_clicked)
         self.ui.pushButton_product_delete.clicked.connect(self.on_product_delete_clicked)
-        self.ui.tableWidget_product.itemSelectionChanged.connect(self.on_product_selection_changed)
-        self.ui.lineEdit_search_product.textChanged.connect(lambda text: self._filter_table(self.ui.tableWidget_product, text.lower()))
-        self.setup_tables()
-        # Таймер автообновления
-        self.update_timer = QTimer()
-        self.update_timer.timeout.connect(self.load_current_tab_data)
-
-    def setup_tables(self):
-        """Настройка таблиц"""
+        self.ui.tableWidget_product.itemSelectionChanged.connect(self.on_selection_changed)
+        self.ui.lineEdit_search_product.textChanged.connect(lambda text: self.filter_table(self.ui.tableWidget_product, text.lower()))
+        # Настройка таблиц
         for table in [self.ui.tableWidget_profile_tool, self.ui.tableWidget_product, self.ui.tableWidget_component]:
             table.setSelectionBehavior(QAbstractItemView.SelectRows)
             table.setSelectionMode(QAbstractItemView.SingleSelection)
@@ -76,104 +68,106 @@ class WindowProduct(QWidget):
         self.ui.tableWidget_product.horizontalHeader().setStretchLastSection(True)
         self.ui.tableWidget_component.setColumnWidth(0, 300)
         self.ui.tableWidget_component.horizontalHeader().setStretchLastSection(True)
+        # Таймер автообновления
+        self.update_timer = QTimer()
+        self.update_timer.timeout.connect(self.refresh_data)
 
     # =============================================================================
     # УПРАВЛЕНИЕ ДАННЫМИ: ЗАГРУЗКА И ОБНОВЛЕНИЕ
     # =============================================================================
+    def load_data_from_server(self):
+        """Загрузка всех данных"""
+        if self.tab_index == 0:
+            tool = self.api_profile_tool.get_profile_tool()
+            self.profile_tool_data = tool
+            self.update_table_tool(tool)
+            
+        elif self.tab_index == 1:
+            product = self.api_product.get_product()
+            self.product_data = product
+            self.update_table_product(product)
+
     def refresh_data(self):
         """Принудительное обновление данных"""
-        self.current_data_tool = []
-        self.current_data_product = []
-        self.load_data()
+        if self.tab_index == 0:
+            self.profile_tool_data = []
+            self.load_data_from_server()
+        elif self.tab_index == 1:
+            self.product_data = []
+            self.load_data_from_server()
 
-    def load_data(self):
-        """Загрузка всех данных"""
-        try:
-            list_tool = self.api_profile_tool.get_profile_tool()
-            self.update_table_tool(list_tool)
-        except Exception as e:
-            QMessageBox.warning(self, "Предупреждение", f"Ошибка загрузки инструментов: {e}")
-        try:
-            list_product = self.api_product.get_product()
-            self.update_table_product(list_product)
-        except Exception as e:
-            QMessageBox.warning(self, "Предупреждение", f"Ошибка загрузки изделий: {e}")
-
-    def load_current_tab_data(self):
-        """Загрузка данных для текущей вкладки"""
-        index = self.ui.tabWidget_products.currentIndex()
-        if index == 0:
-            self.load_data()
-        elif index == 1:
-            self.load_data()
-
+    def on_tab_changed(self):
+        """Обработчик смены вкладки — обновляет данные для выбранной вкладки"""
+        self.tab_index = self.ui.tabWidget_products.currentIndex()
+        self.refresh_data()
+        self.clear_component()
+    
+    # =============================================================================
+    # ОТОБРАЖЕНИЕ ДАННЫХ: ТАБЛИЦЫ И ИНФОРМАЦИОННЫЕ ПАНЕЛИ
+    # =============================================================================
     def update_table_tool(self, list_tool):
-        """Обновление таблицы инструментов профилей"""
-        if self.current_data_tool == list_tool and self.ui.tableWidget_profile_tool.rowCount() > 0:
-            return
-        self.current_data_tool = list_tool
+        """Обновление таблицы инструментов профиля с корректным отображением и заполнением по ширине"""
         table = self.ui.tableWidget_profile_tool
         table.setRowCount(len(list_tool))
+        table.setColumnCount(2)
+        # Заголовки столбцов
+        table.setHorizontalHeaderLabels(["Размер и профиль", "Описание"])
+        header = table.horizontalHeader()
+        header.setSectionResizeMode(0, QHeaderView.ResizeToContents)
+        header.setSectionResizeMode(1, QHeaderView.Stretch)
         for row, tool in enumerate(list_tool):
-            # Название инструмента
-            name_item = QTableWidgetItem(f"{tool.get('dimension', 'Неизвестно')} - {tool.get('profile_article', 'Неизвестно')}")
-            name_item.setFlags(name_item.flags() & ~Qt.ItemIsEditable)
-            name_item.setData(Qt.UserRole, tool.get('id'))
-            table.setItem(row, 0, name_item)
+            # Размер и профиль
+            name = f"{tool.get('dimension')} - {tool.get('profile_article')}"
+            table.setItem(row, 0, QTableWidgetItem(name))
             # Описание
-            desc_item = QTableWidgetItem(tool.get('description', ''))
-            desc_item.setFlags(desc_item.flags() & ~Qt.ItemIsEditable)
-            table.setItem(row, 1, desc_item)
+            description = tool.get('description')
+            table.setItem(row, 1, QTableWidgetItem(description))
 
     def update_table_product(self, list_product):
-        """Обновление таблицы изделий"""
-        if self.current_data_product == list_product and self.ui.tableWidget_product.rowCount() > 0:
-            return
-        self.current_data_product = list_product
+        """Обновление таблицы изделий с корректным отображением и заполнением по ширине"""
         table = self.ui.tableWidget_product
         table.setRowCount(len(list_product))
-        dict_department = references_manager.get_department()
+        table.setColumnCount(3)
+        # Заголовки столбцов
+        table.setHorizontalHeaderLabels(["Название", "Департамент", "Описание"])
+        header = table.horizontalHeader()
+        header.setSectionResizeMode(0, QHeaderView.ResizeToContents)
+        header.setSectionResizeMode(1, QHeaderView.ResizeToContents)
+        header.setSectionResizeMode(2, QHeaderView.Stretch)
         for row, product in enumerate(list_product):
             # Название изделия
-            name_item = QTableWidgetItem(product.get('name', ''))
-            name_item.setFlags(name_item.flags() & ~Qt.ItemIsEditable)
-            name_item.setData(Qt.UserRole, product.get('id'))
-            table.setItem(row, 0, name_item)
+            name = product.get('name')
+            table.setItem(row, 0, QTableWidgetItem(name))
             # Департамент
-            dept_item = QTableWidgetItem(dict_department.get(product.get('department_id', 0), 'Неизвестно'))
-            dept_item.setFlags(dept_item.flags() & ~Qt.ItemIsEditable)
-            table.setItem(row, 1, dept_item)
+            dept = product.get('departament')
+            table.setItem(row, 1, QTableWidgetItem(dept))
             # Описание
-            desc_item = QTableWidgetItem(product.get('description', ''))
-            desc_item.setFlags(desc_item.flags() & ~Qt.ItemIsEditable)
-            table.setItem(row, 2, desc_item)
+            desc = product.get('description')
+            table.setItem(row, 2, QTableWidgetItem(desc))
 
-    # =============================================================================
-    # РАБОТА С КОМПОНЕНТАМИ
-    # =============================================================================
-    def load_component(self, item_type: str, item_id: int):
+    def load_component(self, item_id: int):
         """Загрузка компонентов элемента"""
-        api = self.api_product if item_type == "product" else self.api_profile_tool
-        method = api.get_product_component if item_type == "product" else api.get_profile_tool_component
-        list_component = method(item_id)
-        self.ui.label_selected_item.setText(f"{item_type.capitalize()} ID: {item_id}")
+        if self.tab_index == 1:
+            api = self.api_product
+            list_component = api.get_product_component(item_id)
+        else:
+            api = self.api_profile_tool
+            list_component = api.get_profile_tool_component(item_id)
+
+        self.ui.label_selected_item.setText(f"ID: {item_id}")
         self.ui.tableWidget_component.setRowCount(0)
-        if not list_component:
-            self.ui.label_component_description.setText("Описание: -")
-            return
         self.ui.tableWidget_component.setRowCount(len(list_component))
+
         for row, comp in enumerate(list_component):
-            if item_type == "product":
-                name = comp.get('component_name', '')
-                qty = str(comp.get('quantity', 1))
+            if self.tab_index == 1:
+                name = comp.get('component_name')
+                qty = comp.get('quantity')
             else:
-                name = f"{comp.get('component_type', '')}" + (f" (вариант {comp.get('variant')})" if comp.get('variant') else "")
+                name = comp.get('variant_id')
                 qty = comp.get('status', '')
             name_item = QTableWidgetItem(name)
-            name_item.setFlags(name_item.flags() & ~Qt.ItemIsEditable)
             name_item.setData(Qt.UserRole, comp.get('id'))
             qty_item = QTableWidgetItem(qty)
-            qty_item.setFlags(qty_item.flags() & ~Qt.ItemIsEditable)
             self.ui.tableWidget_component.setItem(row, 0, name_item)
             self.ui.tableWidget_component.setItem(row, 1, qty_item)
         self.ui.pushButton_component_add.setEnabled(True)
@@ -187,100 +181,76 @@ class WindowProduct(QWidget):
         self.ui.pushButton_component_edit.setEnabled(False)
         self.ui.pushButton_component_delete.setEnabled(False)
 
+    def filter_table(self, table, text):
+        """Фильтрация строк таблицы"""
+        for row in range(table.rowCount()):
+            item = table.item(row, 0)
+            if item:
+                visible = text.lower() in item.text().lower()
+                table.setRowHidden(row, not visible)
+
     # =============================================================================
     # ОБРАБОТЧИКИ СОБЫТИЙ
     # =============================================================================
-    def on_tab_changed(self, index):
-        """Обработчик смены вкладки"""
-        pass  # Обновление по таймеру
+    def on_selection_changed(self):
+        """Обработчик выбора элемента"""
+        row = self.get_selected_row()
+        print(row)
+        if row is not None:
+            if self.tab_index == 0:
+                profile = self.profile_tool_data[row]
+                self.load_component(profile.get('id'))
+            else:
+                product = self.product_data[row]
+                self.load_component(product.get('id'))
 
-    def on_profile_tool_selection_changed(self):
-        """Обработчик изменения выделения в таблице инструментов профилей"""
-        selected_items = self.ui.tableWidget_profile_tool.selectedItems()
-        if selected_items:
-            row = selected_items[0].row()
-            tool_id = self.ui.tableWidget_profile_tool.item(row, 0).data(Qt.UserRole)
-            self.current_tool_id = tool_id
-            self.current_product_id = None  # Сброс выбора изделия
-            # Сброс выделения в таблице изделий
-            self.ui.tableWidget_product.setCurrentItem(None)
-            # Загружаем компоненты инструмента
-            self.load_component("profile_tool", tool_id)
+    def get_selected_row(self):
+        """Возвращает индекс выбранной строки или None"""
+        if self.tab_index == 0:
+            selected = self.ui.tableWidget_profile_tool.selectedItems()
         else:
-            self.current_tool_id = None
-            self.clear_component()
+            selected = self.ui.tableWidget_product.selectedItems()
+        return selected[0].row() if selected else None
+    
+    def load_data_by_tab(self):
+        """Загрузка данных и компонентов в зависимости от выбранной вкладки"""
 
-    def on_product_selection_changed(self):
-        """Обработчик изменения выделения в таблице изделий"""
-        selected_items = self.ui.tableWidget_product.selectedItems()
-        if selected_items:
-            row = selected_items[0].row()
-            product_id = self.ui.tableWidget_product.item(row, 0).data(Qt.UserRole)
-            self.current_product_id = product_id
-            self.current_tool_id = None  # Сброс выбора инструмента
-            # Сброс выделения в таблице инструментов
-            self.ui.tableWidget_profile_tool.setCurrentItem(None)
-            # Загружаем компоненты изделия
-            self.load_component("product", product_id)
-        else:
-            self.current_product_id = None
-            self.clear_component()
+        if self.tab_index == 0:
+            # Вкладка инструмент
+            list_tool = self.api_profile_tool.get_profile_tool()
+            self.update_table_tool(list_tool)
 
-    def on_component_selection_changed(self):
-        """Обработчик изменения выделения в таблице компонентов"""
-        selected = self.ui.tableWidget_component.selectedItems()
-        if selected:
-            component_id = self.ui.tableWidget_component.item(selected[0].row(), 0).data(Qt.UserRole)
-            api = self.api_product if self.current_product_id else self.api_profile_tool
-            method = api.get_product_component if self.current_product_id else api.get_profile_tool_component
-            item_id = self.current_product_id or self.current_tool_id
-            try:
-                comp = next((c for c in method(item_id) if c.get('id') == component_id), None)
-                if comp:
-                    self.ui.label_component_description.setText(f"Описание: {comp.get('description', '-')}")
-            except:
-                pass
-            self.ui.pushButton_component_edit.setEnabled(True)
-            self.ui.pushButton_component_delete.setEnabled(True)
-        else:
-            self.ui.label_component_description.setText("Описание: -")
-            self.ui.pushButton_component_edit.setEnabled(False)
-            self.ui.pushButton_component_delete.setEnabled(False)
+        elif self.tab_index == 1:
+            # Вкладка изделие
+            list_product = self.api_product.get_product()
+            self.update_table_product(list_product)
 
-    def _open_dialog(self, dialog_class, created_signal, callback):
-        """Унифицированное открытие диалога"""
-        try:
-            dialog = dialog_class(self)
-            getattr(dialog, created_signal).connect(callback)
-            dialog.exec()
-        except Exception as e:
-            QMessageBox.critical(self, "Ошибка", f"Не удалось открыть диалог: {e}")
-
+    # =============================================================================
+    # ОБРАБОТЧИКИ СОБЫТИЙ: УПРАВЛЕНИЕ
+    # =============================================================================
     def on_profile_tool_add_clicked(self):
         """Добавление инструмента профиля"""
-        self._open_dialog(DialogCreateProfileTool, 'profile_tool_created', self.on_profile_tool_created)
+        dialog = DialogCreateProfileTool(self)
+        dialog.task_created.connect(self.refresh_data)
+        dialog.exec()
 
     def on_product_add_clicked(self):
         """Добавление изделия"""
-        self._open_dialog(DialogCreateProduct, 'product_created', self.on_product_created)
+        dialog = DialogCreateProduct(self)
+        dialog.task_created.connect(self.refresh_data)
+        dialog.exec()
 
-    def on_profile_tool_created(self, tool_data):
-        """Обработка создания инструмента профиля"""
-        self.load_data()
-        QMessageBox.information(self, "Успех", "Инструмент профиля успешно создан!")
-
-    def on_product_created(self, product_data):
-        """Обработка создания изделия"""
-        self.load_data()
-        QMessageBox.information(self, "Успех", f"Изделие '{product_data.get('name', '')}' успешно создано!")
 
     def on_profile_tool_edit_clicked(self):
         """Редактирование инструмента профиля"""
         QMessageBox.information(self, "Информация", "Функция будет реализована позже")
 
     def on_profile_tool_delete_clicked(self):
-        """Удаление инструмента профиля"""
-        self._delete_item(self.ui.tableWidget_profile_tool, 0, 0, self.api_profile_tool.delete_profile_tool, "инструмент")
+        """Удаление задачи"""
+        row = self.get_selected_row()
+        task = self.profile_tool_data[row]
+        self.api_profile_tool.delete_profile_tool(task['id'])
+        self.refresh_data()
 
     def on_product_edit_clicked(self):
         """Редактирование изделия"""
@@ -288,31 +258,10 @@ class WindowProduct(QWidget):
 
     def on_product_delete_clicked(self):
         """Удаление изделия"""
-        self._delete_item(self.ui.tableWidget_product, 0, 0, self.api_product.delete_product, "изделие")
-
-    def _delete_item(self, table, id_col, name_col, delete_func, item_type):
-        """Унифицированный метод удаления элемента"""
-        selected = table.selectedItems()
-        if not selected:
-            QMessageBox.warning(self, "Удаление", f"Выберите {item_type}.")
-            return
-        row = selected[0].row()
-        item_id = table.item(row, id_col).data(Qt.UserRole)
-        item_name = table.item(row, name_col).text()
-        reply = QMessageBox.question(
-            self, "Подтверждение удаления",
-            f"Вы уверены, что хотите удалить {item_type} '{item_name}'?",
-            QMessageBox.Yes | QMessageBox.No,
-            QMessageBox.No
-        )
-        if reply == QMessageBox.Yes:
-            try:
-                delete_func(item_id)
-                self.load_data()
-                self.clear_component()
-                QMessageBox.information(self, "Успех", f"{item_type.capitalize()} и его компоненты успешно удалены.")
-            except Exception as e:
-                QMessageBox.critical(self, "Ошибка", f"Не удалось удалить: {e}")
+        row = self.get_selected_row()
+        task = self.product_data[row]
+        self.api_product.delete_product(task['id'])
+        self.refresh_data()
 
     def on_component_add_clicked(self):
         """Добавление компонента"""
@@ -326,14 +275,6 @@ class WindowProduct(QWidget):
         """Удаление компонента"""
         QMessageBox.information(self, "Информация", "Функция будет реализована позже")
 
-    def _filter_table(self, table, text):
-        """Фильтрация строк таблицы"""
-        for row in range(table.rowCount()):
-            item = table.item(row, 0)
-            if item:
-                visible = text.lower() in item.text().lower()
-                table.setRowHidden(row, not visible)
-
     # =============================================================================
     # УПРАВЛЕНИЕ АВТООБНОВЛЕНИЕМ
     # =============================================================================
@@ -341,7 +282,7 @@ class WindowProduct(QWidget):
         """Запуск автообновления"""
         if not self.update_timer.isActive():
             self.update_timer.start(5000)
-            self.load_data()
+            self.load_data_from_server()
 
     def stop_auto_refresh(self):
         """Остановка автообновления"""

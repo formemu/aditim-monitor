@@ -19,7 +19,6 @@ class WindowTask(QWidget):
         super().__init__()
         self.api_task = ApiTask()
         self.task_data = None  # Кэш задач
-        self.selected_row = None  # Индекс выбранной строки
         self.load_ui()
         self.setup_ui()
     # =============================================================================
@@ -143,7 +142,7 @@ class WindowTask(QWidget):
         product = references_manager.get_product().get(task.get('product_id'))
         return f"Изделие {product['name']}" if product else "Изделие N/A"
 
-    def update_task_info_panel(self, task):
+    def update_info_panel(self, task):
         """Обновление панели информации о задаче"""
         name = self.get_task_name(task)
         deadline = task.get('deadline_on')
@@ -152,17 +151,14 @@ class WindowTask(QWidget):
         self.ui.label_task_name.setText(f"Название: {name}")
         self.ui.label_task_info.setText(f"Статус: {status} | Срок: {deadline} | Создано: {created}")
 
-    def clear_task_info_panel(self):
+    def clear_info_panel(self):
         """Очистка панели задачи"""
         self.ui.label_task_name.setText("Название: -")
         self.ui.label_task_info.setText("Статус: - | Срок: - | Создано: -")
 
-    def load_task_components(self, task_id):
+    def load_component(self, task_id):
         """Загрузка компонентов задачи по её идентификатору. """
         list_component = self.api_task.get_task_component(task_id)
-        self.update_components_table(list_component)
-
-    def update_components_table(self, list_component):
         """Обновление таблицы компонентов"""
         table = self.ui.tableWidget_components
         table.setRowCount(len(list_component))
@@ -194,12 +190,12 @@ class WindowTask(QWidget):
                 name_item = QTableWidgetItem(comp.get('name', ''))
                 table.setItem(row, 1, name_item)
 
-    def clear_components_table(self):
+    def clear_component(self):
         """Очистка таблицы компонентов"""
         self.ui.tableWidget_components.setRowCount(0)
     
     # =============================================================================
-    # ОБРАБОТЧИКИ СОБЫТИЙ: УПРАВЛЕНИЕ ЗАДАЧАМИ
+    # ОБРАБОТЧИКИ СОБЫТИЙ: УПРАВЛЕНИЕ
     # =============================================================================
     def on_create_task(self):
         """Открытие диалога создания задачи"""
@@ -267,14 +263,12 @@ class WindowTask(QWidget):
         """Обработка выбора задачи"""
         row = self.get_selected_row()
         if row is not None:
-            self.selected_row = row
             task = self.task_data[row]
-            self.update_task_info_panel(task)
-            self.load_task_components(task['id'])
+            self.update_info_panel(task)
+            self.load_component(task['id'])
         else:
-            self.selected_row = None
-            self.clear_task_info_panel()
-            self.clear_components_table()
+            self.clear_info_panel()
+            self.clear_component()
 
     def filter_table(self, table, text):
         """Фильтрация строк таблицы по первому столбцу"""

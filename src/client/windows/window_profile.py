@@ -92,9 +92,9 @@ class WindowProfile(QWidget):
         header.setSectionResizeMode(0, QHeaderView.ResizeToContents)
         header.setSectionResizeMode(1, QHeaderView.Stretch)
         for row, profile in enumerate(list_profile):
-            article = profile.get('article', '')
+            article = profile.get('article')
             table.setItem(row, 0, QTableWidgetItem(article))
-            description = profile.get('description', '')
+            description = profile.get('description')
             table.setItem(row, 1, QTableWidgetItem(description))
         
     def update_profile_info_panel(self, profile):
