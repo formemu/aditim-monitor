@@ -42,7 +42,6 @@ class DialogCreateTask(QDialog):
    
     def load_ui(self) -> None:
         """Загрузка UI из файла."""
-        
         ui_file = QFile(UI_PATHS_ABS["DIALOG_CREATE_TASK"])
                 
         loader = QUiLoader()
@@ -53,11 +52,7 @@ class DialogCreateTask(QDialog):
         self.setWindowTitle("Создание задачи")
         self.setModal(True)
         
-        # Установка layout для диалога
-        layout = QVBoxLayout(self)
-        layout.addWidget(self.ui)
-        layout.setContentsMargins(0, 0, 0, 0)
-        self.setLayout(layout)
+        self.setLayout(self.ui.layout())
     
     def setup_ui(self) -> None:
         """Настройка элементов интерфейса."""

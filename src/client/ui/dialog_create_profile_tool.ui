@@ -16,7 +16,6 @@
   <layout class="QVBoxLayout" name="verticalLayout_main">
    <item>
     <layout class="QHBoxLayout" name="horizontalLayout_top">
-     <!-- Левая часть - основная информация -->
      <item>
       <widget class="QGroupBox" name="groupBox_main_info">
        <property name="title">
@@ -42,11 +41,7 @@
          </layout>
         </item>
         <item>
-         <widget class="QListWidget" name="listWidget_profile_results">
-          <property name="maximumHeight">
-           <number>100</number>
-          </property>
-         </widget>
+         <widget class="QListWidget" name="listWidget_profile_results"/>
         </item>
         <item>
          <layout class="QHBoxLayout" name="horizontalLayout_dimension">
@@ -70,16 +65,11 @@
          </widget>
         </item>
         <item>
-         <widget class="QTextEdit" name="textEdit_description">
-          <property name="maximumHeight">
-           <number>80</number>
-          </property>
-         </widget>
+         <widget class="QTextEdit" name="textEdit_description"/>
         </item>
        </layout>
       </widget>
      </item>
-     <!-- Правая часть - эскиз профиля -->
      <item>
       <widget class="QGroupBox" name="groupBox_sketch">
        <property name="title">
@@ -88,20 +78,20 @@
        <layout class="QVBoxLayout" name="verticalLayout_sketch">
         <item>
          <widget class="QLabel" name="label_profile_sketch">
-          <property name="text">
-           <string>Выберите профиль для отображения эскиза</string>
-          </property>
-          <property name="alignment">
-           <set>Qt::AlignCenter</set>
-          </property>
-          <property name="styleSheet">
-           <string>border: 1px solid gray; background-color: #f0f0f0;</string>
-          </property>
           <property name="minimumSize">
            <size>
             <width>200</width>
             <height>150</height>
            </size>
+          </property>
+          <property name="styleSheet">
+           <string>border: 1px solid gray; background-color: #f0f0f0;</string>
+          </property>
+          <property name="text">
+           <string>Выберите профиль для отображения эскиза</string>
+          </property>
+          <property name="alignment">
+           <set>Qt::AlignmentFlag::AlignCenter</set>
           </property>
          </widget>
         </item>
@@ -118,11 +108,11 @@
      <layout class="QVBoxLayout" name="verticalLayout_components">
       <item>
        <widget class="QTableWidget" name="tableWidget_components">
-        <property name="selectionBehavior">
-         <enum>QAbstractItemView::SelectRows</enum>
-        </property>
         <property name="selectionMode">
-         <enum>QAbstractItemView::SingleSelection</enum>
+         <enum>QAbstractItemView::SelectionMode::SingleSelection</enum>
+        </property>
+        <property name="selectionBehavior">
+         <enum>QAbstractItemView::SelectionBehavior::SelectRows</enum>
         </property>
         <column>
          <property name="text">
@@ -134,16 +124,6 @@
           <string>Тип компонента</string>
          </property>
         </column>
-        <column>
-         <property name="text">
-          <string>Статус</string>
-         </property>
-        </column>
-        <column>
-         <property name="text">
-          <string>Описание</string>
-         </property>
-        </column>
        </widget>
       </item>
      </layout>
@@ -152,10 +132,10 @@
    <item>
     <widget class="QDialogButtonBox" name="buttonBox">
      <property name="orientation">
-      <enum>Qt::Horizontal</enum>
+      <enum>Qt::Orientation::Horizontal</enum>
      </property>
      <property name="standardButtons">
-      <set>QDialogButtonBox::Cancel|QDialogButtonBox::Ok</set>
+      <set>QDialogButtonBox::StandardButton::Cancel|QDialogButtonBox::StandardButton::Ok</set>
      </property>
     </widget>
    </item>

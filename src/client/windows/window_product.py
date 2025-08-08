@@ -15,6 +15,7 @@ from ..widgets.dialog_create_product import DialogCreateProduct
 
 class WindowProduct(QWidget):
     """Виджет содержимого изделий с вкладками"""
+    
     def __init__(self):
         super().__init__()
         self.api_product = ApiProduct()
@@ -231,13 +232,13 @@ class WindowProduct(QWidget):
     def on_profile_tool_add_clicked(self):
         """Добавление инструмента профиля"""
         dialog = DialogCreateProfileTool(self)
-        dialog.task_created.connect(self.refresh_data)
+        dialog.profile_tool_created.connect(self.refresh_data)
         dialog.exec()
 
     def on_product_add_clicked(self):
         """Добавление изделия"""
         dialog = DialogCreateProduct(self)
-        dialog.task_created.connect(self.refresh_data)
+        dialog.product_created.connect(self.refresh_data)
         dialog.exec()
 
 

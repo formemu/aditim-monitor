@@ -150,7 +150,7 @@ class WindowProfile(QWidget):
 
     def on_delete_clicked(self):
         """Удаление профиля с подтверждением и опцией удаления инструментов"""
-        row = self._get_selected_row()
+        row = self.get_selected_row()
         profile = self.profile_data[row]
         self.delete_profile_tools(profile['id'])
         self.api_profile.delete_profile(profile['id'])
