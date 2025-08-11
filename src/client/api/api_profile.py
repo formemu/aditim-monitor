@@ -17,6 +17,10 @@ class ApiProfile(ApiClient):
         """Создание нового профиля"""
         return self._request("POST", "/api/profile", json=profile_data)
     
+    def update_profile(self, profile_id: int, profile_data: Dict[str, Any]) -> Dict[Any, Any]:
+        """Обновление существующего профиля"""
+        return self._request("PUT", f"/api/profile/{profile_id}", json=profile_data)
+    
     def delete_profile(self, profile_id: int) -> Dict[Any, Any]:
         """Удаление профиля"""
         return self._request("DELETE", f"/api/profile/{profile_id}")

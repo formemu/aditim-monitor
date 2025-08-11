@@ -17,6 +17,10 @@ class ApiProfileTool(ApiClient):
         """Создание нового инструмента профиля"""
         return self._request("POST", "/api/profile-tool", json=tool_data)
 
+    def update_profile_tool(self, tool_id: int, tool_data: Dict[str, Any]) -> Dict[Any, Any]:
+        """Обновление существующего инструмента профиля"""
+        return self._request("PUT", f"/api/profile-tool/{tool_id}", json=tool_data)
+
     def delete_profile_tool(self, tool_id: int) -> None:
         """Удаление инструмента профиля"""
         self._request("DELETE", f"/api/profile-tool/{tool_id}")
@@ -34,3 +38,9 @@ class ApiProfileTool(ApiClient):
     def delete_profile_tool_component(self, tool_id: int) -> None:
         """Удаление компонента инструмента профиля"""
         self._request("DELETE", f"/api/profile-tool/{tool_id}/component")
+
+
+
+    def delete_profile_tool_component_by_id(self, component_id: int) -> None:
+        """Удаление конкретного компонента по ID"""
+        self._request("DELETE", f"/api/profile-tool-component/{component_id}")

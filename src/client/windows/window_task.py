@@ -40,10 +40,9 @@ class WindowTask(QWidget):
         self.ui.tableWidget_tasks.customContextMenuRequested.connect(self.show_context_menu)
         # Подключение сигналов
         self.ui.pushButton_task_add.clicked.connect(self.on_create_task)
-        self.ui.pushButton_task_edit.clicked.connect(self.on_edit_clicked)
         self.ui.pushButton_task_delete.clicked.connect(self.on_delete_clicked)
         self.ui.tableWidget_tasks.itemSelectionChanged.connect(self.on_selection_changed)
-        self.ui.lineEdit_search.textChanged.connect(lambda text: self.filter_table(self.ui.tableWidget_tasks, text.lower()))
+        self.ui.lineEdit_search.textChanged.connect(self.filter_table)
         # Настройка таблицы задач
         table = self.ui.tableWidget_tasks
         table.setSelectionBehavior(QAbstractItemView.SelectRows)
@@ -203,13 +202,6 @@ class WindowTask(QWidget):
         dialog.task_created.connect(self.refresh_data)
         dialog.exec()
 
-    def on_edit_clicked(self):
-        """Редактирование задачи"""
-        if not self.get_selected_row():
-            QMessageBox.warning(self, "Редактирование", "Выберите задачу для редактирования.")
-        else:
-            QMessageBox.information(self, "Редактировать", "Функция будет реализована позже")
-
     def on_delete_clicked(self):
         """Удаление задачи с подтверждением"""
         row = self.get_selected_row()
@@ -270,8 +262,10 @@ class WindowTask(QWidget):
             self.clear_info_panel()
             self.clear_component()
 
-    def filter_table(self, table, text):
+    def filter_table(self):
         """Фильтрация строк таблицы по первому столбцу"""
+        table = self.ui.tableWidget_tasks
+        text = self.ui.lineEdit_search.text().lower()
         for row in range(table.rowCount()):
             item = table.item(row, 0)
             visible = item and text in item.text().lower()

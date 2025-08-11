@@ -1,6 +1,4 @@
-"""
-Pydantic schemas for tasks
-"""
+"""Pydantic schemas for task"""
 
 from datetime import datetime, date
 from typing import Optional, List, Union
@@ -35,5 +33,10 @@ class TaskResponse(TaskBase):
     class Config:
         from_attributes = True
 
-class TaskStatusUpdateRequest(BaseModel):
+class TaskStatusUpdate(BaseModel):
     status_id: int
+
+class TaskComponentCreate(BaseModel):
+    task_id: int
+    profile_tool_component_id: Optional[int] = None
+    product_component_id: Optional[int] = None

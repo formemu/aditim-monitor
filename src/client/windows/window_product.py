@@ -10,7 +10,9 @@ from ..api.api_profile_tool import ApiProfileTool
 from ..style_util import load_styles
 from ..references_manager import references_manager
 from ..widgets.dialog_create_profile_tool import DialogCreateProfileTool
+from ..widgets.dialog_edit_profile_tool import DialogEditProfileTool
 from ..widgets.dialog_create_product import DialogCreateProduct
+from ..widgets.dialog_edit_product import DialogEditProduct
 
 
 class WindowProduct(QWidget):
@@ -50,13 +52,13 @@ class WindowProduct(QWidget):
         self.ui.pushButton_profile_tool_edit.clicked.connect(self.on_profile_tool_edit_clicked)
         self.ui.pushButton_profile_tool_delete.clicked.connect(self.on_profile_tool_delete_clicked)
         self.ui.tableWidget_profile_tool.itemSelectionChanged.connect(self.on_selection_changed)
-        self.ui.lineEdit_search_profile_tool.textChanged.connect(lambda text: self.filter_table(self.ui.tableWidget_profile_tool, text.lower()))
+        self.ui.lineEdit_search_profile_tool.textChanged.connect(self.filter_table)
         # Подключения: изделия
         self.ui.pushButton_product_add.clicked.connect(self.on_product_add_clicked)
         self.ui.pushButton_product_edit.clicked.connect(self.on_product_edit_clicked)
         self.ui.pushButton_product_delete.clicked.connect(self.on_product_delete_clicked)
         self.ui.tableWidget_product.itemSelectionChanged.connect(self.on_selection_changed)
-        self.ui.lineEdit_search_product.textChanged.connect(lambda text: self.filter_table(self.ui.tableWidget_product, text.lower()))
+        self.ui.lineEdit_search_product.textChanged.connect(self.filter_table)
         # Настройка таблиц
         for table in [self.ui.tableWidget_profile_tool, self.ui.tableWidget_product, self.ui.tableWidget_component]:
             table.setSelectionBehavior(QAbstractItemView.SelectRows)
@@ -182,8 +184,15 @@ class WindowProduct(QWidget):
         self.ui.pushButton_component_edit.setEnabled(False)
         self.ui.pushButton_component_delete.setEnabled(False)
 
-    def filter_table(self, table, text):
+    def filter_table(self):
         """Фильтрация строк таблицы"""
+        if self.tab_index == 0:
+            table = self.ui.tableWidget_profile_tool
+            text = self.ui.lineEdit_search_profile_tool.text().lower()
+        else:
+            table = self.ui.tableWidget_product
+            text = self.ui.lineEdit_search_product.text().lower()
+
         for row in range(table.rowCount()):
             item = table.item(row, 0)
             if item:
@@ -244,10 +253,14 @@ class WindowProduct(QWidget):
 
     def on_profile_tool_edit_clicked(self):
         """Редактирование инструмента профиля"""
-        QMessageBox.information(self, "Информация", "Функция будет реализована позже")
+        row = self.get_selected_row()
+        profile_tool = self.profile_tool_data[row]
+        dialog = DialogEditProfileTool(profile_tool, self)
+        dialog.profile_tool_updated.connect(self.refresh_data)
+        dialog.exec()
 
     def on_profile_tool_delete_clicked(self):
-        """Удаление задачи"""
+        """Удаление инструмента"""
         row = self.get_selected_row()
         task = self.profile_tool_data[row]
         self.api_profile_tool.delete_profile_tool(task['id'])
@@ -255,7 +268,11 @@ class WindowProduct(QWidget):
 
     def on_product_edit_clicked(self):
         """Редактирование изделия"""
-        QMessageBox.information(self, "Информация", "Функция будет реализована позже")
+        row = self.get_selected_row()
+        product = self.product_data[row]
+        dialog = DialogEditProduct(product, self)
+        dialog.product_updated.connect(self.refresh_data)
+        dialog.exec()
 
     def on_product_delete_clicked(self):
         """Удаление изделия"""

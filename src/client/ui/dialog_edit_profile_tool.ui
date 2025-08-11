@@ -1,0 +1,212 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>DialogEditProfileTool</class>
+ <widget class="QDialog" name="DialogEditProfileTool">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>800</width>
+    <height>600</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>Редактирование инструмента профиля</string>
+  </property>
+  <layout class="QVBoxLayout" name="verticalLayout_main">
+   <item>
+    <layout class="QHBoxLayout" name="horizontalLayout_top">
+     <item>
+      <widget class="QGroupBox" name="groupBox_main_info">
+       <property name="title">
+        <string>Основная информация</string>
+       </property>
+       <layout class="QVBoxLayout" name="verticalLayout_main_info">
+        <item>
+         <layout class="QHBoxLayout" name="horizontalLayout_profile">
+          <item>
+           <widget class="QLabel" name="label_profile">
+            <property name="text">
+             <string>Профиль:</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QLineEdit" name="lineEdit_profile_search">
+            <property name="placeholderText">
+             <string>Поиск профиля...</string>
+            </property>
+           </widget>
+          </item>
+         </layout>
+        </item>
+        <item>
+         <widget class="QListWidget" name="listWidget_profile_results"/>
+        </item>
+        <item>
+         <layout class="QHBoxLayout" name="horizontalLayout_dimension">
+          <item>
+           <widget class="QLabel" name="label_dimension">
+            <property name="text">
+             <string>Размерность:</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QComboBox" name="comboBox_dimension"/>
+          </item>
+         </layout>
+        </item>
+        <item>
+         <layout class="QHBoxLayout" name="horizontalLayout_description">
+          <item>
+           <widget class="QLabel" name="label_description">
+            <property name="text">
+             <string>Описание:</string>
+            </property>
+           </widget>
+          </item>
+         </layout>
+        </item>
+        <item>
+         <widget class="QTextEdit" name="textEdit_description">
+          <property name="maximumSize">
+           <size>
+            <width>16777215</width>
+            <height>100</height>
+           </size>
+          </property>
+          <property name="placeholderText">
+           <string>Введите описание инструмента (необязательно)</string>
+          </property>
+         </widget>
+        </item>
+       </layout>
+      </widget>
+     </item>
+     <item>
+      <widget class="QGroupBox" name="groupBox_sketch">
+       <property name="title">
+        <string>Эскиз профиля</string>
+       </property>
+       <layout class="QVBoxLayout" name="verticalLayout_sketch">
+        <item>
+         <widget class="QLabel" name="label_sketch">
+          <property name="minimumSize">
+           <size>
+            <width>200</width>
+            <height>150</height>
+           </size>
+          </property>
+          <property name="maximumSize">
+           <size>
+            <width>200</width>
+            <height>150</height>
+           </size>
+          </property>
+          <property name="text">
+           <string>Эскиз не найден</string>
+          </property>
+          <property name="alignment">
+           <set>Qt::AlignmentFlag::AlignCenter</set>
+          </property>
+          <property name="wordWrap">
+           <bool>true</bool>
+          </property>
+         </widget>
+        </item>
+       </layout>
+      </widget>
+     </item>
+    </layout>
+   </item>
+   <item>
+    <widget class="QGroupBox" name="groupBox_components">
+     <property name="title">
+      <string>Компоненты инструмента</string>
+     </property>
+     <layout class="QVBoxLayout" name="verticalLayout_components">
+      <item>
+       <widget class="QTableWidget" name="tableWidget_components">
+        <property name="alternatingRowColors">
+         <bool>true</bool>
+        </property>
+        <property name="selectionBehavior">
+         <enum>QAbstractItemView::SelectRows</enum>
+        </property>
+        <property name="sortingEnabled">
+         <bool>false</bool>
+        </property>
+        <column>
+         <property name="text">
+          <string>Использовать</string>
+         </property>
+        </column>
+        <column>
+         <property name="text">
+          <string>Тип компонента</string>
+         </property>
+        </column>
+        <column>
+         <property name="text">
+          <string>Статус</string>
+         </property>
+        </column>
+        <column>
+         <property name="text">
+          <string>Описание</string>
+         </property>
+        </column>
+       </widget>
+      </item>
+     </layout>
+    </widget>
+   </item>
+   <item>
+    <widget class="QDialogButtonBox" name="buttonBox">
+     <property name="orientation">
+      <enum>Qt::Horizontal</enum>
+     </property>
+     <property name="standardButtons">
+      <set>QDialogButtonBox::Cancel|QDialogButtonBox::Ok</set>
+     </property>
+    </widget>
+   </item>
+  </layout>
+ </widget>
+ <resources/>
+ <connections>
+  <connection>
+   <sender>buttonBox</sender>
+   <signal>accepted()</signal>
+   <receiver>DialogEditProfileTool</receiver>
+   <slot>accept()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>248</x>
+     <y>254</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>157</x>
+     <y>274</y>
+    </hint>
+   </hints>
+   </connection>
+   <connection>
+    <sender>buttonBox</sender>
+    <signal>rejected()</signal>
+    <receiver>DialogEditProfileTool</receiver>
+    <slot>reject()</slot>
+    <hints>
+     <hint type="sourcelabel">
+      <x>316</x>
+      <y>260</y>
+     </hint>
+     <hint type="destinationlabel">
+      <x>286</x>
+      <y>274</y>
+     </hint>
+    </hints>
+   </connection>
+  </connections>
+ </ui>

@@ -46,8 +46,11 @@ UI_PATHS = {
     "PRODUCT_CONTENT": "ui/window_product.ui",
     "TASK_CONTENT": "ui/window_task.ui",
     "DIALOG_CREATE_PROFILE": "ui/dialog_create_profile.ui",
+    "DIALOG_EDIT_PROFILE": "ui/dialog_edit_profile.ui",
     "DIALOG_CREATE_PROFILE_TOOL": "ui/dialog_create_profile_tool.ui",
+    "DIALOG_EDIT_PROFILE_TOOL": "ui/dialog_edit_profile_tool.ui",
     "DIALOG_CREATE_PRODUCT": "ui/dialog_create_product.ui",
+    "DIALOG_EDIT_PRODUCT": "ui/dialog_edit_product.ui",
     "DIALOG_CREATE_TASK": "ui/dialog_create_task.ui",
     "DIALOG_TASK": "ui/dialogtask.ui"
 }

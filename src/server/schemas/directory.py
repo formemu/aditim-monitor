@@ -1,47 +1,32 @@
-"""
-Pydantic schemas for directories
-"""
-
+"""Pydantic schemas for directory"""
 from pydantic import BaseModel
 from typing import Optional
 
 
 class DirectoryBase(BaseModel):
-    name: str
-
-
-class DirectoryCreate(DirectoryBase):
-    pass
-
-
-class DirectoryResponse(DirectoryBase):
     id: int
-    
+    name: str
     class Config:
         from_attributes = True
 
+    
+    
 
-# Specific directory schemas
-class DirDepartmentResponse(DirectoryResponse):
+
+class DirDepartment(DirectoryBase):
     pass
 
-
-class DirTaskStatusResponse(DirectoryResponse):
+class DirTaskStatus(DirectoryBase):
     pass
 
-
-class DirComponentTypeResponse(DirectoryResponse):
+class DirComponentType(DirectoryBase):
     description: Optional[str] = None
 
-
-class DirComponentStatusResponse(DirectoryResponse):
+class DirComponentStatus(DirectoryBase):
     description: Optional[str] = None
 
-
-class DirToolDimensionResponse(BaseModel):
-    id: int
+class DirToolDimension(DirectoryBase):
     dimension: str
     description: Optional[str] = None
-    
     class Config:
         from_attributes = True

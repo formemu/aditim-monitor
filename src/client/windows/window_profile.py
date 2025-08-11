@@ -9,6 +9,7 @@ from PySide6.QtUiTools import QUiLoader
 from PySide6.QtGui import QPixmap
 from ..constant import UI_PATHS_ABS as UI_PATHS, ICON_PATHS_ABS as ICON_PATHS, get_style_path
 from ..widgets.dialog_create_profile import DialogCreateProfile
+from ..widgets.dialog_edit_profile import DialogEditProfile
 from ..api.api_profile import ApiProfile
 from ..api.api_profile_tool import ApiProfileTool
 from ..style_util import load_styles
@@ -47,7 +48,7 @@ class WindowProfile(QWidget):
         self.ui.pushButton_sketch_open.clicked.connect(self.on_sketch_open_clicked)
         self.ui.pushButton_autocad_open.clicked.connect(self.on_autocad_open_clicked)
         self.ui.tableWidget_profiles.itemSelectionChanged.connect(self.on_selection_changed)
-        self.ui.lineEdit_search.textChanged.connect(lambda text: self._filter_table(self.ui.tableWidget_profiles, text.lower()))
+        self.ui.lineEdit_search.textChanged.connect(self.filter_table)
         # Настройка таблицы
         table = self.ui.tableWidget_profiles
         table.setSelectionBehavior(QAbstractItemView.SelectRows)
@@ -146,7 +147,11 @@ class WindowProfile(QWidget):
 
     def on_edit_clicked(self):
         """Редактирование профиля"""
-        QMessageBox.information(self, "Редактировать", "Редактирование профиля")
+        row = self.get_selected_row()
+        profile = self.profile_data[row]
+        dialog = DialogEditProfile(profile, self)
+        dialog.profile_updated.connect(self.refresh_data)
+        dialog.exec()
 
     def on_delete_clicked(self):
         """Удаление профиля с подтверждением и опцией удаления инструментов"""
@@ -183,8 +188,10 @@ class WindowProfile(QWidget):
             self.selected_row = None
             self.clear_profile_info_panel()
 
-    def filter_table(self, table, text):
+    def filter_table(self):
         """Фильтрация строк таблицы по тексту в первом столбце"""
+        table = self.ui.tableWidget_profiles
+        text = self.ui.lineEdit_search.text().lower()
         for row in range(table.rowCount()):
             item = table.item(row, 0)
             visible = item and text in item.text().lower()
