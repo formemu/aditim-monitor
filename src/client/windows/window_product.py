@@ -8,7 +8,7 @@ from ..constant import UI_PATHS_ABS as UI_PATHS, get_style_path
 from ..api.api_product import ApiProduct
 from ..api.api_profile_tool import ApiProfileTool
 from ..style_util import load_styles
-from ..references_manager import references_manager
+from ..api_manager import api_manager
 from ..widgets.dialog_create_profile_tool import DialogCreateProfileTool
 from ..widgets.dialog_edit_profile_tool import DialogEditProfileTool
 from ..widgets.dialog_create_product import DialogCreateProduct
@@ -205,7 +205,6 @@ class WindowProduct(QWidget):
     def on_selection_changed(self):
         """Обработчик выбора элемента"""
         row = self.get_selected_row()
-        print(row)
         if row is not None:
             if self.tab_index == 0:
                 profile = self.profile_tool_data[row]

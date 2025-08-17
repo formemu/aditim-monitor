@@ -10,7 +10,7 @@ from PySide6.QtWidgets import (QCheckBox, QDialog, QVBoxLayout, QWidget, QSpinBo
 from ..api.api_profile_tool import ApiProfileTool
 from ..api.api_product import ApiProduct
 from ..api.api_task import ApiTask
-from ..references_manager import references_manager
+from ..api_manager import api_manager
 from ..constant import UI_PATHS_ABS
 
 

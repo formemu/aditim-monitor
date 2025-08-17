@@ -8,7 +8,7 @@ from PySide6.QtUiTools import QUiLoader
 
 from ..constant import UI_PATHS_ABS
 from ..api.api_product import ApiProduct
-from ..references_manager import references_manager
+from ..api_manager import api_manager
 from ..style_util import load_styles
 import warnings
 
@@ -60,7 +60,7 @@ class DialogCreateProduct(QDialog):
     # =============================================================================
     def load_departments(self):
         """Загружает департаменты в combobox"""
-        departments = references_manager.get_department()
+        departments = api_manager.get_department()
         
         self.ui.comboBox_department.clear()
         self.ui.comboBox_department.addItem("-- Выберите департамент --", 0)

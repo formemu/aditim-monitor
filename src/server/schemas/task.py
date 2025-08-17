@@ -1,11 +1,12 @@
 """Pydantic schemas for task"""
-
 from datetime import datetime, date
-from typing import Optional, List, Union
-from pydantic import BaseModel
+from typing import Optional
+from pydantic import BaseModel, ConfigDict
 
+# === TASK SCHEMAS ===
 
 class TaskBase(BaseModel):
+    """Базовые поля задачи (без id и created_at)"""
     product_id: Optional[int] = None
     profile_tool_id: Optional[int] = None
     stage: Optional[str] = None
@@ -15,9 +16,11 @@ class TaskBase(BaseModel):
     description: Optional[str] = None
 
 class TaskCreate(TaskBase):
-    pass
+    """Создание задачи — сервер сам установит created_at и id"""
+    pass  # Все поля из Base
 
-class TaskUpdate(TaskBase):
+class TaskUpdate(BaseModel):
+    """Частичное обновление задачи — все поля опциональны"""
     product_id: Optional[int] = None
     profile_tool_id: Optional[int] = None
     stage: Optional[str] = None
@@ -27,16 +30,36 @@ class TaskUpdate(TaskBase):
     description: Optional[str] = None
 
 class TaskResponse(TaskBase):
+    """Ответ API — включает id и created_at"""
     id: int
     created_at: datetime
+    model_config = ConfigDict(from_attributes=True)
 
-    class Config:
-        from_attributes = True
+# === TASK STATUS UPDATE (частное обновление статуса) ===
 
 class TaskStatusUpdate(BaseModel):
-    status_id: int
+    """Только для обновления статуса задачи"""
+    status_id: int  # Обязательно — нельзя обновить статус на "ничего"
 
-class TaskComponentCreate(BaseModel):
-    task_id: int
-    profile_tool_component_id: Optional[int] = None
-    product_component_id: Optional[int] = None
+# === TASK COMPONENT SCHEMAS ===
+
+class TaskComponentBase(BaseModel):
+    """Базовая модель компонента задачи"""
+    component_name: str
+    quantity: int = 1
+    description: Optional[str] = None
+
+class TaskComponentCreate(TaskComponentBase):
+    """Создание компонента — привязка к задаче обязательна"""
+    task_id: int  # Связь с задачей
+
+class TaskComponentUpdate(BaseModel):
+    """Частичное обновление компонента"""
+    component_name: Optional[str] = None
+    quantity: Optional[int] = None
+    description: Optional[str] = None
+
+class TaskComponentResponse(TaskComponentBase):
+    """Ответ с компонентом"""
+    id: int
+    model_config = ConfigDict(from_attributes=True)

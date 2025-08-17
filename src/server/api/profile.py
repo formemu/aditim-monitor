@@ -3,21 +3,18 @@
 from typing import List
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
-import base64
 
 from ..database import get_db
 from ..models.profile import Profile
-from ..schemas.profile import ProfileCreate, ProfileResponse, ProfileUpdate
+from ..schemas.profile import ProfileCreate, ProfileUpdate, ProfileResponse
 
 router = APIRouter(prefix="/api", tags=["profiles"])
-
 
 # =============================================================================
 # ROUTER.GET
 # =============================================================================
 @router.get("/profile", response_model=List[ProfileResponse])
 def get_profile(db: Session = Depends(get_db)):
-    """Получить все профили"""
     return db.query(Profile).all()
 
 # =============================================================================
@@ -25,13 +22,15 @@ def get_profile(db: Session = Depends(get_db)):
 # =============================================================================
 @router.post("/profile", response_model=ProfileResponse)
 def create_profile(profile: ProfileCreate, db: Session = Depends(get_db)):
-    """Создать новый профиль"""
     profile_data = profile.model_dump()
+
     if profile_data.get("sketch"):
-            sketch_data = profile_data["sketch"]
-            if sketch_data.startswith("data:"):
-                sketch_data = sketch_data.split(",", 1)[1]
-            profile_data["sketch"] = base64.b64decode(sketch_data)
+        sketch_str = profile_data["sketch"]
+        if isinstance(sketch_str, str) and "," in sketch_str:
+            # Убираем data:image/png;base64,
+            sketch_str = sketch_str.split(",", 1)[1]
+        profile_data["sketch"] = sketch_str  # ← строка
+
     db_profile = Profile(**profile_data)
     db.add(db_profile)
     db.commit()
@@ -41,37 +40,48 @@ def create_profile(profile: ProfileCreate, db: Session = Depends(get_db)):
 # =============================================================================
 # ROUTER.PUT
 # =============================================================================
-@router.put("/profile/{profile_id}")
+@router.put("/profile/{profile_id}", response_model=ProfileResponse)
 def update_profile(profile_id: int, profile: ProfileUpdate, db: Session = Depends(get_db)):
     """Обновить профиль"""
-    # Найти существующий профиль
     db_profile = db.query(Profile).filter(Profile.id == profile_id).first()
-    if db_profile:
-        profile_data = profile.model_dump()
-        if profile_data.get("sketch"):
-            sketch_data = profile_data["sketch"]
-            if sketch_data.startswith("data:"):
-                sketch_data = sketch_data.split(",", 1)[1]
-            profile_data["sketch"] = base64.b64decode(sketch_data)
-        for field, value in profile_data.items():
-            if value is not None:  # Только обновляем поля, которые не None
-                setattr(db_profile, field, value)
-    else:
+    if not db_profile:
         raise HTTPException(status_code=404, detail="Profile not found")
+
+    profile_data = profile.model_dump(exclude_unset=True)  # только переданные поля
+
+    # Обработка sketch — сохраняем как Base64 строку
+    if "sketch" in profile_data:
+        sketch_str = profile_data["sketch"]
+        if sketch_str is None:
+            db_profile.sketch = None
+        else:
+            if isinstance(sketch_str, str):
+                # Убираем data URL, если есть
+                if "," in sketch_str:
+                    sketch_str = sketch_str.split(",", 1)[1]
+                db_profile.sketch = sketch_str  # ← сохраняем как строку!
+            else:
+                raise HTTPException(status_code=400, detail="Sketch must be a string")
+    # Если sketch не передан — не трогаем
+
+    # Обновляем остальные поля
+    for field, value in profile_data.items():
+        if field != "sketch":  # sketch уже обработан
+            setattr(db_profile, field, value)
 
     db.commit()
     db.refresh(db_profile)
+    return db_profile
 
 # =============================================================================
 # ROUTER.DELETE
 # =============================================================================
-@router.delete("/profile/{profile_id}")
+@router.delete("/profile/{profile_id}", response_model=dict)
 def delete_profile(profile_id: int, db: Session = Depends(get_db)):
-    """Удалить профиль по profile_id"""
-    profile = db.query(Profile).filter(Profile.id == profile_id).first()
-    if  profile:
-        db.delete(profile)
-        db.commit()
-    else:
+    db_profile = db.query(Profile).filter(Profile.id == profile_id).first()
+    if not db_profile:
         raise HTTPException(status_code=404, detail="Profile not found")
 
+    db.delete(db_profile)
+    db.commit()
+    return {"detail": "Профиль и все связанные данные удалены"}

@@ -1,36 +1,23 @@
-"""Pydantic schemas for profile"""
-
-from typing import Optional, Union
-from pydantic import BaseModel, validator
-import base64
-
+from typing import Optional
+from pydantic import BaseModel, ConfigDict
 
 class ProfileBase(BaseModel):
+    """Базовая модель профиля"""
     article: str
-    description: Optional[str] = None  # Описание профиля
-    sketch: Optional[Union[str, bytes]] = None  # Base64 encoded image data or binary
+    description: Optional[str] = None
+    sketch: Optional[str] = None  # Base64 строка
 
 class ProfileCreate(ProfileBase):
+    """Создание профиля — все поля из Base"""
     pass
 
 class ProfileUpdate(BaseModel):
+    """Частичное обновление профиля — все поля опциональны"""
     article: Optional[str] = None
-    description: Optional[str] = None  # Описание профиля
-    sketch: Optional[Union[str, bytes]] = None  # Base64 encoded image data or binary
+    description: Optional[str] = None
+    sketch: Optional[str] = None
 
 class ProfileResponse(ProfileBase):
+    """Ответ API — включает id и поддержку ORM"""
     id: int
-    
-    @validator('sketch', pre=True)
-    def convert_binary_to_base64(cls, v):
-        """Конвертирует бинарные данные в base64 строку для ответа"""
-        if v is None:
-            return None
-        if isinstance(v, bytes):
-            # Конвертируем бинарные данные в base64
-            base64_data = base64.b64encode(v).decode('utf-8')
-            return f"data:image/png;base64,{base64_data}"
-        return v
-    
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)

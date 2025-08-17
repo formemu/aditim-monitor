@@ -1,32 +1,42 @@
 """Pydantic schemas for directory"""
-from pydantic import BaseModel
 from typing import Optional
+from pydantic import BaseModel, ConfigDict
 
-
+# Базовая модель — общие поля для всех справочников
 class DirectoryBase(BaseModel):
-    id: int
     name: str
-    class Config:
-        from_attributes = True
 
-    
-    
+# Схема для создания — без id!
+class DirectoryCreate(DirectoryBase):
+    description: Optional[str] = None
 
+# Схема для обновления — все поля опциональны
+class DirectoryUpdate(BaseModel):
+    name: Optional[str] = None
+    description: Optional[str] = None
 
-class DirDepartment(DirectoryBase):
+# Схема для ответа — включает id и поддержку ORM
+class DirectoryResponse(DirectoryBase):
+    id: int
+    description: Optional[str] = None
+    model_config = ConfigDict(from_attributes=True)
+
+# Конкретные справочники — наследуются и расширяются
+class DirDepartment(DirectoryResponse):
+    """Справочник: Подразделения"""
     pass
 
-class DirTaskStatus(DirectoryBase):
+class DirTaskStatus(DirectoryResponse):
+    """Справочник: Статусы задач"""
     pass
 
-class DirComponentType(DirectoryBase):
-    description: Optional[str] = None
+class DirComponentType(DirectoryResponse):
+    """Справочник: Типы компонентов"""
+    pass
 
-class DirComponentStatus(DirectoryBase):
-    description: Optional[str] = None
+class DirComponentStatus(DirectoryResponse):
+    """Справочник: Статусы компонентов"""
+    pass
 
-class DirToolDimension(DirectoryBase):
-    dimension: str
-    description: Optional[str] = None
-    class Config:
-        from_attributes = True
+class DirToolDimension(DirectoryResponse):
+    """Справочник: размерности инструментов"""

@@ -12,7 +12,7 @@ import base64
 
 from ..constant import UI_PATHS_ABS as UI_PATHS
 from ..api.api_profile_tool import ApiProfileTool
-from ..references_manager import references_manager
+from ..api_manager import api_manager
 from ..style_util import load_styles
 
 
@@ -94,7 +94,7 @@ class DialogEditProfileTool(QDialog):
     def load_profile_info(self, profile_id: int):
         """Загружает информацию о профиле инструмента."""
         try:
-            profile = references_manager.get_profile().get(profile_id)
+            profile = api_manager.get_profile().get(profile_id)
             if profile:
                 self.selected_profile = profile
                 article = profile.get('article', '')
@@ -119,7 +119,7 @@ class DialogEditProfileTool(QDialog):
     def load_default_dimension(self):
         """Загружает размерности по умолчанию"""
         # Загружаем размерности инструментов из справочника
-        dimension_dict = references_manager.get_dimension()
+        dimension_dict = api_manager.get_dimension()
         self.ui.comboBox_dimension.clear()
 
         # Извлекаем значения dimension из словаря
@@ -130,7 +130,7 @@ class DialogEditProfileTool(QDialog):
 
     def load_component_type(self):
         """Загружает типы компонентов в таблицу"""
-        component_type = references_manager.get_component_type()
+        component_type = api_manager.get_component_type()
         # Очищаем таблицу
         self.ui.tableWidget_components.setRowCount(0)
         self.component_widgets.clear()
@@ -181,7 +181,7 @@ class DialogEditProfileTool(QDialog):
             return
 
         # Ищем профили через references_manager
-        search_results = references_manager.search_profile(text)
+        search_results = api_manager.get_search_profile(text)
         for profile in search_results[:10]:  # Показываем максимум 10 результатов
             display_text = f"{profile['article']} - {profile.get('description', '')}"
             item = QListWidgetItem(display_text)
@@ -206,7 +206,7 @@ class DialogEditProfileTool(QDialog):
         """Загружает и отображает эскиз профиля"""
         try:
             # Получаем данные профиля из references_manager
-            profile = references_manager.get_profile().get(profile_id)
+            profile = api_manager.get_profile().get(profile_id)
             if profile and profile.get('sketch'):
                 # Конвертируем base64 в QPixmap
                 sketch_data = profile['sketch']

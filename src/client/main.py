@@ -7,7 +7,7 @@ import sys
 from PySide6.QtWidgets import QApplication
 from PySide6.QtCore import Qt
 from .main_window import MainWindow
-from .references_manager import references_manager
+from .api_manager import api_manager
 
 
 def main():
@@ -21,7 +21,7 @@ def main():
     app.setAttribute(Qt.ApplicationAttribute.AA_EnableHighDpiScaling, True)
     app.setAttribute(Qt.ApplicationAttribute.AA_UseHighDpiPixmaps, True)
     
-    references_manager.load_all_references()
+    api_manager.load_all_directory()
 
     # Создание и отображение главного окна
     window = MainWindow()

@@ -1,11 +1,7 @@
-"""
-Directory models for ADITIM Monitor
-"""
-
+"""Directory models for ADITIM Monitor"""
 from sqlalchemy import Column, Integer, String, Text
 from sqlalchemy.orm import relationship
 from ..database import Base
-
 
 class DirDepartment(Base):
     """Справочник подразделений"""
@@ -13,9 +9,7 @@ class DirDepartment(Base):
     id = Column(Integer, primary_key=True, index=True)
     name = Column(String(100), nullable=False, unique=True)
     description = Column(Text)
-    # Связи
     product = relationship("Product", back_populates="department")
-
 
 class DirTaskStatus(Base):
     """Справочник статусов задач"""
@@ -23,19 +17,15 @@ class DirTaskStatus(Base):
     id = Column(Integer, primary_key=True, index=True)
     name = Column(String(50), nullable=False, unique=True)
     description = Column(Text)
-    # Связи  
     task = relationship("Task", back_populates="status")
-
 
 class DirToolDimension(Base):
     """Справочник размерностей инструментов"""
     __tablename__ = "dir_tool_dimension"
     id = Column(Integer, primary_key=True, index=True)
-    dimension = Column(String(100), nullable=False, unique=True)
+    name = Column(String(100), nullable=False, unique=True)
     description = Column(Text)
-    # Связи
     tool = relationship("ProfileTool", back_populates="dimension")
-
 
 class DirComponentType(Base):
     """Справочник типов компонентов инструментов"""
@@ -43,9 +33,7 @@ class DirComponentType(Base):
     id = Column(Integer, primary_key=True, index=True)
     name = Column(String(50), nullable=False, unique=True)
     description = Column(Text)
-    # Связи
     component = relationship("ProfileToolComponent", back_populates="component_type")
-
 
 class DirComponentStatus(Base):
     """Справочник статусов компонентов"""
@@ -53,5 +41,4 @@ class DirComponentStatus(Base):
     id = Column(Integer, primary_key=True, index=True)
     name = Column(String(50), nullable=False, unique=True)
     description = Column(Text)
-    # Связи
     component = relationship("ProfileToolComponent", back_populates="status")

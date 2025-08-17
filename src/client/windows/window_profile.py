@@ -1,17 +1,14 @@
-"""
-Содержимое профилей для ADITIM Monitor Client
-"""
+"""Содержимое профилей для ADITIM Monitor Client"""
 import os
 import base64
-from PySide6.QtWidgets import QWidget, QMessageBox, QTableWidgetItem, QAbstractItemView, QHeaderView
+from PySide6.QtWidgets import QWidget, QMessageBox, QTableWidgetItem, QAbstractItemView, QHeaderView, QDialog
 from PySide6.QtCore import QFile, Qt, QTimer
 from PySide6.QtUiTools import QUiLoader
 from PySide6.QtGui import QPixmap
 from ..constant import UI_PATHS_ABS as UI_PATHS, ICON_PATHS_ABS as ICON_PATHS, get_style_path
 from ..widgets.dialog_create_profile import DialogCreateProfile
 from ..widgets.dialog_edit_profile import DialogEditProfile
-from ..api.api_profile import ApiProfile
-from ..api.api_profile_tool import ApiProfileTool
+from ..api_manager import api_manager
 from ..style_util import load_styles
 
 
@@ -19,9 +16,7 @@ class WindowProfile(QWidget):
     """Виджет содержимого профилей с таблицей, фильтрацией и просмотром эскизов"""
     def __init__(self):
         super().__init__()
-        self.api_profile = ApiProfile()
-        self.api_profile_tool = ApiProfileTool()
-        self.profile_data = None  # Кэш данных профилей
+        self.profile = None  # Текущий профиль
         self.selected_row = None  # Индекс выбранной строки
         self.load_ui()
         self.setup_ui()
@@ -56,7 +51,7 @@ class WindowProfile(QWidget):
         table.setFocusPolicy(Qt.NoFocus)
         # Таймер автообновления
         self.update_timer = QTimer()
-        self.update_timer.timeout.connect(self.load_data_from_server)
+        self.update_timer.timeout.connect(self.refresh_data)
     
     def load_logo(self):
         """Загрузка логотипа ADITIM"""
@@ -71,38 +66,36 @@ class WindowProfile(QWidget):
     # =============================================================================
     def refresh_data(self):
         """Принудительное обновление данных"""
-        self.profile_data = []
-        self.load_data_from_server()
-
-    def load_data_from_server(self):
-        """Загрузка профилей с сервера"""
-        self.profile_data = self.api_profile.get_profile()
-        self.update_profile_table(self.profile_data)
+        api_manager.refresh_profile_async()
+        self.update_profile_table()
+        if self.selected_row is not None:
+            self.update_profile_info_panel()
 
     # =============================================================================
     # ОТОБРАЖЕНИЕ ДАННЫХ: ТАБЛИЦА ПРОФИЛЕЙ И ИНФОРМАЦИОННЫЕ ПАНЕЛИ
     # =============================================================================
-    def update_profile_table(self, list_profile):
+    def update_profile_table(self):
         """Обновление таблицы профилей с корректным отображением и заполнением по ширине"""
         table = self.ui.tableWidget_profiles
-        table.setRowCount(len(list_profile))
+        table.setRowCount(len(api_manager.profile))
         table.setColumnCount(2)
         # Заголовки столбцов
         table.setHorizontalHeaderLabels(["Артикул", "Описание"])
         header = table.horizontalHeader()
         header.setSectionResizeMode(0, QHeaderView.ResizeToContents)
         header.setSectionResizeMode(1, QHeaderView.Stretch)
-        for row, profile in enumerate(list_profile):
+        for row, profile in enumerate(api_manager.profile):
             article = profile.get('article')
             table.setItem(row, 0, QTableWidgetItem(article))
             description = profile.get('description')
             table.setItem(row, 1, QTableWidgetItem(description))
         
-    def update_profile_info_panel(self, profile):
+    def update_profile_info_panel(self):
         """Обновление панели информации о профиле"""
-        article = profile.get('article')
-        description = profile.get('description')
-        self.load_and_show_sketch(profile)
+        self.profile = api_manager.profile[self.selected_row]
+        article = self.profile.get('article')
+        description = self.profile.get('description')
+        self.load_and_show_sketch()
         self.ui.label_profile_article.setText(f"Артикул: {article}")
         self.ui.label_profile_description.setText(f"Описание: {description}")
 
@@ -111,23 +104,12 @@ class WindowProfile(QWidget):
         self.ui.label_profile_article.setText("Артикул: -")
         self.ui.label_profile_description.setText("Описание: -")
 
-    def set_sketch_placeholder(self):
-        """Установка иконки-заглушки для эскиза"""
-        placeholder_path = ICON_PATHS.get("SKETCH_PLACEHOLDER")
-        if placeholder_path and os.path.exists(placeholder_path):
-            pixmap = QPixmap(placeholder_path)
-            scaled = pixmap.scaled(120, 120, Qt.KeepAspectRatio, Qt.SmoothTransformation)
-            self.ui.label_sketch.setPixmap(scaled)
-        else:
-            self.ui.label_sketch.clear()
-
-    def load_and_show_sketch(self, profile):
+    def load_and_show_sketch(self):
         """Отображение эскиза профиля"""
-        if not profile or not profile.get('sketch'):
-            self.set_sketch_placeholder()
-            self.ui.label_sketch.setText("Эскиз не найден")
+        sketch_data = self.profile.get('sketch')
+        if not sketch_data:
+            self.ui.label_sketch.setText("Эскиз отсутствует")
             return
-        sketch_data = profile['sketch']
         base64_data = sketch_data.split(',')[1] if sketch_data.startswith('data:image') else sketch_data
         image_data = base64.b64decode(base64_data)
         pixmap = QPixmap()
@@ -142,48 +124,36 @@ class WindowProfile(QWidget):
     def on_add_clicked(self):
         """Открытие диалога добавления профиля"""
         dialog = DialogCreateProfile(self)
-        dialog.profile_created.connect(self.refresh_data)
-        dialog.exec()
+        if dialog.exec() == QDialog.Accepted:
+            self.refresh_data()
 
     def on_edit_clicked(self):
         """Редактирование профиля"""
-        row = self.get_selected_row()
-        profile = self.profile_data[row]
-        dialog = DialogEditProfile(profile, self)
-        dialog.profile_updated.connect(self.refresh_data)
-        dialog.exec()
+        dialog = DialogEditProfile(self.profile, self)
+        if dialog.exec() == QDialog.Accepted:
+            self.refresh_data()
 
     def on_delete_clicked(self):
         """Удаление профиля с подтверждением и опцией удаления инструментов"""
-        row = self.get_selected_row()
-        profile = self.profile_data[row]
-        self.delete_profile_tools(profile['id'])
-        self.api_profile.delete_profile(profile['id'])
+        api_manager.api_profile.delete_profile(self.profile['id'])
         self.refresh_data()
 
     def get_selected_row(self):
         """Возвращает индекс выбранной строки или None"""
         selected = self.ui.tableWidget_profiles.selectedItems()
-        return selected[0].row() if selected else None
-
-    def delete_profile_tools(self, profile_id):
-        """Удаляет инструменты и их компоненты для профиля"""
-        tools = self.api_profile_tool.get_profile_tool()
-        profile_tools = [t for t in tools if t.get('profile_id') == profile_id]
-        for tool in profile_tools:
-            self.api_profile_tool.delete_profile_tool_component(tool['id'])
-        self.api_profile_tool.delete_profile_tool(profile_id)
+        if selected:
+            return selected[0].row()
+        else:
+            return None
 
     # =============================================================================
     # ОБРАБОТЧИКИ СОБЫТИЙ: ВЫДЕЛЕНИЕ И ПОИСК
     # =============================================================================
     def on_selection_changed(self):
         """Обработка выбора строки"""
-        row = self.get_selected_row()
-        if row is not None:
-            self.selected_row = row
-            profile = self.profile_data[row]
-            self.update_profile_info_panel(profile)
+        self.selected_row = self.get_selected_row()
+        if self.selected_row is not None:
+            self.update_profile_info_panel()
         else:
             self.selected_row = None
             self.clear_profile_info_panel()
@@ -215,7 +185,7 @@ class WindowProfile(QWidget):
         """Запуск автообновления"""
         if not self.update_timer.isActive():
             self.update_timer.start(5000)
-            self.load_data_from_server()
+            self.refresh_data()
 
     def stop_auto_refresh(self):
         """Остановка автообновления"""

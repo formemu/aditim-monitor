@@ -9,8 +9,7 @@ import base64
 
 from ..constant import UI_PATHS_ABS as UI_PATHS
 from ..api.api_profile_tool import ApiProfileTool
-from ..references_manager import references_manager
-from ..style_util import load_styles
+from ..api_manager import api_manager
 
 
 class DialogCreateProfileTool(QDialog):
@@ -19,7 +18,6 @@ class DialogCreateProfileTool(QDialog):
 
     def __init__(self, parent=None):
         super().__init__(parent)
-        self.api_profile_tool = ApiProfileTool()
         self.component_widgets = []   # Список виджетов компонентов (checkbox, combobox)
         self.selected_profile = None
 
@@ -67,7 +65,7 @@ class DialogCreateProfileTool(QDialog):
     def load_default_dimension(self):
         """Загружает размерности по умолчанию"""
         # Загружаем размерности инструментов из справочника
-        dimension_dict = references_manager.get_dimension()
+        dimension_dict = api_manager.get_dimension()
         self.ui.comboBox_dimension.clear()
 
         # Извлекаем значения dimension из словаря
@@ -78,7 +76,7 @@ class DialogCreateProfileTool(QDialog):
 
     def load_component_type(self):
         """Загружает типы компонентов в таблицу"""
-        component_type = references_manager.get_component_type()
+        component_type = api_manager.get_component_type()
         # Очищаем таблицу
         self.ui.tableWidget_components.setRowCount(0)
         self.component_widgets.clear()
@@ -111,11 +109,9 @@ class DialogCreateProfileTool(QDialog):
     def on_profile_search_changed(self, text: str):
         """Обработчик изменения поискового запроса"""
         self.ui.listWidget_profile_results.clear()
-        if len(text) < 2:  # Начинаем поиск с 2 символов
-            return
 
         # Ищем профили через references_manager
-        search_results = references_manager.search_profile(text)
+        search_results = api_manager.get_search_profile(text)
         for profile in search_results[:10]:  # Показываем максимум 10 результатов
             display_text = f"{profile['article']} - {profile.get('description', '')}"
             item = QListWidgetItem(display_text)
@@ -126,15 +122,15 @@ class DialogCreateProfileTool(QDialog):
     @Slot(QListWidgetItem)
     def on_profile_selected(self, item):
         """Обработчик выбора профиля из списка"""
-        profile_data = item.data(Qt.UserRole)
-        if profile_data:
-            self.selected_profile = profile_data
+        profile = item.data(Qt.UserRole)
+        if profile:
+            self.selected_profile = profile
             # Обновляем поле поиска
-            self.ui.lineEdit_profile_search.setText(profile_data['article'])
+            self.ui.lineEdit_profile_search.setText(profile['article'])
             # Скрываем список результатов
             self.ui.listWidget_profile_results.clear()
             # Загружаем эскиз профиля
-            self.load_profile_sketch(profile_data['id'])
+            self.load_profile_sketch(profile['id'])
         else:
             pass
 
@@ -142,7 +138,7 @@ class DialogCreateProfileTool(QDialog):
         """Загружает и отображает эскиз профиля"""
         try:
             # Получаем данные профиля из references_manager
-            profile = references_manager.get_profile().get(profile_id)
+            profile = api_manager.get_profile().get(profile_id)
             if profile and profile.get('sketch'):
                 # Конвертируем base64 в QPixmap
                 sketch_data = profile['sketch']
@@ -223,7 +219,7 @@ class DialogCreateProfileTool(QDialog):
         tool_data = self.validate_and_get_data()
 
         # Отправляем запрос на сервер для создания инструмента
-        result = self.api_profile_tool.create_profile_tool(tool_data)
+        result = api_manager.api_profile_tool.create_profile_tool(tool_data)
         tool_id = result.get('id')
         if not tool_id:
             raise ValueError("Сервер не вернул ID созданного инструмента")
@@ -232,7 +228,7 @@ class DialogCreateProfileTool(QDialog):
         selected_components = self.get_selected_components()
         for component_data in selected_components:
             try:
-                self.api_profile_tool.create_profile_tool_component(tool_id, component_data)
+                api_manager.api_profile_tool.create_profile_tool_component(tool_id, component_data)
             except Exception as comp_error:
                 # Продолжаем создание остальных компонентов
                 pass

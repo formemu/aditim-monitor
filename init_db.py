@@ -48,7 +48,7 @@ def init_db():
         
         # Add tool dimensions
         tool_dimensions = [
-            DirToolDimension(dimension="250x190(250x130)", description="250x190x45 (2 плиты) 250x190x48 (1 плита) 250x130x56 (1 плита)")
+            DirToolDimension(name="250x190(250x130)", description="250x190x45 (2 плиты) 250x190x48 (1 плита) 250x130x56 (1 плита)")
         ]
         for dim in tool_dimensions:
             db.add(dim)

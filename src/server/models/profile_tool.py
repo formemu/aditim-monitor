@@ -12,7 +12,7 @@ class ProfileTool(Base):
     __tablename__ = "profile_tool"
     
     id = Column(Integer, primary_key=True, index=True)
-    profile_id = Column(Integer, ForeignKey("profile.id"), nullable=False)
+    profile_id = Column(Integer, ForeignKey("profile.id", ondelete="CASCADE"), nullable=False)
     dimension_id = Column(Integer, ForeignKey("dir_tool_dimension.id"), nullable=False)
     description = Column(Text)
     
@@ -28,7 +28,7 @@ class ProfileToolComponent(Base):
     __tablename__ = "profile_tool_component"
     
     id = Column(Integer, primary_key=True, index=True)
-    tool_id = Column(Integer, ForeignKey("profile_tool.id"), nullable=False)
+    tool_id = Column(Integer, ForeignKey("profile_tool.id", ondelete="CASCADE"), nullable=False)
     component_type_id = Column(Integer, ForeignKey("dir_component_type.id"), nullable=False)
     variant = Column(Integer, nullable=True)  # Номер варианта (1, 2, 3... или NULL)
     description = Column(Text)

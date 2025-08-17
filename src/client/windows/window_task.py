@@ -10,7 +10,7 @@ from ..constant import UI_PATHS_ABS as UI_PATHS, get_style_path
 from ..widgets.dialog_create_task import DialogCreateTask
 from ..api.api_task import ApiTask
 from ..style_util import load_styles
-from ..references_manager import references_manager
+from ..api_manager import api_manager
 
 
 class WindowTask(QWidget):
@@ -136,9 +136,9 @@ class WindowTask(QWidget):
     def get_task_name(self, task):
         """Возвращает название задачи: артикул профиля или имя изделия"""
         if task.get('profile_tool_id'):
-            profile_tool = references_manager.get_profile_tool().get(task['profile_tool_id'])
+            profile_tool = api_manager.get_profile_tool().get(task['profile_tool_id'])
             return f"Инструмент {profile_tool['name']}"
-        product = references_manager.get_product().get(task.get('product_id'))
+        product = api_manager.get_product().get(task.get('product_id'))
         return f"Изделие {product['name']}" if product else "Изделие N/A"
 
     def update_info_panel(self, task):
@@ -223,7 +223,7 @@ class WindowTask(QWidget):
 
         row = index.row()
         task = self.task_data[row]
-        status_dict = references_manager.get_task_status()
+        status_dict = api_manager.get_task_status()
 
         menu = QMenu(table)
         status_menu = QMenu("Изменить статус", menu)
