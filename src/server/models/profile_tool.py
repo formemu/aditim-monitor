@@ -7,7 +7,7 @@ from sqlalchemy.orm import relationship
 from ..database import Base
 
 
-class ProfileTool(Base):
+class ModelProfileTool(Base):
     """Инструмент для изготовления профиля"""
     __tablename__ = "profile_tool"
     
@@ -19,23 +19,23 @@ class ProfileTool(Base):
     # Связи
     profile = relationship("Profile", back_populates="tool")
     dimension = relationship("DirToolDimension", back_populates="tool")
-    component = relationship("ProfileToolComponent", back_populates="tool", cascade="all, delete-orphan")
+    component = relationship("ModelProfileToolComponent", back_populates="tool", cascade="all, delete-orphan")
     task = relationship("Task", back_populates="profile_tool")
 
 
-class ProfileToolComponent(Base):
+class ModelProfileToolComponent(Base):
     """Компонент инструмента для профиля"""
     __tablename__ = "profile_tool_component"
     
     id = Column(Integer, primary_key=True, index=True)
     tool_id = Column(Integer, ForeignKey("profile_tool.id", ondelete="CASCADE"), nullable=False)
-    component_type_id = Column(Integer, ForeignKey("dir_component_type.id"), nullable=False)
+    type_id = Column(Integer, ForeignKey("dir_component_type.id"), nullable=False)
     variant = Column(Integer, nullable=True)  # Номер варианта (1, 2, 3... или NULL)
     description = Column(Text)
     status_id = Column(Integer, ForeignKey("dir_component_status.id"), nullable=False)
     
     # Связи
-    tool = relationship("ProfileTool", back_populates="component")
-    component_type = relationship("DirComponentType", back_populates="component")
+    tool = relationship("ModelProfileTool", back_populates="component")
+    type = relationship("DirComponentType", back_populates="component")
     status = relationship("DirComponentStatus", back_populates="component")
     task_component = relationship("TaskComponent", back_populates="profile_tool_component")

@@ -21,8 +21,6 @@ def main():
     app.setAttribute(Qt.ApplicationAttribute.AA_EnableHighDpiScaling, True)
     app.setAttribute(Qt.ApplicationAttribute.AA_UseHighDpiPixmaps, True)
     
-    api_manager.load_all_directory()
-
     # Создание и отображение главного окна
     window = MainWindow()
     window.show()

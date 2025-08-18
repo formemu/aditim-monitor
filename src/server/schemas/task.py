@@ -45,7 +45,7 @@ class TaskStatusUpdate(BaseModel):
 
 class TaskComponentBase(BaseModel):
     """Базовая модель компонента задачи"""
-    component_name: str
+    name: str
     quantity: int = 1
     description: Optional[str] = None
 
@@ -55,7 +55,7 @@ class TaskComponentCreate(TaskComponentBase):
 
 class TaskComponentUpdate(BaseModel):
     """Частичное обновление компонента"""
-    component_name: Optional[str] = None
+    name: Optional[str] = None
     quantity: Optional[int] = None
     description: Optional[str] = None
 

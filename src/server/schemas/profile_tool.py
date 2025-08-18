@@ -1,52 +1,55 @@
 """Pydantic schemas for profile_tool"""
 from typing import Optional
 from pydantic import BaseModel, ConfigDict
-from ..schemas.directory import DirToolDimension
+from ..schemas.directory import DirToolDimension, DirComponentStatus, DirComponentType
+from ..schemas.profile import ProfileBase
 
 
 # === PROFILE TOOL SCHEMAS ===
-
-class ProfileToolBase(BaseModel):
-    """Базовая модель: общие поля для профиля инструмента (без id)"""
+class SchemaProfileToolBase(BaseModel):
+    profile_id: int
+    dimension_id: int
     description: Optional[str] = None
+
+    profile: Optional[ProfileBase] = None
     dimension: Optional[DirToolDimension] = None
 
-class ProfileToolCreate(ProfileToolBase):
-    """Создание профиля инструмента — клиент не передаёт id"""
-    pass  # Все поля из Base (обязательные/опциональные)
-
-class ProfileToolUpdate(BaseModel):
-    """Обновление профиля — все поля опциональны для частичного обновления"""
-    description: Optional[str] = None
-    dimension: Optional[DirToolDimension] = None
-
-class ProfileToolResponse(ProfileToolBase):
-    """Ответ API — включает id и поддержку ORM"""
-    id: int
-    dimension: DirToolDimension  # ← вложенный объект
     model_config = ConfigDict(from_attributes=True)
+
+class SchemaProfileToolCreate(SchemaProfileToolBase):
+    pass
+
+class SchemaProfileToolUpdate(BaseModel):
+    dimension_id: Optional[int] = None
+    description: Optional[str] = None
+
+class SchemaProfileToolResponse(SchemaProfileToolBase):
+    id: int
 
 # === PROFILE TOOL COMPONENT SCHEMAS ===
 
 class ProfileToolComponentBase(BaseModel):
     """Базовая модель компонента (без id)"""
-    component_name: str
+    tool_id: int
+    type_id: int
+    status_id: int
+    variant: int
     description: Optional[str] = None
-    variant: Optional[str] = None
-    profile_tool_id: int  # Связь с профилем
 
-class ProfileToolComponentCreate(ProfileToolComponentBase):
-    """Создание компонента — без id, но с profile_tool_id"""
+    type: Optional[DirComponentType] = None
+    status: Optional[DirComponentStatus] = None
+
+    model_config = ConfigDict(from_attributes=True)
+    
+class SchemaProfileToolComponentCreate(ProfileToolComponentBase):
     pass
 
 class ProfileToolComponentUpdate(BaseModel):
     """Частичное обновление компонента"""
-    component_name: Optional[str] = None
+    type_id: int
+    status_id: int
     description: Optional[str] = None
-    variant: Optional[str] = None
-    profile_tool_id: Optional[int] = None  # редко, но может меняться
+    variant: Optional[int] = None
 
-class ProfileToolComponentResponse(ProfileToolComponentBase):
-    """Ответ с компонентом — включает id и поддержку ORM"""
+class SchemaProfileToolComponentResponse(ProfileToolComponentBase):
     id: int
-    model_config = ConfigDict(from_attributes=True)

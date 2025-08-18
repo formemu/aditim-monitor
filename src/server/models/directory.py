@@ -25,7 +25,7 @@ class DirToolDimension(Base):
     id = Column(Integer, primary_key=True, index=True)
     name = Column(String(100), nullable=False, unique=True)
     description = Column(Text)
-    tool = relationship("ProfileTool", back_populates="dimension")
+    tool = relationship("ModelProfileTool", back_populates="dimension")
 
 class DirComponentType(Base):
     """Справочник типов компонентов инструментов"""
@@ -33,7 +33,7 @@ class DirComponentType(Base):
     id = Column(Integer, primary_key=True, index=True)
     name = Column(String(50), nullable=False, unique=True)
     description = Column(Text)
-    component = relationship("ProfileToolComponent", back_populates="component_type")
+    component = relationship("ModelProfileToolComponent", back_populates="type")
 
 class DirComponentStatus(Base):
     """Справочник статусов компонентов"""
@@ -41,4 +41,4 @@ class DirComponentStatus(Base):
     id = Column(Integer, primary_key=True, index=True)
     name = Column(String(50), nullable=False, unique=True)
     description = Column(Text)
-    component = relationship("ProfileToolComponent", back_populates="status")
+    component = relationship("ModelProfileToolComponent", back_populates="status")

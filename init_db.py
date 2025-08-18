@@ -112,13 +112,13 @@ def init_db():
         # Add test profile tool components
         tool_components = [
             # Компоненты для первого инструмента (1634447.1)
-            ProfileToolComponent(tool_id=1, component_type_id=1, variant=1, description="Плита 1 для инструмента 1634447.1", status_id=4),
-            ProfileToolComponent(tool_id=1, component_type_id=2, variant=1, description="Плита 2 для инструмента 1634447.1", status_id=4),
-            ProfileToolComponent(tool_id=1, component_type_id=5, variant=1, description="Пальцы для инструмента 1634447.1", status_id=3),
+            ProfileToolComponent(tool_id=1, type_id=1, variant=1, description="Плита 1 для инструмента 1634447.1", status_id=4),
+            ProfileToolComponent(tool_id=1, type_id=2, variant=1, description="Плита 2 для инструмента 1634447.1", status_id=4),
+            ProfileToolComponent(tool_id=1, type_id=5, variant=1, description="Пальцы для инструмента 1634447.1", status_id=3),
             
             # Компоненты для второго инструмента (1540096.0)
-            ProfileToolComponent(tool_id=2, component_type_id=1, variant=1, description="Плита 1 для инструмента 1540096.0", status_id=2),
-            ProfileToolComponent(tool_id=2, component_type_id=3, variant=2, description="Плита 3 вариант 2 для инструмента 1540096.0", status_id=1),
+            ProfileToolComponent(tool_id=2, type_id=1, variant=1, description="Плита 1 для инструмента 1540096.0", status_id=2),
+            ProfileToolComponent(tool_id=2, type_id=3, variant=2, description="Плита 3 вариант 2 для инструмента 1540096.0", status_id=1),
         ]
         for component in tool_components:
             db.add(component)

@@ -104,7 +104,7 @@ class DialogEditProduct(QDialog):
         
         # Заполняем существующие компоненты
         for row, component in enumerate(self.existing_components):
-            name = component.get('component_name', '')
+            name = component.get('name', '')
             quantity = component.get('quantity', 1)
             self.add_component_row_data(row, name, quantity)
         
@@ -209,10 +209,10 @@ class DialogEditProduct(QDialog):
         for row in range(self.ui.tableWidget_components.rowCount()):
             # Получаем название компонента
             name_item = self.ui.tableWidget_components.item(row, 0)
-            component_name = name_item.text().strip() if name_item else ""
+            name = name_item.text().strip() if name_item else ""
             
             # Пропускаем пустые строки
-            if not component_name:
+            if not name:
                 continue
             
             # Получаем количество из SpinBox
@@ -220,7 +220,7 @@ class DialogEditProduct(QDialog):
             quantity = spinbox.value() if spinbox else 1
             
             components.append({
-                'component_name': component_name,
+                'name':name,
                 'quantity': quantity,
                 'description': None  # Пока без описания, можно добавить позже
             })

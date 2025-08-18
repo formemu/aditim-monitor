@@ -1,21 +1,17 @@
 """Диалог для создания инструмента профиля"""
-from typing import Dict, Any, Optional, List
-from PySide6.QtWidgets import (QDialog, QMessageBox, QTableWidgetItem, 
-                               QCheckBox, QComboBox, QAbstractItemView, QListWidgetItem)
-from PySide6.QtCore import Signal, QFile, Qt, Slot
+from PySide6.QtWidgets import (QDialog, QTableWidgetItem, 
+                               QCheckBox, QAbstractItemView, QListWidgetItem)
+from PySide6.QtCore import QFile, Qt, Slot
 from PySide6.QtUiTools import QUiLoader
 from PySide6.QtGui import QPixmap
 import base64
 
 from ..constant import UI_PATHS_ABS as UI_PATHS
-from ..api.api_profile_tool import ApiProfileTool
 from ..api_manager import api_manager
 
 
 class DialogCreateProfileTool(QDialog):
     """Диалог для создания инструмента профиля с компонентами"""
-    profile_tool_created = Signal(dict)  # Сигнал об успешном создании инструмента
-
     def __init__(self, parent=None):
         super().__init__(parent)
         self.component_widgets = []   # Список виджетов компонентов (checkbox, combobox)
@@ -24,7 +20,7 @@ class DialogCreateProfileTool(QDialog):
         self.load_ui()
         self.setup_ui()
         self.load_component_type()
-        self.load_default_dimension()
+        self.load_dimension()
 
     def load_ui(self):
         """Загружает UI из файла"""
@@ -62,42 +58,35 @@ class DialogCreateProfileTool(QDialog):
     # =============================================================================
     # Загрузка справочников и начальных данных
     # =============================================================================
-    def load_default_dimension(self):
+    def load_dimension(self):
         """Загружает размерности по умолчанию"""
         # Загружаем размерности инструментов из справочника
-        dimension_dict = api_manager.get_dimension()
         self.ui.comboBox_dimension.clear()
-
-        # Извлекаем значения dimension из словаря
-        dimension_list = []
-        for dimension in dimension_dict.values():
-            dimension_list.append(dimension.get('dimension'))
-        self.ui.comboBox_dimension.addItems(dimension_list)
+        for dimension in api_manager.profile_dimension:
+            name = dimension['name']
+            dimension_id = dimension['id']
+            self.ui.comboBox_dimension.addItem(name, dimension_id)
 
     def load_component_type(self):
         """Загружает типы компонентов в таблицу"""
-        component_type = api_manager.get_component_type()
         # Очищаем таблицу
         self.ui.tableWidget_components.setRowCount(0)
         self.component_widgets.clear()
-
         # Заполняем таблицу типами компонентов
-        self.ui.tableWidget_components.setRowCount(len(component_type))
-        for row, (type_id, type_data) in enumerate(component_type.items()):
+        self.ui.tableWidget_components.setRowCount(len(api_manager.component_type))
+        for row, type in enumerate(api_manager.component_type):
             # Колонка 0: Checkbox "Использовать"
             checkbox = QCheckBox()
             checkbox.setChecked(False)  # По умолчанию не выбран
             self.ui.tableWidget_components.setCellWidget(row, 0, checkbox)
-
             # Колонка 1: Название типа компонента
-            name_item = QTableWidgetItem(type_data['name'])
+            name_item = QTableWidgetItem(type['name'])
             name_item.setFlags(name_item.flags() & ~Qt.ItemIsEditable)
-            name_item.setData(Qt.UserRole, type_id)  # Сохраняем ID типа
+            name_item.setData(Qt.UserRole, type['id'])
             self.ui.tableWidget_components.setItem(row, 1, name_item)
-
             # Сохраняем ссылки на виджеты для удобного доступа
             self.component_widgets.append({
-                'type_id': type_id,
+                'type_id': type['id'],
                 'checkbox': checkbox,
                 'row': row
             })
@@ -109,8 +98,7 @@ class DialogCreateProfileTool(QDialog):
     def on_profile_search_changed(self, text: str):
         """Обработчик изменения поискового запроса"""
         self.ui.listWidget_profile_results.clear()
-
-        # Ищем профили через references_manager
+        # Ищем профили через api_manager
         search_results = api_manager.get_search_profile(text)
         for profile in search_results[:10]:  # Показываем максимум 10 результатов
             display_text = f"{profile['article']} - {profile.get('description', '')}"
@@ -136,62 +124,35 @@ class DialogCreateProfileTool(QDialog):
 
     def load_profile_sketch(self, profile_id: int):
         """Загружает и отображает эскиз профиля"""
-        try:
-            # Получаем данные профиля из references_manager
-            profile = api_manager.get_profile().get(profile_id)
-            if profile and profile.get('sketch'):
-                # Конвертируем base64 в QPixmap
-                sketch_data = profile['sketch']
-                if sketch_data.startswith('data:image'):
-                    # Убираем префикс data:image/...;base64,
-                    base64_data = sketch_data.split(',')[1]
-                else:
-                    base64_data = sketch_data
-                image_data = base64.b64decode(base64_data)
-                pixmap = QPixmap()
-                result = pixmap.loadFromData(image_data)
-                if not pixmap.isNull():
-                    # Масштабируем изображение под размер label
-                    scaled_pixmap = pixmap.scaled(
-                        200, 150,
-                        Qt.KeepAspectRatio,
-                        Qt.SmoothTransformation
-                    )
-                    self.ui.label_profile_sketch.setPixmap(scaled_pixmap)
-                    self.ui.label_profile_sketch.setText("")
-                else:
-                    self.ui.label_profile_sketch.setText("Ошибка загрузки эскиза")
+        # Получаем данные профиля из references_manager
+        profile = api_manager.get_profile().get(profile_id)
+        if profile and profile.get('sketch'):
+            # Конвертируем base64 в QPixmap
+            sketch_data = profile['sketch']
+            if sketch_data.startswith('data:image'):
+                # Убираем префикс data:image/...;base64,
+                base64_data = sketch_data.split(',')[1]
             else:
-                self.ui.label_profile_sketch.setText("Эскиз не найден")
-        except Exception as e:
-            self.ui.label_profile_sketch.setText("Ошибка загрузки эскиза")
+                base64_data = sketch_data
+            image_data = base64.b64decode(base64_data)
+            pixmap = QPixmap()
+            pixmap.loadFromData(image_data)
+            if not pixmap.isNull():
+                # Масштабируем изображение под размер label
+                scaled_pixmap = pixmap.scaled(
+                    200, 150,
+                    Qt.KeepAspectRatio,
+                    Qt.SmoothTransformation
+                )
+                self.ui.label_profile_sketch.setPixmap(scaled_pixmap)
+                self.ui.label_profile_sketch.setText("")
+            else:
+                self.ui.label_profile_sketch.setText("Ошибка загрузки эскиза")
+        else:
+            self.ui.label_profile_sketch.setText("Эскиз не найден")
 
-    # =============================================================================
-    # Сбор и валидация данных
-    # =============================================================================
-    def validate_and_get_data(self) -> Dict[str, Any]:
-        """Валидирует введенные данные и возвращает их"""
-        if not self.selected_profile:
-            raise ValueError("Необходимо выбрать профиль")
-        dimension = self.ui.comboBox_dimension.currentText().strip()
-        if not dimension:
-            raise ValueError("Необходимо выбрать размерность")
-        description = self.ui.textEdit_description.toPlainText().strip()
 
-        # Проверяем что выбран хотя бы один компонент
-        selected_components = self.get_selected_components()
-        if not selected_components:
-            raise ValueError("Необходимо выбрать хотя бы один компонент")
-
-        data = {
-            "profile_id": self.selected_profile['id'],
-            "dimension": dimension,
-            "description": description if description else None,
-            "profile_article": self.selected_profile['article']  # Для отображения
-        }
-        return data
-
-    def get_selected_components(self) -> List[Dict[str, Any]]:
+    def get_selected_component(self):
         """Возвращает список выбранных компонентов"""
         selected_components = []
         for widget_data in self.component_widgets:
@@ -202,9 +163,10 @@ class DialogCreateProfileTool(QDialog):
                 description_item = self.ui.tableWidget_components.item(row, 3)
                 description = description_item.text() if description_item else ""
                 component_data = {
-                    "component_type_id": widget_data['type_id'],
-                    "variant": 1,  # Всегда первый вариант
-                    "description": description
+                    "type_id": widget_data['type_id'],
+                    "variant": 1,
+                    "description": description,
+                    "status_id": 1
                 }
                 selected_components.append(component_data)
         return selected_components
@@ -215,23 +177,25 @@ class DialogCreateProfileTool(QDialog):
     @Slot()
     def create_profile_tool(self):
         """Создает новый инструмент профиля"""
-        # Валидация данных
-        tool_data = self.validate_and_get_data()
-
-        # Отправляем запрос на сервер для создания инструмента
+        dimension = self.ui.comboBox_dimension.currentData()
+        description = self.ui.textEdit_description.toPlainText().strip()
+        selected_component = self.get_selected_component()
+        tool_data = {
+            "profile_id": self.selected_profile['id'],
+            "dimension_id": dimension,
+            "description": description,
+        }
+         # Отправляем запрос на сервер для создания инструмента
         result = api_manager.api_profile_tool.create_profile_tool(tool_data)
-        tool_id = result.get('id')
+        tool_id = result['id']
         if not tool_id:
             raise ValueError("Сервер не вернул ID созданного инструмента")
-
         # Создаем выбранные компоненты
-        selected_components = self.get_selected_components()
-        for component_data in selected_components:
+        for component_data in selected_component:
             try:
                 api_manager.api_profile_tool.create_profile_tool_component(tool_id, component_data)
-            except Exception as comp_error:
+            except Exception:
                 # Продолжаем создание остальных компонентов
                 pass
-
         # Закрываем диалог
         self.accept()

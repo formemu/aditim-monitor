@@ -142,7 +142,7 @@ class DialogEditProfileTool(QDialog):
             checkbox = QCheckBox()
             
             # Проверяем, используется ли этот тип компонента уже
-            is_used = any(comp.get('component_type_id') == type_id for comp in self.existing_components)
+            is_used = any(comp.get('type_id') == type_id for comp in self.existing_components)
             checkbox.setChecked(is_used)
             
             self.ui.tableWidget_components.setCellWidget(row, 0, checkbox)
@@ -158,7 +158,7 @@ class DialogEditProfileTool(QDialog):
             self.ui.tableWidget_components.setItem(row, 2, status_item)
 
             # Колонка 3: Описание (находим из существующих компонентов)
-            existing_comp = next((comp for comp in self.existing_components if comp.get('component_type_id') == type_id), None)
+            existing_comp = next((comp for comp in self.existing_components if comp.get('type_id') == type_id), None)
             description = existing_comp.get('description', '') if existing_comp else ""
             description_item = QTableWidgetItem(description)
             self.ui.tableWidget_components.setItem(row, 3, description_item)
@@ -266,7 +266,7 @@ class DialogEditProfileTool(QDialog):
                 description_item = self.ui.tableWidget_components.item(row, 3)
                 description = description_item.text() if description_item else ""
                 component_data = {
-                    "component_type_id": widget_data['type_id'],
+                    "type_id": widget_data['type_id'],
                     "variant": 1,  # Всегда первый вариант
                     "description": description
                 }

@@ -1,6 +1,7 @@
 """Pydantic schemas for product"""
 from typing import Optional
 from pydantic import BaseModel, ConfigDict
+from .directory import DirDepartment
 
 
 # === PRODUCT SCHEMAS ===
@@ -9,8 +10,7 @@ class ProductBase(BaseModel):
     """Общие поля для продукта (без id)"""
     name: str
     description: Optional[str] = None
-    department_id: int
-
+    department: DirDepartment = None
 
 class ProductCreate(ProductBase):
     """Схема для создания продукта — без id, все поля обязательны (кроме опциональных)"""
@@ -21,7 +21,7 @@ class ProductUpdate(BaseModel):
     """Схема для частичного обновления — все поля опциональны"""
     name: Optional[str] = None
     description: Optional[str] = None
-    department_id: Optional[int] = None
+    department: DirDepartment = None
 
 
 class ProductResponse(ProductBase):
@@ -34,20 +34,19 @@ class ProductResponse(ProductBase):
 
 class ProductComponentBase(BaseModel):
     """Общие поля для компонента продукта (без id)"""
-    component_name: str
+    name: str
     description: Optional[str] = None
     quantity: int = 1
 
 
 class ProductComponentCreate(ProductComponentBase):
     """Создание компонента — без id"""
-    # Можно добавить product_id, если нужно
     product_id: int  # ← важно: компонент привязан к продукту
 
 
 class ProductComponentUpdate(BaseModel):
     """Частичное обновление компонента"""
-    component_name: Optional[str] = None
+    name: Optional[str] = None
     description: Optional[str] = None
     quantity: Optional[int] = None
 

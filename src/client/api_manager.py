@@ -72,9 +72,10 @@ class ApiManager:
 
     def load_all_table(self):
         self.load_profile()
-        self.load_product()
         self.load_profile_tool()
+        self.load_product()
         self.load_task()
+
 
     # Базовые методы загрузки данных
     def load_profile(self):
@@ -85,6 +86,21 @@ class ApiManager:
         except Exception as e:
             self.profile_loaded = False
 
+    def load_profile_tool(self):
+        """загрузка инструментов профилей"""
+        try:
+            self.profile_tool = self.api_profile_tool.get_profile_tool()
+            self.profile_tool_loaded = True
+        except Exception as e:
+            self.profile_tool_loaded = False
+
+    def load_profile_tool_component_by_id(self, item_id):
+        """загрузка компонентов инструмента профилей"""
+        try:
+            return  self.api_profile_tool.get_profile_tool_component(item_id)
+        except Exception as e:
+            pass
+
     def load_product(self):
         """загрузка изделий"""
         try:
@@ -93,13 +109,12 @@ class ApiManager:
         except Exception as e:
             self.product_loaded = False
 
-    def load_profile_tool(self):
-        """загрузка инструментов профилей"""
+    def load_product_component_by_id(self, item_id):
+        """загрузка компонентов изделий"""
         try:
-            self.profile_tool = self.api_profile_tool.get_profile_tool()
-            self.profile_tool_loaded = True
+            return self.api_product.get_product_component(item_id)
         except Exception as e:
-            self.profile_tool_loaded = False
+            pass
 
     def load_task(self):
         """загрузка задач"""
@@ -153,7 +168,6 @@ class ApiManager:
             self.profile_dimension_loaded = False
 
     # асинхронное обновление справочников
-
     def refresh_department_async(self):
         """Асинхронное обновление справочника департаментов"""
         def refresh():
@@ -249,17 +263,17 @@ class ApiManager:
         run_async(refresh)
 
     # Поиск профилей по артикулу
-    def get_search_profile(self, find_article: str):
+    def get_search_profile(self, find_article):
         """Поиск профилей по артикулу"""
         results = []
-        for profile_id, profile_data in self.profile.items():
-            article = profile_data.get('article')
+        for profile in self.profile:
+            article = profile['article']
             if find_article in article:
                 results.append({
-                    'id': profile_id,
-                    'article': profile_data.get('article'),
-                    'description': profile_data.get('description'),
-                    'sketch': profile_data.get('sketch')
+                    'id': profile['id'],
+                    'article': profile['article'],
+                    'description': profile['description'],
+                    'sketch': profile['sketch']
                 })
         
         return results

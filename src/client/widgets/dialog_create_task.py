@@ -225,8 +225,8 @@ class DialogCreateTask(QDialog):
             
             # Чекбокс
             checkbox = QCheckBox()
-            component_name = component.get("component_name", "Неизвестный компонент")
-            checkbox.setText(component_name)
+            name = component.get("name", "Неизвестный компонент")
+            checkbox.setText(name)
             checkbox.stateChanged.connect(self.on_product_component_selection_changed)
             
             # SpinBox для количества

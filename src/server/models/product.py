@@ -24,7 +24,7 @@ class ProductComponent(Base):
     __tablename__ = "product_component"
     id = Column(Integer, primary_key=True, index=True)
     product_id = Column(Integer, ForeignKey("product.id"), nullable=False)
-    component_name = Column(String(200), nullable=False)
+    name = Column(String(200), nullable=False)
     description = Column(Text, nullable=True)
     quantity = Column(Integer, nullable=True)
     

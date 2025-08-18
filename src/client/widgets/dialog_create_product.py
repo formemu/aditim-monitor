@@ -148,15 +148,15 @@ class DialogCreateProduct(QDialog):
         for row in range(self.ui.tableWidget_components.rowCount()):
             # Получаем название компонента
             name_item = self.ui.tableWidget_components.item(row, 0)
-            component_name = name_item.text().strip() if name_item else ""
+            name = name_item.text().strip() if name_item else ""
             # Пропускаем пустые строки
-            if not component_name:
+            if not name:
                 continue
             # Получаем количество из SpinBox
             spinbox = self.ui.tableWidget_components.cellWidget(row, 1)
             quantity = spinbox.value() if spinbox else 1
             components.append({
-                'component_name': component_name,
+                'name': name,
                 'quantity': quantity,
                 'description': None  # Пока без описания, можно добавить позже
             })
@@ -168,7 +168,7 @@ class DialogCreateProduct(QDialog):
         # Основная информация об изделии
         product_data = {
             'name': self.ui.lineEdit_name.text().strip(),
-            'department_id': self.ui.comboBox_department.currentData(),  # Исправлено: department_id вместо id_departament
+            'department_id': self.ui.comboBox_department.currentData(),
             'description': self.ui.textEdit_description.toPlainText().strip()
         }
         # Собираем компоненты

@@ -16,7 +16,7 @@ class ApiProfileTool(ApiClient):
 
     def update_profile_tool(self, tool_id, tool_data):
         """Обновление существующего инструмента профиля"""
-        return self._request("PUT", f"/api/profile-tool/{tool_id}", json=tool_data)
+        return self._request("PATCH", f"/api/profile-tool/{tool_id}", json=tool_data)
 
     def delete_profile_tool(self, tool_id):
         """Удаление инструмента профиля"""
