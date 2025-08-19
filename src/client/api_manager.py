@@ -33,18 +33,18 @@ class ApiManager:
         self.api_directory = ApiDirectory()
 
 
-        # Словари для хранения загруженных данных
-        self.profile = {}
-        self.profile_tool = {}
-        self.product = {}
-        self.task = {}
+        # списки для хранения загруженных данных
+        self.profile = []
+        self.profile_tool = []
+        self.product = []
+        self.task = []
 
         # Словари для хранения загруженных справочников
-        self.department = {}
-        self.component_type = {}
-        self.component_status = {}
-        self.task_status = {}
-        self.profile_dimension = {}
+        self.department = []
+        self.component_type = []
+        self.component_status = []
+        self.task_status = []
+        self.profile_tool_dimension = []
 
         # Флаги загрузки
         self.profile_loaded = False
@@ -68,7 +68,7 @@ class ApiManager:
         self.load_component_type()
         self.load_component_status()
         self.load_task_status()
-        self.load_profile_dimension()
+        self.load_profile_tool_dimension()
 
     def load_all_table(self):
         self.load_profile()
@@ -159,13 +159,13 @@ class ApiManager:
         except Exception as e:
             self.task_status_loaded = False
 
-    def load_profile_dimension(self):
+    def load_profile_tool_dimension(self):
         """загрузка размерностей профилей"""
         try:
-            self.profile_dimension = self.api_directory.get_tool_dimension()
-            self.profile_dimension_loaded = True
+            self.profile_tool_dimension = self.api_directory.get_tool_dimension()
+            self.profile_tool_dimension_loaded = True
         except Exception as e:
-            self.profile_dimension_loaded = False
+            self.profile_tool_dimension_loaded = False
 
     # асинхронное обновление справочников
     def refresh_department_async(self):
@@ -200,12 +200,12 @@ class ApiManager:
             return self.task_status
         run_async(refresh)
 
-    def refresh_profile_dimension_async(self):
+    def refresh_profile_tool_dimension_async(self):
         """Асинхронное обновление справочника размерностей профилей"""
         def refresh():
-            self.profile_dimension_loaded = False
-            self.load_profile_dimension()
-            return self.profile_dimension
+            self.profile_tool_dimension_loaded = False
+            self.load_profile_tool_dimension()
+            return self.profile_tool_dimension
         run_async(refresh)
 
     def refresh_directory_async(self):
@@ -261,6 +261,11 @@ class ApiManager:
             self.load_all_table()
             return True
         run_async(refresh)
+
+    # поиск по артикулу
+    def get_profile_by_id(self, id):
+        """Поиск профиля по артикулу"""
+        return next((p for p in self.profile if p['id'] == id), None)
 
     # Поиск профилей по артикулу
     def get_search_profile(self, find_article):

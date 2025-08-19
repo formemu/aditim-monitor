@@ -30,7 +30,7 @@ class ModelProfileToolComponent(Base):
     id = Column(Integer, primary_key=True, index=True)
     tool_id = Column(Integer, ForeignKey("profile_tool.id", ondelete="CASCADE"), nullable=False)
     type_id = Column(Integer, ForeignKey("dir_component_type.id"), nullable=False)
-    variant = Column(Integer, nullable=True)  # Номер варианта (1, 2, 3... или NULL)
+    variant = Column(Integer, nullable=True)
     description = Column(Text)
     status_id = Column(Integer, ForeignKey("dir_component_status.id"), nullable=False)
     

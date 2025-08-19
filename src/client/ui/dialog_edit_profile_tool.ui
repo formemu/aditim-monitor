@@ -31,17 +31,7 @@
             </property>
            </widget>
           </item>
-          <item>
-           <widget class="QLineEdit" name="lineEdit_profile_search">
-            <property name="placeholderText">
-             <string>Поиск профиля...</string>
-            </property>
-           </widget>
-          </item>
          </layout>
-        </item>
-        <item>
-         <widget class="QListWidget" name="listWidget_profile_results"/>
         </item>
         <item>
          <layout class="QHBoxLayout" name="horizontalLayout_dimension">
@@ -51,9 +41,6 @@
              <string>Размерность:</string>
             </property>
            </widget>
-          </item>
-          <item>
-           <widget class="QComboBox" name="comboBox_dimension"/>
           </item>
          </layout>
         </item>
@@ -132,7 +119,7 @@
          <bool>true</bool>
         </property>
         <property name="selectionBehavior">
-         <enum>QAbstractItemView::SelectRows</enum>
+         <enum>QAbstractItemView::SelectionBehavior::SelectRows</enum>
         </property>
         <property name="sortingEnabled">
          <bool>false</bool>
@@ -165,10 +152,10 @@
    <item>
     <widget class="QDialogButtonBox" name="buttonBox">
      <property name="orientation">
-      <enum>Qt::Horizontal</enum>
+      <enum>Qt::Orientation::Horizontal</enum>
      </property>
      <property name="standardButtons">
-      <set>QDialogButtonBox::Cancel|QDialogButtonBox::Ok</set>
+      <set>QDialogButtonBox::StandardButton::Cancel|QDialogButtonBox::StandardButton::Ok</set>
      </property>
     </widget>
    </item>
@@ -191,22 +178,22 @@
      <y>274</y>
     </hint>
    </hints>
-   </connection>
-   <connection>
-    <sender>buttonBox</sender>
-    <signal>rejected()</signal>
-    <receiver>DialogEditProfileTool</receiver>
-    <slot>reject()</slot>
-    <hints>
-     <hint type="sourcelabel">
-      <x>316</x>
-      <y>260</y>
-     </hint>
-     <hint type="destinationlabel">
-      <x>286</x>
-      <y>274</y>
-     </hint>
-    </hints>
-   </connection>
-  </connections>
- </ui>
+  </connection>
+  <connection>
+   <sender>buttonBox</sender>
+   <signal>rejected()</signal>
+   <receiver>DialogEditProfileTool</receiver>
+   <slot>reject()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>316</x>
+     <y>260</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>286</x>
+     <y>274</y>
+    </hint>
+   </hints>
+  </connection>
+ </connections>
+</ui>

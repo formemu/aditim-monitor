@@ -58,7 +58,6 @@ def create_profile_tool(profile_tool: SchemaProfileToolCreate, db: Session = Dep
 def create_profile_tool_component(tool_id: int, component: SchemaProfileToolComponentCreate, db: Session = Depends(get_db)):
     """Создать новый компонент инструмента профиля"""
     try:
-        print(component)
         db_component = ModelProfileToolComponent(
             tool_id=tool_id,
             type_id=component.type_id,

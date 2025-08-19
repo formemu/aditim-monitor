@@ -19,7 +19,7 @@ class DialogCreateProfileTool(QDialog):
 
         self.load_ui()
         self.setup_ui()
-        self.load_component_type()
+        
         self.load_dimension()
 
     def load_ui(self):
@@ -49,7 +49,7 @@ class DialogCreateProfileTool(QDialog):
         self.ui.tableWidget_components.setSelectionBehavior(QAbstractItemView.SelectRows)
         self.ui.tableWidget_components.setSelectionMode(QAbstractItemView.SingleSelection)
         self.ui.tableWidget_components.horizontalHeader().setStretchLastSection(True)
-
+        self.setup_component_form()
         # Устанавливаем ширины колонок
         self.ui.tableWidget_components.setColumnWidth(0, 100)  # Использовать
         self.ui.tableWidget_components.setColumnWidth(1, 200)  # Тип компонента
@@ -62,16 +62,17 @@ class DialogCreateProfileTool(QDialog):
         """Загружает размерности по умолчанию"""
         # Загружаем размерности инструментов из справочника
         self.ui.comboBox_dimension.clear()
-        for dimension in api_manager.profile_dimension:
+        for dimension in api_manager.profile_tool_dimension:
             name = dimension['name']
             dimension_id = dimension['id']
             self.ui.comboBox_dimension.addItem(name, dimension_id)
 
-    def load_component_type(self):
+    def setup_component_form(self):
         """Загружает типы компонентов в таблицу"""
         # Очищаем таблицу
         self.ui.tableWidget_components.setRowCount(0)
         self.component_widgets.clear()
+
         # Заполняем таблицу типами компонентов
         self.ui.tableWidget_components.setRowCount(len(api_manager.component_type))
         for row, type in enumerate(api_manager.component_type):
@@ -125,8 +126,10 @@ class DialogCreateProfileTool(QDialog):
     def load_profile_sketch(self, profile_id: int):
         """Загружает и отображает эскиз профиля"""
         # Получаем данные профиля из references_manager
-        profile = api_manager.get_profile().get(profile_id)
-        if profile and profile.get('sketch'):
+
+        profile = api_manager.get_profile_by_id(profile_id)
+        if profile and profile['sketch']:
+
             # Конвертируем base64 в QPixmap
             sketch_data = profile['sketch']
             if sketch_data.startswith('data:image'):
@@ -150,7 +153,6 @@ class DialogCreateProfileTool(QDialog):
                 self.ui.label_profile_sketch.setText("Ошибка загрузки эскиза")
         else:
             self.ui.label_profile_sketch.setText("Эскиз не найден")
-
 
     def get_selected_component(self):
         """Возвращает список выбранных компонентов"""
@@ -179,11 +181,11 @@ class DialogCreateProfileTool(QDialog):
         """Создает новый инструмент профиля"""
         dimension = self.ui.comboBox_dimension.currentData()
         description = self.ui.textEdit_description.toPlainText().strip()
-        selected_component = self.get_selected_component()
+
         tool_data = {
             "profile_id": self.selected_profile['id'],
             "dimension_id": dimension,
-            "description": description,
+            "description": description
         }
          # Отправляем запрос на сервер для создания инструмента
         result = api_manager.api_profile_tool.create_profile_tool(tool_data)
@@ -191,11 +193,8 @@ class DialogCreateProfileTool(QDialog):
         if not tool_id:
             raise ValueError("Сервер не вернул ID созданного инструмента")
         # Создаем выбранные компоненты
-        for component_data in selected_component:
-            try:
-                api_manager.api_profile_tool.create_profile_tool_component(tool_id, component_data)
-            except Exception:
-                # Продолжаем создание остальных компонентов
-                pass
+        for component_data in self.get_selected_component():
+            api_manager.api_profile_tool.create_profile_tool_component(tool_id, component_data)
+
         # Закрываем диалог
         self.accept()

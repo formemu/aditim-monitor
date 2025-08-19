@@ -12,7 +12,7 @@ class ApiDirectory(ApiClient):
     def get_department(self):
         """Получение всех подразделений"""
         return self._request("GET", "/api/directory/dir_department")
-
+    
     def get_component_status(self):
         """Получение всех статусов компонентов"""
         return self._request("GET", "/api/directory/dir_component_status")
