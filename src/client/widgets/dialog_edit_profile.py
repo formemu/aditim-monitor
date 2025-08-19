@@ -62,7 +62,7 @@ class DialogEditProfile(QDialog):
             self.ui.label_sketch.setText("Не удалось загрузить изображение")
 
     # =============================================================================
-    # Работа с данными профиля
+    # Валидация данных профиля
     # =============================================================================
     def validate_profile_data(self):
         """Проверяет корректность введённых данных профиля."""
@@ -90,7 +90,7 @@ class DialogEditProfile(QDialog):
         # Сохраняем в base64
         self.sketch_data = self.pixmap_to_base64(scaled_pixmap)
 
-    def pixmap_to_base64(self, pixmap) -> str:
+    def pixmap_to_base64(self, pixmap):
         """Конвертирует QPixmap в строку формата data:image/png;base64."""
         buffer = QBuffer()
         buffer.open(QBuffer.WriteOnly)
@@ -103,18 +103,20 @@ class DialogEditProfile(QDialog):
     # =============================================================================
     # Обновление профиля
     # =============================================================================
-    def accept(self):
-        """Обновляет существующий профиль"""
+    def update_profile(self):
+        """Обновляет существующий профиль."""
         if self.validate_profile_data():
-
             data_profile = {
                 "article": self.ui.lineEdit_article.text().strip(),
                 "description": self.ui.textEdit_description.toPlainText().strip(),
                 "sketch": self.sketch_data
             }
-
             api_manager.api_profile.update_profile(self.profile.get('id'), data_profile)
-
-            super().accept()
         else:
             QMessageBox.warning(self, "Ошибка", "Пожалуйста, исправьте ошибки в форме.")
+    
+    def accept(self):
+        """Принимает изменения и закрывает диалог"""
+        self.update_profile()
+        super().accept()
+        

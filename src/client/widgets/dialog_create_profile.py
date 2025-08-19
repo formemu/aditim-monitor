@@ -1,22 +1,18 @@
 """Диалог для создания нового профиля."""
-
-from typing import Dict, Any
 from PySide6.QtWidgets import QDialog, QMessageBox
-from PySide6.QtCore import Signal, QFile, QBuffer, Qt
+from PySide6.QtCore import QFile, QBuffer, Qt
 from PySide6.QtUiTools import QUiLoader
 from PySide6.QtGui import QPixmap
 from PySide6.QtWidgets import QApplication
 import base64
-from ..style_util import load_styles
 from ..api_manager import api_manager
 from ..constant import UI_PATHS_ABS
 
-
 class DialogCreateProfile(QDialog):
     """Диалог для создания нового профиля."""
-    def __init__(self, parent=None):
+    def __init__(self, parent):
         super().__init__(parent)
-        self.image_data = None
+        self.sketch_data = None
         self.load_ui()
         self.setup_logic()
 
@@ -32,15 +28,15 @@ class DialogCreateProfile(QDialog):
     def setup_logic(self):
         """Настраивает логику диалога."""
         # Подключаем обработчики кнопок
-        self.ui.buttonBox.accepted.connect(self.create_profile)
+        self.ui.buttonBox.accepted.connect(self.accept)
         self.ui.buttonBox.rejected.connect(self.reject)
         # Подключаем обработчик кнопки вставки изображения
-        self.ui.pushButton_paste_image.clicked.connect(self.paste_image_from_clipboard)
+        self.ui.pushButton_paste_image.clicked.connect(self.paste_image)
         # Устанавливаем фокус на поле ввода артикула
         self.ui.lineEdit_article.setFocus()
 
     # =============================================================================
-    # Работа с данными профиля
+    # Валидация данных профиля
     # =============================================================================
     def validate_profile_data(self) -> bool:
         """Проверяет корректность введённых данных профиля."""
@@ -49,20 +45,10 @@ class DialogCreateProfile(QDialog):
             return False
         return True
 
-    def get_profile_data(self) -> Dict[str, Any]:
-        """Собирает данные формы в словарь для отправки на сервер."""
-        article = self.ui.lineEdit_article.text().strip()
-        description = self.ui.textEdit_description.toPlainText().strip()
-        return {
-            "article": article,
-            "description": description if description else None,
-            "sketch": self.image_data if self.image_data else None
-        }
-
     # =============================================================================
     # Обработка изображения
     # =============================================================================
-    def paste_image_from_clipboard(self):
+    def paste_image(self):
         """Вставляет изображение из буфера обмена."""
         clipboard = QApplication.clipboard()
         pixmap = clipboard.pixmap()
@@ -76,42 +62,36 @@ class DialogCreateProfile(QDialog):
         self.ui.label_image.setPixmap(scaled_pixmap)
         self.ui.label_image.setText("")
         # Сохраняем в base64
-        self.image_data = self.pixmap_to_base64(scaled_pixmap)
+        self.sketch_data = self.pixmap_to_base64(scaled_pixmap)
   
-    def pixmap_to_base64(self, pixmap: QPixmap) -> str:
+    def pixmap_to_base64(self, pixmap: QPixmap):
         """Конвертирует QPixmap в строку формата data:image/png;base64."""
-        try:
-            if pixmap.isNull() or pixmap.width() <= 0 or pixmap.height() <= 0:
-                raise ValueError("Некорректный QPixmap")
+        buffer = QBuffer()
+        buffer.open(QBuffer.WriteOnly)
+        pixmap.save(buffer, "PNG", 85)
+        image_data = buffer.data().data()
 
-            buffer = QBuffer()
-            buffer.open(QBuffer.WriteOnly)
-            success = pixmap.save(buffer, "PNG", 85)
-            if not success:
-                raise ValueError("Не удалось сохранить изображение в буфер")
-
-            image_data = buffer.data().data()
-            if not image_data:
-                raise ValueError("Пустые данные изображения")
-
-            base64_data = base64.b64encode(image_data).decode('utf-8')
-            buffer.close()
-
-            return f"data:image/png;base64,{base64_data}"
-
-        except Exception as e:
-            print(f"Ошибка конвертации pixmap в base64: {e}")
-            return ""
+        base64_data = base64.b64encode(image_data).decode('utf-8')
+        buffer.close()
+        return f"data:image/png;base64,{base64_data}"
 
     # =============================================================================
     # Создание профиля
     # =============================================================================
     def create_profile(self):
         """Создаёт новый профиль после валидации данных."""
-        if not self.validate_profile_data():
+        if self.validate_profile_data():
+            profile_data = {
+                "article": self.ui.lineEdit_article.text().strip(),
+                "description": self.ui.textEdit_description.toPlainText().strip(),
+                "sketch": self.sketch_data
+            }
+            api_manager.api_profile.create_profile(profile_data)
+
+        else:
             QMessageBox.warning(self, "Ошибка", "Пожалуйста, исправьте ошибки в форме.")
-            return
-        profile_data = self.get_profile_data()
-        api_manager.api_profile.create_profile(profile_data)
-        
-        self.accept()
+
+    def accept(self):
+        """Принимает изменения и закрывает диалог"""
+        self.create_profile()
+        super().accept()

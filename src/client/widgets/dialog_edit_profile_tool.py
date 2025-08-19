@@ -1,10 +1,9 @@
-"""Диалог для редактирования существующего инструмента профиля."""
+"""Диалог для редактирования инструмента профиля."""
 from PySide6.QtWidgets import (QDialog, QTableWidgetItem, QCheckBox, QAbstractItemView)
 from PySide6.QtCore import QFile, Qt, Slot
 from PySide6.QtUiTools import QUiLoader
 from PySide6.QtGui import QPixmap
 import base64
-
 from ..constant import UI_PATHS_ABS
 from ..api_manager import api_manager
 
@@ -14,7 +13,7 @@ class DialogEditProfileTool(QDialog):
     def __init__(self, profile_tool, parent=None):
         super().__init__(parent)
         self.profile_tool = profile_tool
-        self.component_widgets = []   # Список виджетов компонентов (checkbox, combobox)
+        self.list_component_widget = []
         self.load_ui()
         self.setup_ui()
         # Заполняем форму данными инструмента
@@ -37,7 +36,7 @@ class DialogEditProfileTool(QDialog):
     def setup_ui(self):
         """Настраивает UI компонентов после загрузки"""
         # Подключаем обработчики кнопок
-        self.ui.buttonBox.accepted.connect(self.update_profile_tool)
+        self.ui.buttonBox.accepted.connect(self.accept)
         self.ui.buttonBox.rejected.connect(self.reject)
 
         # Настройка таблицы компонентов
@@ -51,7 +50,9 @@ class DialogEditProfileTool(QDialog):
         self.ui.tableWidget_components.setColumnWidth(0, 100)  # Использовать
         self.ui.tableWidget_components.setColumnWidth(1, 200)  # Тип компонента
         self.ui.tableWidget_components.setColumnWidth(2, 150)  # Статус
-
+    # =============================================================================
+    # Загрузка справочников и начальных данных
+    # =============================================================================
     def fill_profile_tool(self):
         """Заполняет форму данными редактируемого инструмента профиля."""
         # Заполняем основные поля
@@ -68,7 +69,7 @@ class DialogEditProfileTool(QDialog):
         """Заполняет форму компонентами редактируемого инструмента профиля."""
         for component in self.profile_tool['component']:
             # Заполняем таблицу компонентами
-            for widget_data in self.component_widgets:
+            for widget_data in self.list_component_widget:
                 type_id = widget_data['type_id']
                 checkbox = widget_data['checkbox']
                 row = widget_data['row']
@@ -82,14 +83,12 @@ class DialogEditProfileTool(QDialog):
                     # Описание компонента
                     description_item = QTableWidgetItem(component.get('description', ''))
                     self.ui.tableWidget_components.setItem(row, 3, description_item)
-    # =============================================================================
-    # Загрузка справочников и начальных данных
-    # =============================================================================
+
     def setup_component_form(self):
         """Загружает типы компонентов в таблицу"""
         # Очищаем таблицу
         self.ui.tableWidget_components.setRowCount(0)
-        self.component_widgets.clear()
+        self.list_component_widget.clear()
         
         # Заполняем таблицу типами компонентов
         self.ui.tableWidget_components.setRowCount(len(api_manager.component_type))
@@ -104,7 +103,7 @@ class DialogEditProfileTool(QDialog):
             name_item.setData(Qt.UserRole, type['id'])
             self.ui.tableWidget_components.setItem(row, 1, name_item)
             # Сохраняем ссылки на виджеты для удобного доступа
-            self.component_widgets.append({
+            self.list_component_widget.append({
                 'type_id': type['id'],
                 'checkbox': checkbox,
                 'row': row
@@ -114,7 +113,6 @@ class DialogEditProfileTool(QDialog):
         """Загружает и отображает эскиз профиля"""
         # Получаем данные профиля из api_manager
         if profile and profile['sketch']:
-            print(1)
             # Конвертируем base64 в QPixmap
             sketch_data = profile['sketch']
             if sketch_data.startswith('data:image'):
@@ -122,7 +120,6 @@ class DialogEditProfileTool(QDialog):
                 base64_data = sketch_data.split(',')[1]
             else:
                 base64_data = sketch_data
-
             # Декодируем base64 и создаем QPixmap
             image_data = base64.b64decode(base64_data)
             pixmap = QPixmap()
@@ -142,8 +139,8 @@ class DialogEditProfileTool(QDialog):
     # =============================================================================
     def get_selected_component(self):
         """Возвращает список выбранных компонентов"""
-        selected_components = []
-        for widget_data in self.component_widgets:
+        list_selected_component = []
+        for widget_data in self.list_component_widget:
             checkbox = widget_data['checkbox']
             if checkbox.isChecked():
                 row = widget_data['row']
@@ -156,8 +153,8 @@ class DialogEditProfileTool(QDialog):
                     "description": description,
                     "status_id": 1
                 }
-                selected_components.append(component_data)
-        return selected_components
+                list_selected_component.append(component_data)
+        return list_selected_component
 
     # =============================================================================
     # Обновление инструмента профиля
@@ -171,9 +168,6 @@ class DialogEditProfileTool(QDialog):
         }
         # Отправляем запрос на сервер для обновления инструмента
         api_manager.api_profile_tool.update_profile_tool(self.profile_tool['id'], tool_data)
-        # Обновляем компоненты
-        self.update_tool_component()
-        self.accept()
 
     def update_tool_component(self):
         """Обновляет компоненты инструмента"""
@@ -183,4 +177,8 @@ class DialogEditProfileTool(QDialog):
         for component_data in self.get_selected_component():
             api_manager.api_profile_tool.create_profile_tool_component(self.profile_tool['id'], component_data)
 
-
+    def accept(self):
+        """Принимает изменения и закрывает диалог"""
+        self.update_profile_tool()
+        self.update_tool_component()
+        super().accept()

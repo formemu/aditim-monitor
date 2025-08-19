@@ -1,44 +1,38 @@
 """Диалог для создания инструмента профиля"""
-from PySide6.QtWidgets import (QDialog, QTableWidgetItem, 
-                               QCheckBox, QAbstractItemView, QListWidgetItem)
+from PySide6.QtWidgets import (QDialog, QTableWidgetItem, QCheckBox, QAbstractItemView, QListWidgetItem)
 from PySide6.QtCore import QFile, Qt, Slot
 from PySide6.QtUiTools import QUiLoader
 from PySide6.QtGui import QPixmap
 import base64
-
-from ..constant import UI_PATHS_ABS as UI_PATHS
+from ..constant import UI_PATHS_ABS
 from ..api_manager import api_manager
-
 
 class DialogCreateProfileTool(QDialog):
     """Диалог для создания инструмента профиля с компонентами"""
     def __init__(self, parent=None):
         super().__init__(parent)
-        self.component_widgets = []   # Список виджетов компонентов (checkbox, combobox)
+        self.list_component_widget = []
         self.selected_profile = None
-
         self.load_ui()
         self.setup_ui()
         
-        self.load_dimension()
-
     def load_ui(self):
         """Загружает UI из файла"""
-        ui_file = QFile(UI_PATHS["DIALOG_CREATE_PROFILE_TOOL"])
+        ui_file = QFile(UI_PATHS_ABS["DIALOG_CREATE_PROFILE_TOOL"])
         ui_file.open(QFile.ReadOnly)
         loader = QUiLoader()
         self.ui = loader.load(ui_file)
         ui_file.close()
-
         # Устанавливаем заголовок и свойства диалога
         self.setWindowTitle("Создание инструмента профиля")
         self.setModal(True)
         self.setLayout(self.ui.layout())
+        self.load_dimension()
 
     def setup_ui(self):
         """Настраивает UI компонентов после загрузки"""
         # Подключаем обработчики кнопок
-        self.ui.buttonBox.accepted.connect(self.create_profile_tool)
+        self.ui.buttonBox.accepted.connect(self.accept)
         self.ui.buttonBox.rejected.connect(self.reject)
 
         # Подключаем поиск профилей
@@ -60,7 +54,6 @@ class DialogCreateProfileTool(QDialog):
     # =============================================================================
     def load_dimension(self):
         """Загружает размерности по умолчанию"""
-        # Загружаем размерности инструментов из справочника
         self.ui.comboBox_dimension.clear()
         for dimension in api_manager.profile_tool_dimension:
             name = dimension['name']
@@ -71,7 +64,7 @@ class DialogCreateProfileTool(QDialog):
         """Загружает типы компонентов в таблицу"""
         # Очищаем таблицу
         self.ui.tableWidget_components.setRowCount(0)
-        self.component_widgets.clear()
+        self.list_component_widget.clear()
 
         # Заполняем таблицу типами компонентов
         self.ui.tableWidget_components.setRowCount(len(api_manager.component_type))
@@ -86,7 +79,7 @@ class DialogCreateProfileTool(QDialog):
             name_item.setData(Qt.UserRole, type['id'])
             self.ui.tableWidget_components.setItem(row, 1, name_item)
             # Сохраняем ссылки на виджеты для удобного доступа
-            self.component_widgets.append({
+            self.list_component_widget.append({
                 'type_id': type['id'],
                 'checkbox': checkbox,
                 'row': row
@@ -96,7 +89,7 @@ class DialogCreateProfileTool(QDialog):
     # Управление поиском и выбором профиля
     # =============================================================================
     @Slot(str)
-    def on_profile_search_changed(self, text: str):
+    def on_profile_search_changed(self, text):
         """Обработчик изменения поискового запроса"""
         self.ui.listWidget_profile_results.clear()
         # Ищем профили через api_manager
@@ -119,17 +112,14 @@ class DialogCreateProfileTool(QDialog):
             # Скрываем список результатов
             self.ui.listWidget_profile_results.clear()
             # Загружаем эскиз профиля
-            self.load_profile_sketch(profile['id'])
+            self.load_profile_sketch(profile)
         else:
             pass
 
-    def load_profile_sketch(self, profile_id: int):
+    def load_profile_sketch(self, profile):
         """Загружает и отображает эскиз профиля"""
-        # Получаем данные профиля из references_manager
-
-        profile = api_manager.get_profile_by_id(profile_id)
+        # Получаем данные профиля из api_manager
         if profile and profile['sketch']:
-
             # Конвертируем base64 в QPixmap
             sketch_data = profile['sketch']
             if sketch_data.startswith('data:image'):
@@ -137,41 +127,38 @@ class DialogCreateProfileTool(QDialog):
                 base64_data = sketch_data.split(',')[1]
             else:
                 base64_data = sketch_data
+            # Декодируем base64 и создаем QPixmap
             image_data = base64.b64decode(base64_data)
             pixmap = QPixmap()
-            pixmap.loadFromData(image_data)
-            if not pixmap.isNull():
-                # Масштабируем изображение под размер label
-                scaled_pixmap = pixmap.scaled(
-                    200, 150,
-                    Qt.KeepAspectRatio,
-                    Qt.SmoothTransformation
-                )
-                self.ui.label_profile_sketch.setPixmap(scaled_pixmap)
-                self.ui.label_profile_sketch.setText("")
-            else:
-                self.ui.label_profile_sketch.setText("Ошибка загрузки эскиза")
-        else:
-            self.ui.label_profile_sketch.setText("Эскиз не найден")
+            if pixmap.loadFromData(image_data):
+                # Масштабируем изображение
+                scaled_pixmap = pixmap.scaled(200, 150, Qt.KeepAspectRatio, Qt.SmoothTransformation)
+                self.ui.label_sketch.setPixmap(scaled_pixmap)
+                self.ui.label_sketch.setText("")
+                return
+
+        # Если эскиз не найден, показываем заглушку
+        self.ui.label_sketch.clear()
+        self.ui.label_sketch.setText("Эскиз не найден")
 
     def get_selected_component(self):
         """Возвращает список выбранных компонентов"""
-        selected_components = []
-        for widget_data in self.component_widgets:
+        list_selected_component = []
+        for widget_data in self.list_component_widget:
             checkbox = widget_data['checkbox']
             if checkbox.isChecked():
                 row = widget_data['row']
                 # Получаем описание из таблицы
                 description_item = self.ui.tableWidget_components.item(row, 3)
-                description = description_item.text() if description_item else ""
-                component_data = {
+                description = description_item.text()
+                component = {
                     "type_id": widget_data['type_id'],
                     "variant": 1,
                     "description": description,
                     "status_id": 1
                 }
-                selected_components.append(component_data)
-        return selected_components
+                list_selected_component.append(component)
+        return list_selected_component
 
     # =============================================================================
     # Создание инструмента профиля
@@ -181,20 +168,19 @@ class DialogCreateProfileTool(QDialog):
         """Создает новый инструмент профиля"""
         dimension = self.ui.comboBox_dimension.currentData()
         description = self.ui.textEdit_description.toPlainText().strip()
-
-        tool_data = {
+        tool = {
             "profile_id": self.selected_profile['id'],
             "dimension_id": dimension,
             "description": description
         }
          # Отправляем запрос на сервер для создания инструмента
-        result = api_manager.api_profile_tool.create_profile_tool(tool_data)
+        result = api_manager.api_profile_tool.create_profile_tool(tool)
         tool_id = result['id']
-        if not tool_id:
-            raise ValueError("Сервер не вернул ID созданного инструмента")
         # Создаем выбранные компоненты
-        for component_data in self.get_selected_component():
-            api_manager.api_profile_tool.create_profile_tool_component(tool_id, component_data)
+        for component in self.get_selected_component():
+            api_manager.api_profile_tool.create_profile_tool_component(tool_id, component)
 
-        # Закрываем диалог
-        self.accept()
+    def accept(self):
+        """Принимает изменения и закрывает диалог"""
+        self.create_profile_tool()
+        super().accept()
