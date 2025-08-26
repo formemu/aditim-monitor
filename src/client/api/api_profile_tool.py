@@ -31,7 +31,7 @@ class ApiProfileTool(ApiClient):
         return self._request("POST", f"/api/profile-tool/{tool_id}/component", json=component_data)
 
     def delete_profile_tool_component(self, tool_id):
-        """Удаление компонента инструмента профиля"""
+        """Удаление компонентов инструмента профиля"""
         self._request("DELETE", f"/api/profile-tool/{tool_id}/component")
 
     def delete_profile_tool_component_by_id(self, component_id):

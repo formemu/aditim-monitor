@@ -21,7 +21,7 @@ class Task(Base):
     description = Column(Text, nullable=True)
 
     # Relationships
-    product = relationship("Product", back_populates="task")
+    product = relationship("ModelProduct", back_populates="task")
     profile_tool = relationship("ModelProfileTool", back_populates="task")
     status = relationship("DirTaskStatus", back_populates="task")
     component = relationship("TaskComponent", back_populates="task", cascade="all, delete-orphan")
@@ -43,4 +43,4 @@ class TaskComponent(Base):
     # Relationships
     task = relationship("Task", back_populates="component")
     profile_tool_component = relationship("ModelProfileToolComponent", back_populates="task_component")
-    product_component = relationship("ProductComponent", back_populates="task_component")
+    product_component = relationship("ModelProductComponent", back_populates="task_component")

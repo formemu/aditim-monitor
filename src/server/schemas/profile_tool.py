@@ -10,10 +10,6 @@ class SchemaProfileToolBase(BaseModel):
     profile_id: int
     dimension_id: int
     description: Optional[str] = None
-
-    profile: Optional[ProfileBase] = None
-    dimension: Optional[DirToolDimension] = None
-
     model_config = ConfigDict(from_attributes=True)
 
 class SchemaProfileToolCreate(SchemaProfileToolBase):
@@ -25,6 +21,8 @@ class SchemaProfileToolUpdate(BaseModel):
 
 class SchemaProfileToolResponse(SchemaProfileToolBase):
     id: int
+    profile: Optional[ProfileBase] = None
+    dimension: Optional[DirToolDimension] = None
     component: List["SchemaProfileToolComponentResponse"] = []
 
 
@@ -37,9 +35,6 @@ class ProfileToolComponentBase(BaseModel):
     status_id: int
     variant: int
     description: Optional[str] = None
-
-    type: Optional[DirComponentType] = None
-    status: Optional[DirComponentStatus] = None
 
     model_config = ConfigDict(from_attributes=True)
     
@@ -56,3 +51,5 @@ class ProfileToolComponentUpdate(BaseModel):
 class SchemaProfileToolComponentResponse(ProfileToolComponentBase):
     id: int
     tool_id: int
+    type: Optional[DirComponentType] = None
+    status: Optional[DirComponentStatus] = None

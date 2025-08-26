@@ -9,7 +9,7 @@ class DirDepartment(Base):
     id = Column(Integer, primary_key=True, index=True)
     name = Column(String(100), nullable=False, unique=True)
     description = Column(Text)
-    product = relationship("Product", back_populates="department")
+    product = relationship("ModelProduct", back_populates="department")
 
 class DirTaskStatus(Base):
     """Справочник статусов задач"""

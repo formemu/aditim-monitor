@@ -7,7 +7,7 @@ from sqlalchemy.orm import relationship
 from ..database import Base
 
 
-class Product(Base):
+class ModelProduct(Base):
     __tablename__ = "product"
     id = Column(Integer, primary_key=True, index=True)
     name = Column(String, nullable=False)
@@ -16,11 +16,11 @@ class Product(Base):
     
     # Связи
     department = relationship("DirDepartment", back_populates="product")
-    component = relationship("ProductComponent", back_populates="product", cascade="all, delete-orphan")
+    component = relationship("ModelProductComponent", back_populates="product", cascade="all, delete-orphan")
     task = relationship("Task", back_populates="product")
 
 
-class ProductComponent(Base):
+class ModelProductComponent(Base):
     __tablename__ = "product_component"
     id = Column(Integer, primary_key=True, index=True)
     product_id = Column(Integer, ForeignKey("product.id"), nullable=False)
@@ -29,5 +29,5 @@ class ProductComponent(Base):
     quantity = Column(Integer, nullable=True)
     
     # Связи
-    product = relationship("Product", back_populates="component")
+    product = relationship("ModelProduct", back_populates="component")
     task_component = relationship("TaskComponent", back_populates="product_component")

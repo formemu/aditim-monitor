@@ -86,6 +86,7 @@ class WindowProduct(QWidget):
         """Обработчик смены вкладки — обновляет данные для выбранной вкладки"""
         self.tab_index = self.ui.tabWidget_products.currentIndex()
         self.clear_component()
+        self.selected_row = 0
         self.refresh_data()
     
     # =============================================================================
@@ -187,10 +188,11 @@ class WindowProduct(QWidget):
     # =============================================================================
     def on_selection_changed(self):
         """Обработчик выбора элемента"""
-        self.selected_row = self.ui.tableWidget_profile_tool.selectedItems()[0].row()
         if self.tab_index == 0:
+            self.selected_row = self.ui.tableWidget_profile_tool.selectedItems()[0].row()
             self.load_profile_tool_component(api_manager.profile_tool[self.selected_row]['id'])
         else:
+            self.selected_row = self.ui.tableWidget_product.selectedItems()[0].row()
             self.load_product_component(api_manager.product[self.selected_row]['id'])
 
     # =============================================================================
@@ -201,12 +203,14 @@ class WindowProduct(QWidget):
         dialog = DialogCreateProfileTool(self)
         if dialog.exec():
             self.refresh_data()
+            self.load_profile_tool_component(api_manager.profile_tool[self.selected_row]['id'])
 
     def on_product_add_clicked(self):
         """Добавление изделия"""
         dialog = DialogCreateProduct(self)
         if dialog.exec():
             self.refresh_data()
+            self.load_product_component(api_manager.product[self.selected_row]['id'])
 
     def on_profile_tool_edit_clicked(self):
         """Редактирование инструмента профиля"""
@@ -214,6 +218,7 @@ class WindowProduct(QWidget):
         dialog = DialogEditProfileTool(profile_tool, self)
         if dialog.exec():
             self.refresh_data()
+            self.load_profile_tool_component(api_manager.profile_tool[self.selected_row]['id'])
 
     def on_profile_tool_delete_clicked(self):
         """Удаление инструмента"""
@@ -221,11 +226,14 @@ class WindowProduct(QWidget):
         api_manager.api_profile_tool.delete_profile_tool(product['id'])
         self.refresh_data()
 
+
     def on_product_edit_clicked(self):
         """Редактирование изделия"""
         product = api_manager.product[self.selected_row]
         dialog = DialogEditProduct(product, self)
-        dialog.exec()
+        if dialog.exec():
+            self.refresh_data()
+            self.load_product_component(api_manager.product[self.selected_row]['id'])
 
     def on_product_delete_clicked(self):
         """Удаление изделия"""

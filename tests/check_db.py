@@ -17,7 +17,7 @@ sys.path.insert(0, str(project_root))
 try:
     from src.server.database import engine, Base
     from src.server.models.task import Task
-    from src.server.models.product import Product, Profile
+    from src.server.models.product import ModelProduct, Profile
     from src.server.models.directory import DirDepartment, DirTaskStatus
 except ImportError as e:
     print(f"Error importing modules: {e}")
@@ -58,7 +58,7 @@ def get_table_stats(session):
     
     # Products statistics
     try:
-        stats['products'] = session.query(Product).count()
+        stats['products'] = session.query(ModelProduct).count()
     except Exception as e:
         stats['products'] = {'error': str(e)}
     

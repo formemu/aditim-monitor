@@ -1,57 +1,57 @@
 """Pydantic schemas for product"""
-from typing import Optional
+from typing import Optional, List
 from pydantic import BaseModel, ConfigDict
 from .directory import DirDepartment
 
 
 # === PRODUCT SCHEMAS ===
 
-class ProductBase(BaseModel):
+class SchemaProductBase(BaseModel):
     """Общие поля для продукта (без id)"""
     name: str
+    department_id: int
     description: Optional[str] = None
-    department: DirDepartment = None
+    model_config = ConfigDict(from_attributes=True)
 
-class ProductCreate(ProductBase):
+class SchemaProductCreate(SchemaProductBase):
     """Схема для создания продукта — без id, все поля обязательны (кроме опциональных)"""
-    pass  # Можно добавить валидацию позже
+    pass 
 
-
-class ProductUpdate(BaseModel):
+class SchemaProductUpdate(BaseModel):
     """Схема для частичного обновления — все поля опциональны"""
     name: Optional[str] = None
     description: Optional[str] = None
     department: DirDepartment = None
 
-
-class ProductResponse(ProductBase):
+class SchemaProductResponse(SchemaProductBase):
     """Схема для ответа — включает id и поддержку ORM"""
     id: int
-    model_config = ConfigDict(from_attributes=True)
+    department: DirDepartment = None
+    component: List["SchemaProductComponentResponse"] = []
 
 
 # === PRODUCT COMPONENT SCHEMAS ===
 
-class ProductComponentBase(BaseModel):
+class SchemaProductComponentBase(BaseModel):
     """Общие поля для компонента продукта (без id)"""
     name: str
     description: Optional[str] = None
     quantity: int = 1
 
-
-class ProductComponentCreate(ProductComponentBase):
-    """Создание компонента — без id"""
-    product_id: int  # ← важно: компонент привязан к продукту
+    model_config = ConfigDict(from_attributes=True)
 
 
-class ProductComponentUpdate(BaseModel):
+class SchemaProductComponentCreate(SchemaProductComponentBase):
+    pass
+
+
+class SchemaProductComponentUpdate(BaseModel):
     """Частичное обновление компонента"""
     name: Optional[str] = None
     description: Optional[str] = None
     quantity: Optional[int] = None
 
 
-class ProductComponentResponse(ProductComponentBase):
-    """Ответ с компонентом — включает id и поддержку ORM"""
+class SchemaProductComponentResponse(SchemaProductComponentBase):
     id: int
-    model_config = ConfigDict(from_attributes=True)
+    product_id: int

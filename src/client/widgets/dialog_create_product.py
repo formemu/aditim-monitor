@@ -15,26 +15,21 @@ import warnings
 
 class DialogCreateProduct(QDialog):
     """Диалог для создания изделия с компонентами"""
-    product_created = Signal(dict)  # Сигнал об успешном создании изделия
-
     def __init__(self, parent=None):
         super().__init__(parent)
-        self.api_product = ApiProduct()
 
         self.load_ui()
+        self.load_department()
         self.setup_ui()
-        self.load_departments()
         self.setup_component_table()
 
     def load_ui(self):
         """Загружает UI из файла"""
         ui_file = QFile(UI_PATHS_ABS["DIALOG_CREATE_PRODUCT"])
         ui_file.open(QFile.ReadOnly)
-        
         loader = QUiLoader()
         self.ui = loader.load(ui_file, self)
         ui_file.close()
-
         # Устанавливаем заголовок и свойства диалога
         self.setWindowTitle("Создание изделия")
         self.setModal(True)
@@ -43,13 +38,11 @@ class DialogCreateProduct(QDialog):
     def setup_ui(self):
         """Настройка UI компонентов"""
         # Подключаем кнопки
-        self.ui.buttonBox.accepted.connect(self.on_create_clicked)
+        self.ui.buttonBox.accepted.connect(self.accept)
         self.ui.buttonBox.rejected.connect(self.reject)
-        
         # Настройка таблицы компонентов
         self.ui.tableWidget_components.setSelectionBehavior(QAbstractItemView.SelectRows)
         self.ui.tableWidget_components.setSelectionMode(QAbstractItemView.SingleSelection)
-        
         # Настройка ширины колонок: первая растягивается, вторая фиксированная
         self.ui.tableWidget_components.setColumnWidth(1, 120)  # Количество - фиксированная ширина
         self.ui.tableWidget_components.horizontalHeader().setStretchLastSection(False)
@@ -58,17 +51,14 @@ class DialogCreateProduct(QDialog):
     # =============================================================================
     # Управление департаментами
     # =============================================================================
-    def load_departments(self):
+    def load_department(self):
         """Загружает департаменты в combobox"""
-        departments = api_manager.get_department()
-        
         self.ui.comboBox_department.clear()
-        self.ui.comboBox_department.addItem("-- Выберите департамент --", 0)
-        
-        for dept_id, dept_name in departments.items():
-            if dept_id > 0:  # Пропускаем пустое значение
-                self.ui.comboBox_department.addItem(dept_name, dept_id)
-
+        for department in api_manager.department:
+            name = department['name']
+            department_id = department['id']
+            self.ui.comboBox_department.addItem(name, department_id)
+            
     # =============================================================================
     # Управление таблицей компонентов
     # =============================================================================
@@ -119,32 +109,11 @@ class DialogCreateProduct(QDialog):
                     self.ui.tableWidget_components.removeRow(row)
 
     # =============================================================================
-    # Валидация и сбор данных
+    # Сбор данных
     # =============================================================================
-    def validate_data(self) -> bool:
-        """Валидация введенных данных"""
-        # Проверяем название
-        name = self.ui.lineEdit_name.text().strip()
-        if not name:
-            QMessageBox.warning(self, "Ошибка", "Введите название изделия")
-            self.ui.lineEdit_name.setFocus()
-            return False
-        # Проверяем департамент
-        dept_id = self.ui.comboBox_department.currentData()
-        if not dept_id or dept_id == 0:
-            QMessageBox.warning(self, "Ошибка", "Выберите департамент")
-            self.ui.comboBox_department.setFocus()
-            return False
-        # Проверяем компоненты
-        component = self.get_component_from_table()
-        if not component:
-            QMessageBox.warning(self, "Ошибка", "Добавьте хотя бы один компонент с названием")
-            return False
-        return True
-
-    def get_component_from_table(self) -> List[Dict[str, Any]]:
+    def get_component(self):
         """Извлекает компоненты из таблицы"""
-        components = []
+        list_component = []
         for row in range(self.ui.tableWidget_components.rowCount()):
             # Получаем название компонента
             name_item = self.ui.tableWidget_components.item(row, 0)
@@ -155,44 +124,33 @@ class DialogCreateProduct(QDialog):
             # Получаем количество из SpinBox
             spinbox = self.ui.tableWidget_components.cellWidget(row, 1)
             quantity = spinbox.value() if spinbox else 1
-            components.append({
+            list_component.append({
                 'name': name,
                 'quantity': quantity,
                 'description': None  # Пока без описания, можно добавить позже
             })
-        
-        return components
-
-    def collect_data(self) -> Dict[str, Any]:
-        """Собирает данные из формы"""
-        # Основная информация об изделии
-        product_data = {
-            'name': self.ui.lineEdit_name.text().strip(),
-            'department_id': self.ui.comboBox_department.currentData(),
-            'description': self.ui.textEdit_description.toPlainText().strip()
-        }
-        # Собираем компоненты
-        list_component = self.get_component_from_table()
-        return {
-            'product': product_data,
-            'components': list_component
-        }
+        return list_component
 
     # =============================================================================
     # Создание изделия
     # =============================================================================
     @Slot()
-    def on_create_clicked(self):
+    def create_product(self):
         """Обработчик кнопки создания изделия"""
-        # Валидация
-        if self.validate_data():
-            # Собираем данные
-            data = self.collect_data()
-            # Создаем изделие
-            product_result = self.api_product.create_product(data['product'])
-            product_id = product_result['id']
-            # Добавляем компоненты
-            for component in data['components']:
-                self.api_product.create_product_component(product_id, component)
+        product = {
+            'name': self.ui.lineEdit_name.text().strip(),
+            'department_id': self.ui.comboBox_department.currentData(),
+            'description': self.ui.textEdit_description.toPlainText().strip()
+        }
+        # Создаем изделие
+        result = api_manager.api_product.create_product(product)
+        product_id = result['id']
+        # Создаем выбранные компоненты
+        for component in self.get_component():
+            api_manager.api_product.create_product_component(product_id, component)
 
-            self.accept()
+    
+    def accept(self):
+        self.create_product()
+        return super().accept()
+    

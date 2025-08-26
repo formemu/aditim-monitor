@@ -18,7 +18,7 @@ class DialogEditProfileTool(QDialog):
         self.setup_ui()
         # Заполняем форму данными инструмента
         self.fill_profile_tool()
-        self.fill_component_form()
+        self.fill_component()
 
     def load_ui(self):
         """Загружает UI из файла"""
@@ -43,13 +43,13 @@ class DialogEditProfileTool(QDialog):
         self.ui.tableWidget_components.setSelectionBehavior(QAbstractItemView.SelectRows)
         self.ui.tableWidget_components.setSelectionMode(QAbstractItemView.SingleSelection)
         self.ui.tableWidget_components.horizontalHeader().setStretchLastSection(True)
-        # view таблицы
-        self.setup_component_form()
 
         # Устанавливаем ширины колонок
         self.ui.tableWidget_components.setColumnWidth(0, 100)  # Использовать
         self.ui.tableWidget_components.setColumnWidth(1, 200)  # Тип компонента
         self.ui.tableWidget_components.setColumnWidth(2, 150)  # Статус
+
+        self.setup_component_form()
     # =============================================================================
     # Загрузка справочников и начальных данных
     # =============================================================================
@@ -65,7 +65,7 @@ class DialogEditProfileTool(QDialog):
         self.ui.textEdit_description.setPlainText(description)
         self.load_profile_sketch(profile)
 
-    def fill_component_form(self):
+    def fill_component(self):
         """Заполняет форму компонентами редактируемого инструмента профиля."""
         for component in self.profile_tool['component']:
             # Заполняем таблицу компонентами
@@ -163,11 +163,11 @@ class DialogEditProfileTool(QDialog):
     def update_profile_tool(self):
         """Обновляет существующий инструмент профиля"""
         description = self.ui.textEdit_description.toPlainText().strip()
-        tool_data = {
+        data = {
             "description": description
         }
         # Отправляем запрос на сервер для обновления инструмента
-        api_manager.api_profile_tool.update_profile_tool(self.profile_tool['id'], tool_data)
+        api_manager.api_profile_tool.update_profile_tool(self.profile_tool['id'], data)
 
     def update_tool_component(self):
         """Обновляет компоненты инструмента"""
