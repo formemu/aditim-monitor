@@ -4,7 +4,7 @@ from sqlalchemy import Column, Integer, String, LargeBinary, Text
 from sqlalchemy.orm import relationship
 from ..database import Base
 
-class Profile(Base):
+class ModelProfile(Base):
     """Профиль - абстрактная сущность, описание каким должен быть профиль"""
     __tablename__ = "profile"
     
@@ -13,4 +13,4 @@ class Profile(Base):
     description = Column(String, nullable=True)
     sketch = Column(Text)  # ← хранить как строку (Base64)
     # Связи
-    tool = relationship("ModelProfileTool", back_populates="profile", cascade="all, delete")
+    profile_tool = relationship("ModelProfileTool", back_populates="profile", cascade="all, delete")

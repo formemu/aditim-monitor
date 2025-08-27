@@ -1,11 +1,7 @@
-"""
-Модели для инструментов профилей
-"""
-
+"""Модели для инструментов профилей"""
 from sqlalchemy import Column, Integer, Text, ForeignKey
 from sqlalchemy.orm import relationship
 from ..database import Base
-
 
 class ModelProfileTool(Base):
     """Инструмент для изготовления профиля"""
@@ -17,10 +13,10 @@ class ModelProfileTool(Base):
     description = Column(Text)
     
     # Связи
-    profile = relationship("Profile", back_populates="tool")
-    dimension = relationship("DirToolDimension", back_populates="tool")
-    component = relationship("ModelProfileToolComponent", back_populates="tool", cascade="all, delete-orphan")
-    task = relationship("Task", back_populates="profile_tool")
+    profile = relationship("ModelProfile", back_populates="profile_tool")
+    dimension = relationship("ModelDirToolDimension", back_populates="profile_tool")
+    component = relationship("ModelProfileToolComponent", back_populates="profile_tool", cascade="all, delete-orphan")
+    task = relationship("ModelTask", back_populates="profile_tool")
 
 
 class ModelProfileToolComponent(Base):
@@ -35,7 +31,7 @@ class ModelProfileToolComponent(Base):
     status_id = Column(Integer, ForeignKey("dir_component_status.id"), nullable=False)
     
     # Связи
-    tool = relationship("ModelProfileTool", back_populates="component")
-    type = relationship("DirComponentType", back_populates="component")
-    status = relationship("DirComponentStatus", back_populates="component")
-    task_component = relationship("TaskComponent", back_populates="profile_tool_component")
+    profile_tool = relationship("ModelProfileTool", back_populates="component")
+    type = relationship("ModelDirComponentType", back_populates="component")
+    status = relationship("ModelDirComponentStatus", back_populates="component")
+    task_component = relationship("ModelTaskComponent", back_populates="profile_tool_component")

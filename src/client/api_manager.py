@@ -83,16 +83,20 @@ class ApiManager:
         try:
             self.profile = self.api_profile.get_profile()
             self.profile_loaded = True
+            print("данные о всех профилях обновились")
         except Exception as e:
             self.profile_loaded = False
+            print("ошибка при загрузке профилей:", e)
 
     def load_profile_tool(self):
         """загрузка инструментов профилей"""
         try:
             self.profile_tool = self.api_profile_tool.get_profile_tool()
             self.profile_tool_loaded = True
+            print("данные о всех инструментах профилей обновились")
         except Exception as e:
             self.profile_tool_loaded = False
+            print("ошибка при загрузке инструментов профилей:", e)
 
     def load_profile_tool_component_by_id(self, item_id):
         """загрузка компонентов инструмента профилей"""
@@ -106,8 +110,10 @@ class ApiManager:
         try:
             self.product = self.api_product.get_product()
             self.product_loaded = True
+            print("данные о всех изделиях обновились")
         except Exception as e:
             self.product_loaded = False
+            print("ошибка при загрузке изделий:", e)
 
     def load_product_component_by_id(self, item_id):
         """загрузка компонентов изделий"""
@@ -121,7 +127,9 @@ class ApiManager:
         try:
             self.task = self.api_task.get_task()
             self.task_loaded = True
+            print("данные о всех задачах обновились")
         except Exception as e:
+            print("ошибка при загрузке задач:", e)
             self.task_loaded = False
 
     # Базовые методы загрузки справочников
@@ -131,41 +139,50 @@ class ApiManager:
         try:
             self.department = self.api_directory.get_department()
             self.department_loaded = True
+            print("данные о всех департаментах обновились")
         except Exception as e:
             self.department_loaded = False
-    
+            print("ошибка при загрузке департаментов:", e)
+
     def load_component_type(self):
         """загрузка типов компонентов"""
         try:
             self.component_type = self.api_directory.get_component_type()
             self.component_type_loaded = True
+            print("данные о всех типах компонентов обновились")
         except Exception as e:
             self.component_type_loaded = False
-    
+            print("ошибка при загрузке типов компонентов:", e)
+
     def load_component_status(self):
         """загрузка статусов"""
         try:
-            # Загружаем статусы компонентов из API
             self.component_status = self.api_directory.get_component_status()
             self.component_status_loaded = True
+            print("данные о всех статусах компонентов обновились")
         except Exception as e:
             self.component_status_loaded = False
+            print("ошибка при загрузке статусов компонентов:", e)
 
     def load_task_status(self):
         """загрузка статусов задач"""
         try:
             self.task_status = self.api_directory.get_task_status()
             self.task_status_loaded = True
+            print("данные о всех статусах задач обновились")
         except Exception as e:
             self.task_status_loaded = False
+            print("ошибка при загрузке статусов задач:", e)
 
     def load_profile_tool_dimension(self):
         """загрузка размерностей профилей"""
         try:
             self.profile_tool_dimension = self.api_directory.get_tool_dimension()
             self.profile_tool_dimension_loaded = True
+            print("данные о всех размерностях профилей обновились")
         except Exception as e:
             self.profile_tool_dimension_loaded = False
+            print("ошибка при загрузке размерностей профилей:", e)
 
     # асинхронное обновление справочников
     def refresh_department_async(self):
@@ -267,6 +284,14 @@ class ApiManager:
         """Поиск профиля по артикулу"""
         return next((p for p in self.profile if p['id'] == id), None)
 
+    def get_profile_tool_by_id(self, id):
+        """Поиск инструмента профиля по идентификатору"""
+        return next((pt for pt in self.profile_tool if pt['id'] == id), None)
+
+    def get_product_by_id(self, id):
+        """Поиск продукта по идентификатору"""
+        return next((p for p in self.product if p['id'] == id), None)
+
     # Поиск профилей по артикулу
     def get_search_profile(self, find_article):
         """Поиск профилей по артикулу"""
@@ -274,13 +299,7 @@ class ApiManager:
         for profile in self.profile:
             article = profile['article']
             if find_article in article:
-                results.append({
-                    'id': profile['id'],
-                    'article': profile['article'],
-                    'description': profile['description'],
-                    'sketch': profile['sketch']
-                })
-        
+                results.append(profile)       
         return results
 
 # Глобальный экземпляр менеджера справочников

@@ -4,7 +4,6 @@ from .api_client import ApiClient
 
 class ApiProfile(ApiClient):
     """API для профилей"""
-    
     def get_profile(self):
         """Получение всех профилей"""
         return self._request("GET", "/api/profile")

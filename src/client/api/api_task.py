@@ -7,11 +7,11 @@ class ApiTask(ApiClient):
 
     def get_task(self):
         """Получение всех задач"""
-        return self._request("GET", "api/task/")
+        return self._request("GET", "api/task")
 
     def create_task(self, task_data):
         """Создание новой задачи"""
-        return self._request("POST", "api/task/", json=task_data)
+        return self._request("POST", "api/task", json=task_data)
 
     def update_task_status(self, task_id, status_id):
         """Обновление статуса задачи"""

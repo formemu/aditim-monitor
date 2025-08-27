@@ -1,5 +1,4 @@
 """Содержимое профилей для ADITIM Monitor Client"""
-import os
 import base64
 from PySide6.QtWidgets import QWidget, QMessageBox, QTableWidgetItem, QAbstractItemView, QHeaderView, QDialog
 from PySide6.QtCore import QFile, Qt, QTimer
@@ -16,8 +15,8 @@ class WindowProfile(QWidget):
     """Виджет содержимого профилей с таблицей, фильтрацией и просмотром эскизов"""
     def __init__(self):
         super().__init__()
-        self.profile = None  # Текущий профиль
-        self.selected_row = None  # Индекс выбранной строки
+        self.profile = None
+        self.selected_row = None
         self.load_ui()
         self.setup_ui()
 
@@ -84,17 +83,18 @@ class WindowProfile(QWidget):
         header = table.horizontalHeader()
         header.setSectionResizeMode(0, QHeaderView.ResizeToContents)
         header.setSectionResizeMode(1, QHeaderView.Stretch)
+        
         for row, profile in enumerate(api_manager.profile):
-            article = profile.get('article')
+            article = profile['article']
             table.setItem(row, 0, QTableWidgetItem(article))
-            description = profile.get('description')
+            description = profile['description']
             table.setItem(row, 1, QTableWidgetItem(description))
         
     def update_profile_info_panel(self):
         """Обновление панели информации о профиле"""
         self.profile = api_manager.profile[self.selected_row]
-        article = self.profile.get('article')
-        description = self.profile.get('description')
+        article = self.profile['article']
+        description = self.profile['description']
         self.load_and_show_sketch()
         self.ui.label_profile_article.setText(f"Артикул: {article}")
         self.ui.label_profile_description.setText(f"Описание: {description}")
@@ -106,7 +106,7 @@ class WindowProfile(QWidget):
 
     def load_and_show_sketch(self):
         """Отображение эскиза профиля"""
-        sketch_data = self.profile.get('sketch')
+        sketch_data = self.profile['sketch']
         if not sketch_data:
             self.ui.label_sketch.setText("Эскиз отсутствует")
             return

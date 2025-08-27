@@ -1,14 +1,11 @@
-"""
-Task models for ADITIM Monitor
-"""
+"""Task models for ADITIM Monitor"""
 
 from sqlalchemy import Column, Integer, String, ForeignKey, Text, DateTime, Date
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
 from ..database import Base
 
-
-class Task(Base):
+class ModelTask(Base):
     __tablename__ = "task"
     id = Column(Integer, primary_key=True, index=True)
     product_id = Column(Integer, ForeignKey("product.id"), nullable=True)
@@ -17,17 +14,16 @@ class Task(Base):
     deadline_on = Column(Date, nullable=True)
     position = Column(Integer, nullable=True)
     status_id = Column(Integer, ForeignKey("dir_task_status.id"), nullable=False, default=1)
-    created_at = Column(DateTime, server_default=func.now())
+    created_at = Column(Date, server_default=func.now())
     description = Column(Text, nullable=True)
 
     # Relationships
     product = relationship("ModelProduct", back_populates="task")
     profile_tool = relationship("ModelProfileTool", back_populates="task")
-    status = relationship("DirTaskStatus", back_populates="task")
-    component = relationship("TaskComponent", back_populates="task", cascade="all, delete-orphan")
+    status = relationship("ModelDirTaskStatus", back_populates="task")
+    component = relationship("ModelTaskComponent", back_populates="task", cascade="all, delete-orphan")
 
-
-class TaskComponent(Base):
+class ModelTaskComponent(Base):
     """Компонент задачи - связь между задачей и конкретными компонентами"""
     __tablename__ = "task_component"
     
@@ -41,6 +37,6 @@ class TaskComponent(Base):
     quantity = Column(Integer, nullable=False, default=1)
 
     # Relationships
-    task = relationship("Task", back_populates="component")
+    task = relationship("ModelTask", back_populates="component")
     profile_tool_component = relationship("ModelProfileToolComponent", back_populates="task_component")
     product_component = relationship("ModelProductComponent", back_populates="task_component")

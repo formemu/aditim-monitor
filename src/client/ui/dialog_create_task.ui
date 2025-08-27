@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>600</width>
-    <height>500</height>
+    <height>606</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -20,7 +20,7 @@
    <item>
     <widget class="QTabWidget" name="tabWidget">
      <property name="currentIndex">
-      <number>1</number>
+      <number>0</number>
      </property>
      <widget class="QWidget" name="tab_profile_tool">
       <attribute name="title">
@@ -28,33 +28,31 @@
       </attribute>
       <layout class="QVBoxLayout" name="verticalLayout">
        <item>
+        <widget class="QGroupBox" name="groupBox">
+         <property name="title">
+          <string>Выбор выбор профиля</string>
+         </property>
+         <layout class="QVBoxLayout" name="verticalLayout_4">
+          <item>
+           <widget class="QLineEdit" name="lineEdit_profile_search">
+            <property name="placeholderText">
+             <string>Поиск профиля...</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QListWidget" name="listWidget_profile_results"/>
+          </item>
+         </layout>
+        </widget>
+       </item>
+       <item>
         <widget class="QGroupBox" name="groupBox_profile_tool_instrument">
          <property name="title">
           <string>Выбор инструмента</string>
          </property>
-         <layout class="QFormLayout" name="formLayout_instrument">
-          <item row="0" column="0">
-           <widget class="QLabel" name="label_profile_tool_profile">
-            <property name="text">
-             <string>Профиль:</string>
-            </property>
-           </widget>
-          </item>
-          <item row="0" column="1">
-           <widget class="QComboBox" name="comboBox_profile_tool_profile">
-            <property name="placeholderText">
-             <string>Выберите профиль...</string>
-            </property>
-           </widget>
-          </item>
-          <item row="1" column="0">
-           <widget class="QLabel" name="label_profile_tool_tool">
-            <property name="text">
-             <string>Инструмент:</string>
-            </property>
-           </widget>
-          </item>
-          <item row="1" column="1">
+         <layout class="QVBoxLayout" name="verticalLayout_3">
+          <item>
            <widget class="QComboBox" name="comboBox_profile_tool_tool">
             <property name="enabled">
              <bool>false</bool>
@@ -84,7 +82,7 @@
                <x>0</x>
                <y>0</y>
                <width>536</width>
-               <height>113</height>
+               <height>54</height>
               </rect>
              </property>
              <layout class="QVBoxLayout" name="verticalLayout_checkboxes"/>
@@ -191,7 +189,7 @@
                <x>0</x>
                <y>0</y>
                <width>536</width>
-               <height>128</height>
+               <height>181</height>
               </rect>
              </property>
              <layout class="QVBoxLayout" name="verticalLayout_checkboxes_2"/>

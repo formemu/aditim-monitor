@@ -2,7 +2,6 @@
 from typing import Optional, List
 from pydantic import BaseModel, ConfigDict
 from ..schemas.directory import DirToolDimension, DirComponentStatus, DirComponentType
-from ..schemas.profile import ProfileBase
 
 
 # === PROFILE TOOL SCHEMAS ===
@@ -21,7 +20,7 @@ class SchemaProfileToolUpdate(BaseModel):
 
 class SchemaProfileToolResponse(SchemaProfileToolBase):
     id: int
-    profile: Optional[ProfileBase] = None
+    profile: Optional["SchemaProfileBase"] = None
     dimension: Optional[DirToolDimension] = None
     component: List["SchemaProfileToolComponentResponse"] = []
 

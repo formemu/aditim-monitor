@@ -5,11 +5,11 @@ from sqlalchemy.orm import Session
 
 from ..database import get_db
 from ..models.directory import (
-    DirDepartment as DirDepartmentModel,
-    DirTaskStatus as DirTaskStatusModel,
-    DirComponentType as DirComponentTypeModel,
-    DirComponentStatus as DirComponentStatusModel,
-    DirToolDimension as DirToolDimensionModel,
+    ModelDirDepartment as DirDepartmentModel,
+    ModelDirTaskStatus as DirTaskStatusModel,
+    ModelDirComponentType as DirComponentTypeModel,
+    ModelDirComponentStatus as DirComponentStatusModel,
+    ModelDirToolDimension as DirToolDimensionModel,
 )
 from ..schemas.directory import (
     DirDepartment,

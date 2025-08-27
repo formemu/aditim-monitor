@@ -5,23 +5,23 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 
 from ..database import get_db
-from ..models.profile import Profile
-from ..schemas.profile import ProfileCreate, ProfileUpdate, ProfileResponse
+from ..models.profile import ModelProfile
+from ..schemas.profile import SchemaProfileCreate, SchemaProfileUpdate, SchemaProfileResponse
 
 router = APIRouter(prefix="/api", tags=["profiles"])
 
 # =============================================================================
 # ROUTER.GET
 # =============================================================================
-@router.get("/profile", response_model=List[ProfileResponse])
+@router.get("/profile", response_model=List[SchemaProfileResponse])
 def get_profile(db: Session = Depends(get_db)):
-    return db.query(Profile).all()
+    return db.query(ModelProfile).all()
 
 # =============================================================================
 # ROUTER.POST
 # =============================================================================
-@router.post("/profile", response_model=ProfileResponse)
-def create_profile(profile: ProfileCreate, db: Session = Depends(get_db)):
+@router.post("/profile", response_model=SchemaProfileResponse)
+def create_profile(profile: SchemaProfileCreate, db: Session = Depends(get_db)):
     profile_data = profile.model_dump()
 
     if profile_data.get("sketch"):
@@ -31,7 +31,7 @@ def create_profile(profile: ProfileCreate, db: Session = Depends(get_db)):
             sketch_str = sketch_str.split(",", 1)[1]
         profile_data["sketch"] = sketch_str  # ← строка
 
-    db_profile = Profile(**profile_data)
+    db_profile = ModelProfile(**profile_data)
     db.add(db_profile)
     db.commit()
     db.refresh(db_profile)
@@ -40,10 +40,10 @@ def create_profile(profile: ProfileCreate, db: Session = Depends(get_db)):
 # =============================================================================
 # ROUTER.PUT
 # =============================================================================
-@router.put("/profile/{profile_id}", response_model=ProfileResponse)
-def update_profile(profile_id: int, profile: ProfileUpdate, db: Session = Depends(get_db)):
+@router.put("/profile/{profile_id}", response_model=SchemaProfileResponse)
+def update_profile(profile_id: int, profile: SchemaProfileUpdate, db: Session = Depends(get_db)):
     """Обновить профиль"""
-    db_profile = db.query(Profile).filter(Profile.id == profile_id).first()
+    db_profile = db.query(ModelProfile).filter(ModelProfile.id == profile_id).first()
     if not db_profile:
         raise HTTPException(status_code=404, detail="Profile not found")
 
@@ -78,7 +78,7 @@ def update_profile(profile_id: int, profile: ProfileUpdate, db: Session = Depend
 # =============================================================================
 @router.delete("/profile/{profile_id}", response_model=dict)
 def delete_profile(profile_id: int, db: Session = Depends(get_db)):
-    db_profile = db.query(Profile).filter(Profile.id == profile_id).first()
+    db_profile = db.query(ModelProfile).filter(ModelProfile.id == profile_id).first()
     if not db_profile:
         raise HTTPException(status_code=404, detail="Profile not found")
 

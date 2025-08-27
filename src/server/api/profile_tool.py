@@ -1,5 +1,4 @@
 """API routes for profile tool"""
-
 from typing import List
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
@@ -19,7 +18,6 @@ router = APIRouter(prefix="/api", tags=["profile-tool"])
 # =============================================================================
 # ROUTER.GET
 # =============================================================================
-
 @router.get("/profile-tool", response_model=List[SchemaProfileToolResponse])
 def get_profile_tool(db: Session = Depends(get_db)):
     """Получить все инструменты профиля"""
@@ -92,15 +90,6 @@ def update_profile_tool( tool_id: int, tool: SchemaProfileToolUpdate, db: Sessio
 # =============================================================================
 # ROUTER.DELETE
 # =============================================================================
-@router.delete("/profile/{profile_id}/profile-tool")
-def delete_profile_tool_by_profile(profile_id: int, db: Session = Depends(get_db)):
-    """Удалить все инструменты профиля (и их компоненты) по ID профиля"""
-    deleted_count = db.query(ModelProfileTool).filter(ModelProfileTool.profile_id == profile_id).delete()
-    if deleted_count == 0:
-        raise HTTPException(status_code=404, detail="Инструменты не найдены")
-    db.commit()
-    return {"detail": f"Удалены все инструменты и компоненты профиля {profile_id}"}
-
 @router.delete("/profile-tool/{tool_id}", response_model=dict)
 def delete_profile_tool(tool_id: int, db: Session = Depends(get_db)):
     """Удалить инструмент профиля по ID"""
@@ -110,6 +99,15 @@ def delete_profile_tool(tool_id: int, db: Session = Depends(get_db)):
     db.delete(tool)
     db.commit()
     return {"detail": "Инструмент и его компоненты удалены успешно"}
+
+@router.delete("/profile/{profile_id}/profile-tool")
+def delete_profile_tool_by_profile(profile_id: int, db: Session = Depends(get_db)):
+    """Удалить все инструменты профиля (и их компоненты) по ID профиля"""
+    deleted_count = db.query(ModelProfileTool).filter(ModelProfileTool.profile_id == profile_id).delete()
+    if deleted_count == 0:
+        raise HTTPException(status_code=404, detail="Инструменты не найдены")
+    db.commit()
+    return {"detail": f"Удалены все инструменты и компоненты профиля {profile_id}"}
 
 @router.delete("/profile-tool/{tool_id}/component", response_model=dict)
 def delete_all_profile_tool_components(tool_id: int, db: Session = Depends(get_db)):

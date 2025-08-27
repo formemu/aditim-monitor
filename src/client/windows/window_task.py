@@ -1,14 +1,10 @@
-"""
-Содержимое задач для ADITIM Monitor Client
-"""
-from PySide6.QtWidgets import QWidget, QMessageBox, QTableWidgetItem, QAbstractItemView,  QMenu, QHeaderView
+"""Содержимое задач для ADITIM Monitor Client"""
+from PySide6.QtWidgets import QWidget, QTableWidgetItem, QAbstractItemView,  QMenu, QHeaderView, QDialog
 from PySide6.QtCore import QFile, Qt, QTimer
 from PySide6.QtGui import QAction
 from PySide6.QtUiTools import QUiLoader
-from datetime import datetime
 from ..constant import UI_PATHS_ABS as UI_PATHS, get_style_path
 from ..widgets.dialog_create_task import DialogCreateTask
-from ..api.api_task import ApiTask
 from ..style_util import load_styles
 from ..api_manager import api_manager
 
@@ -17,10 +13,11 @@ class WindowTask(QWidget):
     """Виджет содержимого задач"""
     def __init__(self):
         super().__init__()
-        self.api_task = ApiTask()
-        self.task_data = None  # Кэш задач
+        self.task = None
+        self.selected_row = None
         self.load_ui()
         self.setup_ui()
+
     # =============================================================================
     # ИНИЦИАЛИЗАЦИЯ И ЗАГРУЗКА ИНТЕРФЕЙСА
     # =============================================================================
@@ -56,101 +53,61 @@ class WindowTask(QWidget):
     # =============================================================================
     def refresh_data(self):
         """Принудительное обновление данных"""
-        self.task_data = []
-        self.dict_task_position = {}
-        self.load_data_from_server()
-        self.create_dict_task_position()
+        api_manager.refresh_task_async()
+        self.update_task_table()
+        if self.selected_row is not None:
+            self.update_task_info_panel()
 
-    def load_data_from_server(self):
-        """Загрузка задач с сервера"""
-        task = self.api_task.get_task()
-        if self.skip_update(self.task_data, task):
-            return
-        self.task_data = task
-        self.update_task_table(self.task_data)
-
-    def create_dict_task_position(self):
-        """Формирует словарь: задача_id -> позиция"""
-        if not self.task_data:
-            return {}
-        self.dict_task_position = {}
-        for task in self.task_data:
-            self.dict_task_position[task.get('id')] = task.get('position')
-        return self.dict_task_position
-    
     # =============================================================================
     # ОТОБРАЖЕНИЕ ДАННЫХ: ТАБЛИЦЫ И ИНФОРМАЦИОННЫЕ ПАНЕЛИ
     # =============================================================================
-    def update_task_table(self, list_task):
+    def update_task_table(self):
         """Обновление таблицы задач с корректным отображением и заполнением по ширине"""
         table = self.ui.tableWidget_tasks
-        table.setRowCount(len(list_task))
+        table.setRowCount(len(api_manager.task))
         table.setColumnCount(6) 
-
         # Заголовки столбцов
-        table.setHorizontalHeaderLabels([
-            "Название", "Статус", "Позиция", "Срок", "Создано", "Описание"
-        ])
-
+        table.setHorizontalHeaderLabels(["Название", "Статус", "Позиция", "Срок", "Создано", "Описание"])
         header = table.horizontalHeader()
-        
         for col in range(table.columnCount() - 1):
             header.setSectionResizeMode(col, QHeaderView.ResizeToContents)
         header.setSectionResizeMode(table.columnCount() - 1, QHeaderView.Stretch)
-        for row, task in enumerate(list_task):
-            # Название задачи
+
+        for row, task in enumerate(api_manager.task):
             name = self.get_task_name(task)
             table.setItem(row, 0, QTableWidgetItem(name))
-
-            # Статус
-            status = task.get('status')
+            status = task['status']['name']
             table.setItem(row, 1, QTableWidgetItem(status))
-
-            # Позиция
-            position = str(task.get('position'))
+            position = str(task['position'])
             table.setItem(row, 2, QTableWidgetItem(position))
-
-            # Срок
-            deadline = task.get('deadline_on')
+            deadline = task['deadline_on']
             table.setItem(row, 3, QTableWidgetItem(deadline))
-
-            # Дата создания
-            created = task.get('created_at')
+            created = task['created_at']
             table.setItem(row, 4, QTableWidgetItem(created))
-            # Описание
-            description = task.get('description')
+            description = task['description']
             table.setItem(row, 5, QTableWidgetItem(description))
 
-    def skip_update(self, current_data, new_data):
-        """Проверка, нужно ли обновлять таблицу"""
-        is_table_empty = self.ui.tableWidget_tasks.rowCount() == 0
-        # Если таблица пуста — всегда обновляем
-        if is_table_empty:
-            return False
-        # Если данные не изменились и таблица не пуста — пропускаем обновление
-        if current_data is not None and new_data == current_data:
-            return True
-        # В остальных случаях — обновляем
-        return False
-
-    def get_task_name(self, task):
-        """Возвращает название задачи: артикул профиля или имя изделия"""
-        if task.get('profile_tool_id'):
-            profile_tool = api_manager.get_profile_tool().get(task['profile_tool_id'])
-            return f"Инструмент {profile_tool['name']}"
-        product = api_manager.get_product().get(task.get('product_id'))
-        return f"Изделие {product['name']}" if product else "Изделие N/A"
-
-    def update_info_panel(self, task):
+    def update_task_info_panel(self):
         """Обновление панели информации о задаче"""
-        name = self.get_task_name(task)
-        deadline = task.get('deadline_on')
-        created = task.get('created_at')
-        status = task.get('status')
+        self.task = api_manager.task[self.selected_row]
+        name = self.get_task_name(self.task)
+        deadline = self.task['deadline_on']
+        created = self.task['created_at']
+        status = self.task['status']['name']
         self.ui.label_task_name.setText(f"Название: {name}")
         self.ui.label_task_info.setText(f"Статус: {status} | Срок: {deadline} | Создано: {created}")
 
-    def clear_info_panel(self):
+    def get_task_name(self, task):
+        """Возвращает название задачи: артикул профиля или имя изделия"""
+        if task['profile_tool_id']:
+            profile_tool = api_manager.get_profile_tool_by_id(task['profile_tool_id'])
+            return f"Инструмент {profile_tool['profile']['article']}"
+        elif task['product_id']:
+            product = api_manager.get_product_by_id(task['product_id'])
+            return f"Изделие {product['name']}" if product else "Изделие N/A"
+        return print("ошибка тут: WindowTask.get_task_name")
+
+    def clear_task_info_panel(self):
         """Очистка панели задачи"""
         self.ui.label_task_name.setText("Название: -")
         self.ui.label_task_info.setText("Статус: - | Срок: - | Создано: -")
@@ -199,68 +156,51 @@ class WindowTask(QWidget):
     def on_create_task(self):
         """Открытие диалога создания задачи"""
         dialog = DialogCreateTask(self)
-        dialog.task_created.connect(self.refresh_data)
-        dialog.exec()
+        if dialog.exec() == QDialog.Accepted:
+            self.refresh_data()
 
     def on_delete_clicked(self):
         """Удаление задачи с подтверждением"""
-        row = self.get_selected_row()
-        task = self.task_data[row]
-        self.api_task.delete_task(task['id'])
+        api_manager.api_task.delete_task(self.task['id'])
         self.refresh_data()
-
-    def get_selected_row(self):
-        """Возвращает индекс выбранной строки или None"""
-        selected = self.ui.tableWidget_tasks.selectedItems()
-        return selected[0].row() if selected else None
 
     def show_context_menu(self, pos):
         """Показать контекстное меню для изменения статуса задачи"""
         table = self.ui.tableWidget_tasks
-        index = table.indexAt(pos)
-        if not index.isValid():
-            return
-
-        row = index.row()
-        task = self.task_data[row]
-        status_dict = api_manager.get_task_status()
-
         menu = QMenu(table)
         status_menu = QMenu("Изменить статус", menu)
-
-        current_status_id = task.get('task_status_id')
-        for status_id, status_name in status_dict.items():
-            action = QAction(status_name, status_menu)
+        for status in api_manager.task_status:
+            action = QAction(status['name'], status_menu)
             action.setCheckable(True)
-            action.setChecked(status_id == current_status_id)
-            action.triggered.connect(lambda checked, sid=status_id, r=row: self.change_task_status(r, sid))
+            action.triggered.connect(lambda _, sid=status['id']: self.change_task_status(sid))
             status_menu.addAction(action)
-
         menu.addMenu(status_menu)
         menu.exec(table.viewport().mapToGlobal(pos))
 
-    def change_task_status(self, row, status_id):
+    def change_task_status(self, status_id):
         """Изменить статус задачи через API"""
-        task = self.task_data[row]
-        try:
-            self.api_task.update_task_status(task['id'], status_id)
-            self.refresh_data()
-        except Exception as e:
-            QMessageBox.critical(self, "Ошибка", f"Не удалось изменить статус: {e}")
-    
+        api_manager.api_task.update_task_status(self.task['id'], status_id)
+        self.refresh_data()
+
+    def get_selected_row(self):
+        """Возвращает выбранную задачу или None"""
+        selected = self.ui.tableWidget_tasks.selectedItems()
+        if selected:
+            return selected[0].row()
+        else:
+            return None
+
     # =============================================================================
     # ОБРАБОТЧИКИ СОБЫТИЙ: ВЫДЕЛЕНИЕ И ПОИСК
     # =============================================================================
     def on_selection_changed(self):
         """Обработка выбора задачи"""
-        row = self.get_selected_row()
-        if row is not None:
-            task = self.task_data[row]
-            self.update_info_panel(task)
-            self.load_component(task['id'])
+        self.selected_row = self.get_selected_row()
+        if self.selected_row is not None:
+            self.update_task_info_panel()
         else:
-            self.clear_info_panel()
-            self.clear_component()
+            self.selected_row = None
+            self.clear_task_info_panel()
 
     def filter_table(self):
         """Фильтрация строк таблицы по первому столбцу"""
@@ -277,7 +217,7 @@ class WindowTask(QWidget):
         """Запуск автообновления"""
         if not self.update_timer.isActive():
             self.update_timer.start(5000)
-            self.load_data_from_server()
+            self.refresh_data()
 
     def stop_auto_refresh(self):
         """Остановка автообновления"""

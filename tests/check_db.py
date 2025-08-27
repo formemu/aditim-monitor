@@ -16,9 +16,9 @@ sys.path.insert(0, str(project_root))
 
 try:
     from src.server.database import engine, Base
-    from src.server.models.task import Task
+    from src.server.models.task import ModelTask
     from src.server.models.product import ModelProduct, Profile
-    from src.server.models.directory import DirDepartment, DirTaskStatus
+    from src.server.models.directory import ModelDirDepartment, ModelDirTaskStatus
 except ImportError as e:
     print(f"Error importing modules: {e}")
     print("Make sure you're running from the project root directory")
@@ -43,14 +43,14 @@ def get_table_stats(session):
     # Tasks statistics
     try:
         stats['tasks'] = {
-            'total': session.query(Task).count(),
+            'total': session.query(ModelTask).count(),
             'by_status': {}
         }
         
         # Tasks by status
-        statuses = session.query(DirTaskStatus).all()
+        statuses = session.query(ModelDirTaskStatus).all()
         for status in statuses:
-            count = session.query(Task).filter(Task.status_id == status.id).count()
+            count = session.query(ModelTask).filter(ModelTask.status_id == status.id).count()
             stats['tasks']['by_status'][status.name] = count
             
     except Exception as e:
@@ -71,8 +71,8 @@ def get_table_stats(session):
     # Directories statistics
     try:
         stats['directories'] = {
-            'departments': session.query(DirDepartment).count(),
-            'statuses': session.query(DirTaskStatus).count()
+            'departments': session.query(ModelDirDepartment).count(),
+            'statuses': session.query(ModelDirTaskStatus).count()
         }
     except Exception as e:
         stats['directories'] = {'error': str(e)}

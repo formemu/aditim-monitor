@@ -1,11 +1,7 @@
-"""
-Product models for ADITIM Monitor
-"""
-
+"""Product models for ADITIM Monitor"""
 from sqlalchemy import Column, Integer, String, ForeignKey, Text
 from sqlalchemy.orm import relationship
 from ..database import Base
-
 
 class ModelProduct(Base):
     __tablename__ = "product"
@@ -15,9 +11,9 @@ class ModelProduct(Base):
     department_id = Column(Integer, ForeignKey("dir_department.id"), nullable=False)
     
     # Связи
-    department = relationship("DirDepartment", back_populates="product")
+    department = relationship("ModelDirDepartment", back_populates="product")
     component = relationship("ModelProductComponent", back_populates="product", cascade="all, delete-orphan")
-    task = relationship("Task", back_populates="product")
+    task = relationship("ModelTask", back_populates="product")
 
 
 class ModelProductComponent(Base):
@@ -30,4 +26,4 @@ class ModelProductComponent(Base):
     
     # Связи
     product = relationship("ModelProduct", back_populates="component")
-    task_component = relationship("TaskComponent", back_populates="product_component")
+    task_component = relationship("ModelTaskComponent", back_populates="product_component")

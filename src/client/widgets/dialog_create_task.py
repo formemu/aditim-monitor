@@ -1,119 +1,99 @@
 """Диалог создания задачи для инструмента."""
-
 from datetime import date, timedelta
 from typing import Dict, List, Optional
-
-from PySide6.QtCore import QDate, QFile, Signal, Slot
+from PySide6.QtCore import QDate, QFile, Slot, Qt
 from PySide6.QtUiTools import QUiLoader
-from PySide6.QtWidgets import (QCheckBox, QDialog, QVBoxLayout, QWidget, QSpinBox)
+from PySide6.QtWidgets import QCheckBox, QDialog, QWidget, QListWidgetItem
 
-from ..api.api_profile_tool import ApiProfileTool
-from ..api.api_product import ApiProduct
-from ..api.api_task import ApiTask
 from ..api_manager import api_manager
 from ..constant import UI_PATHS_ABS
 
-
 class DialogCreateTask(QDialog):
     """Диалог создания новой задачи для инструмента."""
-    
-    task_created = Signal(dict)
-    
     def __init__(self, parent: Optional[QWidget] = None):
         super().__init__(parent)
-        
-        self.ui: QWidget = None
-        self.api_profile_tool = ApiProfileTool()
-        self.api_product = ApiProduct()
-        self.api_task = ApiTask()
-
-        # Данные для работы
-        self.profile_tool: Dict[str, str] = {}
-        self.dict_profile_tool_component_checkbox: Dict[int, QCheckBox] = {}
-
-        # Данные для работы с изделиями
-        self.product: Dict[str, str] = {}
-        self.dict_product_component_checkbox: Dict[int, QCheckBox] = {}
-        self.dict_product_component_spinbox: Dict[int, QSpinBox] = {} 
-        
-        
+        self.profile = None
+        self.profile_tool = None
+        self.list_profile_tool_component = None
+        self.product = None
+        self.list_product_component = None
         self.load_ui()
         self.setup_ui()
    
     def load_ui(self) -> None:
         """Загрузка UI из файла."""
         ui_file = QFile(UI_PATHS_ABS["DIALOG_CREATE_TASK"])
-                
         loader = QUiLoader()
         self.ui = loader.load(ui_file)
         ui_file.close()
-        
         # Устанавливаем заголовок и свойства диалога
         self.setWindowTitle("Создание задачи")
         self.setModal(True)
-        
         self.setLayout(self.ui.layout())
     
     def setup_ui(self) -> None:
         """Настройка элементов интерфейса."""
         # Подключение сигналов для инструментов
-        self.ui.comboBox_profile_tool_profile.currentTextChanged.connect(self.on_profile_changed)
+        self.ui.lineEdit_profile_search.textChanged.connect(self.on_profile_search_changed)
+        self.ui.listWidget_profile_results.itemClicked.connect(self.on_profile_selected)
         self.ui.comboBox_profile_tool_tool.currentTextChanged.connect(self.on_tool_changed)
-        
         # Подключение сигналов для изделий
         self.ui.comboBox_product.currentTextChanged.connect(self.on_product_changed)
-
         # Подключение сигналов для переключения вкладок
         self.ui.tabWidget.currentChanged.connect(self.update_create_button_state)
-
         # Общие кнопки
         self.ui.pushButton_create.clicked.connect(self.create_task)
-        self.ui.pushButton_cancel.clicked.connect(self.reject)
-        
         # Настройка даты по умолчанию (неделя от сегодня)
         default_date = date.today() + timedelta(days=7)
         self.ui.dateEdit_profile_tool_deadline.setDate(QDate.fromString(default_date.isoformat(), "yyyy-MM-dd"))
         self.ui.dateEdit_product_deadline.setDate(QDate.fromString(default_date.isoformat(), "yyyy-MM-dd"))
-        
         # Минимальная дата - сегодня
         self.ui.dateEdit_profile_tool_deadline.setMinimumDate(QDate.currentDate())
         self.ui.dateEdit_product_deadline.setMinimumDate(QDate.currentDate())
-
-        for profile_tool in self.api_profile_tool.get_profile_tool():
-            self.ui.comboBox_profile_tool_profile.addItem(profile_tool["profile_article"], profile_tool["profile_id"])
-
-        for product in self.api_product.get_product():
-            self.ui.comboBox_product.addItem(product["name"], product["id"])
 
     # =============================================================================
     # Управление вкладкой с инструментами профиля
     # =============================================================================
     @Slot(str)
-    def on_profile_changed(self, profile_article: str):
+    def on_profile_search_changed(self, text):
+        """Обработчик изменения поискового запроса"""
+        self.ui.listWidget_profile_results.clear()
+        # Ищем профили через api_manager
+        search_results = api_manager.get_search_profile(text)
+        for profile in search_results[:10]:  # Показываем максимум 10 результатов
+            display_text = f"{profile['article']} - {profile['description']}"
+            item = QListWidgetItem(display_text)
+            # Сохраняем данные профиля в элементе списка
+            item.setData(Qt.UserRole, profile)
+            self.ui.listWidget_profile_results.addItem(item)
+    
+    @Slot(QListWidgetItem)
+    def on_profile_selected(self, item):
+        """Обработчик выбора профиля из списка"""
+        profile = item.data(Qt.UserRole)
+        if profile:
+            self.profile = profile
+            # Обновляем поле поиска
+            self.ui.lineEdit_profile_search.setText(profile['article'])
+            # Скрываем список результатов
+            self.ui.listWidget_profile_results.clear()
+            self.fill_comboBox_profile_tool_tool()
+        else:
+            pass
+
+    @Slot(str)
+    def fill_comboBox_profile_tool_tool(self):
         """Обработка изменения профиля."""
-        if not profile_article:
-            self.ui.comboBox_profile_tool_tool.clear()
-            self.ui.comboBox_profile_tool_tool.setEnabled(False)
-            self.clear_profile_tool_component()
-            return
-        
-        # Получаем ID выбранного профиля
-        profile_id = self.ui.comboBox_profile_tool_profile.currentData()
-        
         # Заполняем инструменты для данного профиля
         self.ui.comboBox_profile_tool_tool.clear()
         # Фильтруем инструменты по профилю
-        for profile_tool in self.api_profile_tool.get_profile_tool():
-            if profile_tool["profile_id"] == profile_id:
-                # Используем ID инструмента как название (можно потом улучшить)
-                tool_name = f"Инструмент {profile_tool['dimension']}"
-                self.ui.comboBox_profile_tool_tool.addItem(
-                    tool_name, profile_tool["id"]
-                )
+        for profile_tool in self.profile['profile_tool']:
+            tool_name = f"Инструмент {profile_tool['dimension']}"
+            self.ui.comboBox_profile_tool_tool.addItem(tool_name, profile_tool["id"] )
         self.ui.comboBox_profile_tool_tool.setEnabled(True)
 
     @Slot(str)
-    def on_tool_changed(self, tool_name: str) -> None:
+    def on_tool_changed(self, tool_name):
         """Обработка изменения инструмента."""
         if not tool_name:
             self.clear_profile_tool_component()
@@ -180,7 +160,6 @@ class DialogCreateTask(QDialog):
     # =============================================================================
     # Управление вкладкой с изделиями
     # =============================================================================
-    
     @Slot()
     def on_profile_tool_component_selection_changed(self) -> None:
         """Обработка изменения выбора компонентов инструмента."""
@@ -292,6 +271,7 @@ class DialogCreateTask(QDialog):
             has_selected = any(cb.isChecked() for cb in self.dict_product_component_checkbox.values())
             has_product = bool(self.ui.comboBox_product.currentText())
             self.ui.pushButton_create.setEnabled(has_selected and has_product)
+    
     # =============================================================================
     # Создание задачи
     # =============================================================================
@@ -299,7 +279,6 @@ class DialogCreateTask(QDialog):
     def create_task(self) -> None:
         """Создание новой задачи."""
         current_tab = self.ui.tabWidget.currentIndex()
-        
         if current_tab == 0:  # Создание задачи для инструмента
             self.create_profile_tool_task()
         elif current_tab == 1:  # Создание задачи для изделия
@@ -334,7 +313,7 @@ class DialogCreateTask(QDialog):
                 self.api_task.create_task_component(comp_request)
         self.accept()
 
-    def create_product_task(self) -> None:
+    def create_product_task(self):
         """Создание задачи для изделия с компонентами."""
         # Собираем данные формы
         product_id = self.ui.comboBox_product.currentData()

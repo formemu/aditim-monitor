@@ -2,6 +2,7 @@
 from datetime import datetime, date
 from typing import Optional
 from pydantic import BaseModel, ConfigDict
+from .directory import DirTaskStatus
 
 # === TASK SCHEMAS ===
 
@@ -15,7 +16,7 @@ class TaskBase(BaseModel):
     status_id: int = 1
     description: Optional[str] = None
 
-class TaskCreate(TaskBase):
+class SchemaTaskCreate(TaskBase):
     """Создание задачи — сервер сам установит created_at и id"""
     pass  # Все поля из Base
 
@@ -29,15 +30,16 @@ class TaskUpdate(BaseModel):
     status_id: Optional[int] = None
     description: Optional[str] = None
 
-class TaskResponse(TaskBase):
+class SchemaTaskResponse(TaskBase):
     """Ответ API — включает id и created_at"""
     id: int
-    created_at: datetime
+    created_at: date
+    status: DirTaskStatus
     model_config = ConfigDict(from_attributes=True)
 
 # === TASK STATUS UPDATE (частное обновление статуса) ===
 
-class TaskStatusUpdate(BaseModel):
+class SchemaTaskStatusUpdate(BaseModel):
     """Только для обновления статуса задачи"""
     status_id: int  # Обязательно — нельзя обновить статус на "ничего"
 
@@ -49,7 +51,7 @@ class TaskComponentBase(BaseModel):
     quantity: int = 1
     description: Optional[str] = None
 
-class TaskComponentCreate(TaskComponentBase):
+class SchemaTaskComponentCreate(TaskComponentBase):
     """Создание компонента — привязка к задаче обязательна"""
     task_id: int  # Связь с задачей
 
@@ -59,7 +61,7 @@ class TaskComponentUpdate(BaseModel):
     quantity: Optional[int] = None
     description: Optional[str] = None
 
-class TaskComponentResponse(TaskComponentBase):
+class SchemaTaskComponentResponse(TaskComponentBase):
     """Ответ с компонентом"""
     id: int
     model_config = ConfigDict(from_attributes=True)

@@ -1,136 +1,127 @@
-"""
-API роутеры для задач
-"""
-
+"""API роутеры для задач"""
 from typing import List, Optional
 from fastapi import APIRouter, Depends, HTTPException, Query, Path, Body
 from sqlalchemy.orm import Session
 
 from ..database import get_db
-from ..models.task import Task, TaskComponent
-from ..models.directory import DirTaskStatus
+from ..models.task import ModelTask, ModelTaskComponent
+from ..models.directory import ModelDirTaskStatus
 from ..schemas.task import (
-    TaskCreate,
-    TaskStatusUpdate,
-    TaskComponentCreate,
-    TaskResponse,
-    TaskComponentResponse,
+    SchemaTaskCreate,
+    SchemaTaskStatusUpdate,
+    SchemaTaskComponentCreate,
+    SchemaTaskResponse,
+    SchemaTaskComponentResponse,
 )
 
 router = APIRouter(prefix="/api", tags=["task"])
 
-
 # =============================================================================
 # ROUTER.GET
 # =============================================================================
-
-@router.get("/task", response_model=List[TaskResponse])
+@router.get("/task", response_model=List[SchemaTaskResponse])
 def get_task(
     status: Optional[str] = Query(None, description="Фильтр по названию статуса"),
     limit: int = Query(20, ge=1, le=100, description="Ограничение количества результатов"),
     db: Session = Depends(get_db)
 ):
     """Получить список задач с необязательным фильтром по статусу"""
-    query = db.query(Task)
-
+    query = db.query(ModelTask)
     if status:
-        query = query.join(DirTaskStatus).filter(DirTaskStatus.name == status)
+        query = query.join(ModelDirTaskStatus).filter(ModelDirTaskStatus.name == status)
+    return query.order_by(ModelTask.position).limit(limit).all()
 
-    query = query.order_by(Task.position).limit(limit)
-    return query.all()
-
-
-@router.get("/task/{task_id}", response_model=TaskResponse)
-def get_task_by_id(task_id: int = Path(..., description="ID задачи"), db: Session = Depends(get_db)):
-    """Получить задачу по ID"""
-    task = db.query(Task).filter(Task.id == task_id).first()
-    if not task:
-        raise HTTPException(status_code=404, detail="Задача не найдена")
-    return task
-
-
-@router.get("/task/{task_id}/component", response_model=List[TaskComponentResponse])
+@router.get("/task/{task_id}/component", response_model=List[SchemaTaskComponentResponse])
 def get_task_component_list(task_id: int, db: Session = Depends(get_db)):
     """Получить компоненты задачи по ID задачи"""
-    return db.query(TaskComponent).filter(TaskComponent.task_id == task_id).all()
+    return db.query(ModelTaskComponent).filter(ModelTaskComponent.task_id == task_id).all()
 
+# @router.get("/task/{task_id}", response_model=SchemaTaskResponse)
+# def get_task_by_id(task_id: int = Path(..., description="ID задачи"), db: Session = Depends(get_db)):
+#     """Получить задачу по ID"""
+#     task = db.query(ModelTask).filter(ModelTask.id == task_id).first()
+#     if not task:
+#         raise HTTPException(status_code=404, detail="Задача не найдена")
+#     return task
 
 # =============================================================================
 # ROUTER.POST
 # =============================================================================
 
-@router.post("/task", response_model=TaskResponse)
-def create_task(task: TaskCreate, db: Session = Depends(get_db)):
+@router.post("/task", response_model=SchemaTaskResponse)
+def create_task(task: SchemaTaskCreate, db: Session = Depends(get_db)):
     """Создать новую задачу"""
-    db_task = Task(**task.model_dump())
-    db.add(db_task)
-    db.commit()
-    db.refresh(db_task)
-    return db_task
+    try:
+        task = ModelTask(
+            product_id=task.product_id,
+            profile_tool_id=task.profile_tool_id,
+            stage=task.stage,
+            deadline_on=task.deadline_on,
+            position=task.position,
+            status_id=task.status_id,
+            description=task.description
+        )
+        db.add(task)
+        db.commit()
+        db.refresh(task)
+        return task
+    except Exception as e:
+        db.rollback()
+        raise HTTPException(status_code=500, detail=f"Не удалось создать задачу: {e}")
 
-
-@router.post("/task/{task_id}/component", response_model=TaskComponentResponse)
+@router.post("/task/{task_id}/component", response_model=SchemaTaskComponentResponse)
 def create_task_component(
     task_id: int = Path(..., description="ID задачи"),
-    component: TaskComponentCreate = Body(...),
+    component: SchemaTaskComponentCreate = Body(...),
     db: Session = Depends(get_db)
 ):
     """Создать новый компонент задачи"""
-    # Проверяем, существует ли задача
-    task = db.query(Task).filter(Task.id == task_id).first()
-    if not task:
-        raise HTTPException(status_code=404, detail="Задача не найдена")
+    try:
+        db_component = ModelTaskComponent(
+            task_id=task_id,
+            #TODO доделать  поля
+        )
 
-    db_component = TaskComponent(**component.model_dump())
-    db_component.task_id = task_id
-    db.add(db_component)
-    db.commit()
-    db.refresh(db_component)
-    return db_component
-
+        db.add(db_component)
+        db.commit()
+        db.refresh(db_component)
+        return db_component
+    except Exception as e:
+        db.rollback()
+        raise HTTPException(status_code=500, detail=f"Не удалось создать компонент задачи: {e}")
 
 # =============================================================================
 # ROUTER.PATCH
 # =============================================================================
 
-@router.patch("/task/{task_id}/status", response_model=TaskResponse)
-def update_task_status(
-    task_id: int,
-    request: TaskStatusUpdate,
-    db: Session = Depends(get_db)
-):
+@router.patch("/task/{task_id}/status", response_model=SchemaTaskResponse)
+def update_task_status( task_id: int, task: SchemaTaskStatusUpdate, db: Session = Depends(get_db)):
     """Обновить статус задачи"""
-    task = db.query(Task).filter(Task.id == task_id).first()
-    if not task:
+    db_task = db.get(ModelTask, task_id)
+    if not db_task:
         raise HTTPException(status_code=404, detail="Задача не найдена")
 
-    # Проверяем, существует ли статус
-    status_exists = db.query(DirTaskStatus).filter(DirTaskStatus.id == request.status_id).first()
+    status_exists = db.get(ModelDirTaskStatus, task.status_id)
     if not status_exists:
         raise HTTPException(status_code=400, detail="Invalid status_id")
 
-    task.status_id = request.status_id
+    db_task.status_id = task.status_id
     db.commit()
-    db.refresh(task)
-    return task
+    db.refresh(db_task)
+    return db_task
 
 
-@router.patch("/task/{task_id}/position", response_model=TaskResponse)
-def update_task_position(
-    task_id: int,
-    position: int = Body(..., embed=True, description="Новая позиция"),
-    db: Session = Depends(get_db)
-):
+@router.patch("/task/{task_id}/position", response_model=SchemaTaskResponse)
+def update_task_position(task_id: int, position: int = Body(..., embed=True, description="Новая позиция"), db: Session = Depends(get_db)):
     """Обновить позицию задачи"""
-    task = db.query(Task).filter(Task.id == task_id).first()
-    if not task:
+    db_task = db.get(ModelTask, task_id)
+    if not db_task:
         raise HTTPException(status_code=404, detail="Задача не найдена")
 
-    task.position = position
+    db_task.position = position
     db.commit()
-    db.refresh(task)
-    return task
-
+    db.refresh(db_task)
+    return db_task
 
 # =============================================================================
 # ROUTER.DELETE
@@ -139,10 +130,9 @@ def update_task_position(
 @router.delete("/task/{task_id}", response_model=dict)
 def delete_task(task_id: int, db: Session = Depends(get_db)):
     """Удалить задачу по ID"""
-    task = db.query(Task).filter(Task.id == task_id).first()
-    if not task:
+    db_task = db.get(ModelTask, task_id)
+    if not db_task:
         raise HTTPException(status_code=404, detail="Задача не найдена")
-
-    db.delete(task)
+    db.delete(db_task)
     db.commit()
     return {"detail": "Задача удалена успешно"}
