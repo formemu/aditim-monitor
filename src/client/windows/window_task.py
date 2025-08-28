@@ -96,6 +96,7 @@ class WindowTask(QWidget):
         status = self.task['status']['name']
         self.ui.label_task_name.setText(f"Название: {name}")
         self.ui.label_task_info.setText(f"Статус: {status} | Срок: {deadline} | Создано: {created}")
+        self.load_component()
 
     def get_task_name(self, task):
         """Возвращает название задачи: артикул профиля или имя изделия"""
@@ -112,25 +113,23 @@ class WindowTask(QWidget):
         self.ui.label_task_name.setText("Название: -")
         self.ui.label_task_info.setText("Статус: - | Срок: - | Создано: -")
 
-    def load_component(self, task_id):
+    def load_component(self):
         """Загрузка компонентов задачи по её идентификатору. """
-        list_component = self.api_task.get_task_component(task_id)
         """Обновление таблицы компонентов"""
         table = self.ui.tableWidget_components
-        table.setRowCount(len(list_component))
+        table.setRowCount(len(self.task['component']))
 
         # Проверяем по первому элементу, какой тип компонента
-        if list_component and list_component[0].get('product_component_id'):
-            table.setColumnCount(3)
+        if self.task['component'] and self.task['component'][0]['product_component_id']:
+            table.setColumnCount(2)
             header = table.horizontalHeader()
             header.setSectionResizeMode(0, QHeaderView.ResizeToContents)
             header.setSectionResizeMode(1, QHeaderView.Stretch)
-            header.setSectionResizeMode(2, QHeaderView.ResizeToContents)
             table.setHorizontalHeaderLabels(["№", "Название"])
-            for row, comp in enumerate(list_component):
+            for row, comp in enumerate(self.task['component']):
                 num_item = QTableWidgetItem(str(row + 1))
                 table.setItem(row, 0, num_item)
-                name_item = QTableWidgetItem(comp.get('name', ''))
+                name_item = QTableWidgetItem(comp['product_component']['name'])
                 table.setItem(row, 1, name_item)
         else:
             table.setColumnCount(2)
@@ -138,11 +137,11 @@ class WindowTask(QWidget):
             header.setSectionResizeMode(0, QHeaderView.ResizeToContents)
             header.setSectionResizeMode(1, QHeaderView.Stretch)
             table.setHorizontalHeaderLabels(["№", "Название"])
-            for row, comp in enumerate(list_component):
+            for row, comp in enumerate(self.task['component']):
                 num_item = QTableWidgetItem(str(row + 1))
                 table.setItem(row, 0, num_item)
-                name_item = QTableWidgetItem(comp.get('name', ''))
-                table.setItem(row, 1, name_item)
+                type_item = QTableWidgetItem(comp['profile_tool_component']['type']['name'])
+                table.setItem(row, 1, type_item)
 
     def clear_component(self):
         """Очистка таблицы компонентов"""

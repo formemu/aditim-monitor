@@ -3,6 +3,8 @@ from datetime import datetime, date
 from typing import Optional
 from pydantic import BaseModel, ConfigDict
 from .directory import DirTaskStatus
+from .profile_tool import SchemaProfileToolComponentResponse
+from .product import SchemaProductComponentResponse
 
 # === TASK SCHEMAS ===
 
@@ -37,7 +39,8 @@ class SchemaTaskResponse(TaskBase):
     """Ответ API — включает id и created_at"""
     id: int
     created_at: date
-    status: DirTaskStatus
+    status: Optional[DirTaskStatus] = None
+    component: Optional[list["SchemaTaskComponentResponse"]] = None
 
 # === TASK STATUS UPDATE (частное обновление статуса) ===
 
@@ -67,3 +70,5 @@ class TaskComponentUpdate(BaseModel):
 class SchemaTaskComponentResponse(TaskComponentBase):
     """Ответ с компонентом"""
     id: int
+    profile_tool_component: Optional[SchemaProfileToolComponentResponse] = None
+    product_component: Optional[SchemaProductComponentResponse] = None
