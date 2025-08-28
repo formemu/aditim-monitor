@@ -14,7 +14,7 @@ class ModelTask(Base):
     deadline_on = Column(Date, nullable=True)
     position = Column(Integer, nullable=True)
     status_id = Column(Integer, ForeignKey("dir_task_status.id"), nullable=False, default=1)
-    created_at = Column(Date, server_default=func.now())
+    created_at = Column(Date, nullable=True)
     description = Column(Text, nullable=True)
 
     # Relationships
@@ -34,7 +34,6 @@ class ModelTaskComponent(Base):
     # Ссылка на компонент изделия (если задача для изделия)
     product_component_id = Column(Integer, ForeignKey("product_component.id"), nullable=True)
     description = Column(Text, nullable=True)
-    quantity = Column(Integer, nullable=False, default=1)
 
     # Relationships
     task = relationship("ModelTask", back_populates="component")

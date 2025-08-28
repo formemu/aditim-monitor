@@ -126,14 +126,12 @@ class WindowTask(QWidget):
             header.setSectionResizeMode(0, QHeaderView.ResizeToContents)
             header.setSectionResizeMode(1, QHeaderView.Stretch)
             header.setSectionResizeMode(2, QHeaderView.ResizeToContents)
-            table.setHorizontalHeaderLabels(["№", "Название", "Количество"])
+            table.setHorizontalHeaderLabels(["№", "Название"])
             for row, comp in enumerate(list_component):
                 num_item = QTableWidgetItem(str(row + 1))
                 table.setItem(row, 0, num_item)
                 name_item = QTableWidgetItem(comp.get('name', ''))
                 table.setItem(row, 1, name_item)
-                qty_item = QTableWidgetItem(str(comp.get('quantity', '')))
-                table.setItem(row, 2, qty_item)
         else:
             table.setColumnCount(2)
             header = table.horizontalHeader()

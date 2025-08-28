@@ -178,10 +178,10 @@ class DialogCreateProfileTool(QDialog):
         }
          # Создаем инструмент
         result = api_manager.api_profile_tool.create_profile_tool(tool)
-        tool_id = result['id']
+        profile_tool_id = result['id']
         # Создаем выбранные компоненты
         for component in self.get_selected_component():
-            api_manager.api_profile_tool.create_profile_tool_component(tool_id, component)
+            api_manager.api_profile_tool.create_profile_tool_component(profile_tool_id, component)
 
     def accept(self):
         """Принимает изменения и закрывает диалог"""

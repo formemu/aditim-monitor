@@ -2,7 +2,7 @@
 from typing import List, Optional
 from fastapi import APIRouter, Depends, HTTPException, Query, Path, Body
 from sqlalchemy.orm import Session
-
+import traceback
 from ..database import get_db
 from ..models.task import ModelTask, ModelTaskComponent
 from ..models.directory import ModelDirTaskStatus
@@ -59,15 +59,22 @@ def create_task(task: SchemaTaskCreate, db: Session = Depends(get_db)):
             deadline_on=task.deadline_on,
             position=task.position,
             status_id=task.status_id,
-            description=task.description
+            description=task.description,
+            created_at=task.created_at
         )
+        
         db.add(task)
         db.commit()
         db.refresh(task)
         return task
     except Exception as e:
         db.rollback()
-        raise HTTPException(status_code=500, detail=f"Не удалось создать задачу: {e}")
+        # print("❌ ОШИБКА ПРИ СОЗДАНИИ ЗАДАЧИ")
+        # print(f"Тип ошибки: {type(e).__name__}")
+        # print(f"Сообщение: {str(e)}")
+        # print("----- TRACEBACK -----")
+        # traceback.print_exc()  # ← Это покажет, где именно ошибка
+        raise HTTPException(status_code=500, detail=f"Не удалось создать задачу: {type(e).__name__}: {str(e)}")
 
 @router.post("/task/{task_id}/component", response_model=SchemaTaskComponentResponse)
 def create_task_component(
@@ -77,18 +84,44 @@ def create_task_component(
 ):
     """Создать новый компонент задачи"""
     try:
-        db_component = ModelTaskComponent(
-            task_id=task_id,
-            #TODO доделать  поля
-        )
+        # Проверим, существует ли задача
+        task = db.query(ModelTask).filter(ModelTask.id == task_id).first()
+        if not task:
+            raise HTTPException(status_code=404, detail="Задача не найдена")
+
+        # Создаём компонент
+        if component.profile_tool_component_id:
+            db_component = ModelTaskComponent(
+                task_id=task_id,
+                profile_tool_component_id=component.profile_tool_component_id,
+                description=component.description
+            )
+        elif component.product_component_id:
+            db_component = ModelTaskComponent(
+                task_id=task_id,
+                product_component_id=component.product_component_id,
+                description=component.description
+            )
+        else:
+            raise HTTPException(
+                status_code=422,
+                detail="Требуется profile_tool_component_id или product_component_id"
+            )
 
         db.add(db_component)
         db.commit()
         db.refresh(db_component)
         return db_component
+
+    except HTTPException:
+        db.rollback()
+        raise
     except Exception as e:
         db.rollback()
-        raise HTTPException(status_code=500, detail=f"Не удалось создать компонент задачи: {e}")
+        raise HTTPException(
+            status_code=500,
+            detail=f"Не удалось создать компонент задачи: {type(e).__name__}: {str(e)}"
+        )
 
 # =============================================================================
 # ROUTER.PATCH

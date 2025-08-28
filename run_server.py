@@ -1,7 +1,4 @@
-"""
-Server launcher for ADITIM Monitor
-Запускает серверное приложение из src/server
-"""
+"""Запускает серверное приложение из src/server"""
 
 import sys
 import uvicorn
@@ -22,7 +19,7 @@ try:
             host="0.0.0.0",
             port=8000,
             reload=True,
-            log_level="info"
+            log_level="debug"
         )
         
 except ImportError as e:

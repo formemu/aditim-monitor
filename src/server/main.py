@@ -19,7 +19,8 @@ app = FastAPI(
     title="ADITIM Monitor API",
     description="Task management system for metalworking workshop",
     version="1.0.0",
-    redirect_slashes=False
+    redirect_slashes=False,
+    debug=True
 )
 
 # CORS настройки

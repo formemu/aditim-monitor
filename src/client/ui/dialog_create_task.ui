@@ -16,11 +16,11 @@
   <property name="modal">
    <bool>true</bool>
   </property>
-  <layout class="QVBoxLayout" name="verticalLayout_main">
+  <layout class="QVBoxLayout" name="verticalLayout_5">
    <item>
     <widget class="QTabWidget" name="tabWidget">
      <property name="currentIndex">
-      <number>0</number>
+      <number>1</number>
      </property>
      <widget class="QWidget" name="tab_profile_tool">
       <attribute name="title">
@@ -28,9 +28,9 @@
       </attribute>
       <layout class="QVBoxLayout" name="verticalLayout">
        <item>
-        <widget class="QGroupBox" name="groupBox">
+        <widget class="QGroupBox" name="groupBox_profile_tool_selected">
          <property name="title">
-          <string>Выбор выбор профиля</string>
+          <string>Выбор профиля</string>
          </property>
          <layout class="QVBoxLayout" name="verticalLayout_4">
           <item>
@@ -81,8 +81,8 @@
               <rect>
                <x>0</x>
                <y>0</y>
-               <width>536</width>
-               <height>54</height>
+               <width>98</width>
+               <height>28</height>
               </rect>
              </property>
              <layout class="QVBoxLayout" name="verticalLayout_checkboxes"/>
@@ -150,24 +150,20 @@
       </attribute>
       <layout class="QVBoxLayout" name="verticalLayout_2">
        <item>
-        <widget class="QGroupBox" name="groupBox_product">
+        <widget class="QGroupBox" name="groupBox_poduct_selected">
          <property name="title">
           <string>Выбор изделия</string>
          </property>
-         <layout class="QFormLayout" name="formLayout_instrument_2">
-          <item row="0" column="0">
-           <widget class="QLabel" name="label_product">
-            <property name="text">
-             <string>Изделие</string>
+         <layout class="QVBoxLayout" name="verticalLayout_6">
+          <item>
+           <widget class="QLineEdit" name="lineEdit_product_search">
+            <property name="placeholderText">
+             <string>Поиск изделия...</string>
             </property>
            </widget>
           </item>
-          <item row="0" column="1">
-           <widget class="QComboBox" name="comboBox_product">
-            <property name="placeholderText">
-             <string>Выберите изделие...</string>
-            </property>
-           </widget>
+          <item>
+           <widget class="QListWidget" name="listWidget_product_results"/>
           </item>
          </layout>
         </widget>
@@ -189,7 +185,7 @@
                <x>0</x>
                <y>0</y>
                <width>536</width>
-               <height>181</height>
+               <height>59</height>
               </rect>
              </property>
              <layout class="QVBoxLayout" name="verticalLayout_checkboxes_2"/>
@@ -254,38 +250,14 @@
     </widget>
    </item>
    <item>
-    <layout class="QHBoxLayout" name="horizontalLayout_buttons">
-     <item>
-      <spacer name="horizontalSpacer">
-       <property name="orientation">
-        <enum>Qt::Orientation::Horizontal</enum>
-       </property>
-       <property name="sizeHint" stdset="0">
-        <size>
-         <width>40</width>
-         <height>20</height>
-        </size>
-       </property>
-      </spacer>
-     </item>
-     <item>
-      <widget class="QPushButton" name="pushButton_cancel">
-       <property name="text">
-        <string>Отмена</string>
-       </property>
-      </widget>
-     </item>
-     <item>
-      <widget class="QPushButton" name="pushButton_create">
-       <property name="enabled">
-        <bool>false</bool>
-       </property>
-       <property name="text">
-        <string>Создать</string>
-       </property>
-      </widget>
-     </item>
-    </layout>
+    <widget class="QDialogButtonBox" name="buttonBox">
+     <property name="orientation">
+      <enum>Qt::Orientation::Horizontal</enum>
+     </property>
+     <property name="standardButtons">
+      <set>QDialogButtonBox::StandardButton::Cancel|QDialogButtonBox::StandardButton::Ok</set>
+     </property>
+    </widget>
    </item>
   </layout>
  </widget>

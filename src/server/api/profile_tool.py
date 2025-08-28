@@ -24,10 +24,10 @@ def get_profile_tool(db: Session = Depends(get_db)):
     return db.query(ModelProfileTool).all()
 
 
-@router.get("/profile-tool/{tool_id}/component", response_model=List[SchemaProfileToolComponentResponse])
-def get_profile_tool_component(tool_id: int, db: Session = Depends(get_db)):
+@router.get("/profile-tool/{profile_tool_id}/component", response_model=List[SchemaProfileToolComponentResponse])
+def get_profile_tool_component(profile_tool_id: int, db: Session = Depends(get_db)):
     """Получить все компоненты инструмента профиля"""
-    return db.query(ModelProfileToolComponent).filter(ModelProfileToolComponent.tool_id == tool_id).all()
+    return db.query(ModelProfileToolComponent).filter(ModelProfileToolComponent.profile_tool_id == profile_tool_id).all()
 
 
 # =============================================================================
@@ -52,12 +52,12 @@ def create_profile_tool(profile_tool: SchemaProfileToolCreate, db: Session = Dep
         raise HTTPException(status_code=400, detail="Не удалось создать инструмент: " + str(e))
 
 
-@router.post("/profile-tool/{tool_id}/component", response_model=SchemaProfileToolComponentResponse)
-def create_profile_tool_component(tool_id: int, component: SchemaProfileToolComponentCreate, db: Session = Depends(get_db)):
+@router.post("/profile-tool/{profile_tool_id}/component", response_model=SchemaProfileToolComponentResponse)
+def create_profile_tool_component(profile_tool_id: int, component: SchemaProfileToolComponentCreate, db: Session = Depends(get_db)):
     """Создать новый компонент инструмента профиля"""
     try:
         db_component = ModelProfileToolComponent(
-            tool_id=tool_id,
+            profile_tool_id=profile_tool_id,
             type_id=component.type_id,
             status_id=component.status_id,
             variant=component.variant,
@@ -74,10 +74,10 @@ def create_profile_tool_component(tool_id: int, component: SchemaProfileToolComp
 # =============================================================================
 # ROUTER.PATCH
 # =============================================================================
-@router.patch("/profile-tool/{tool_id}", response_model=SchemaProfileToolResponse)
-def update_profile_tool( tool_id: int, tool: SchemaProfileToolUpdate, db: Session = Depends(get_db)):
+@router.patch("/profile-tool/{profile_tool_id}", response_model=SchemaProfileToolResponse)
+def update_profile_tool(profile_tool_id: int, tool: SchemaProfileToolUpdate, db: Session = Depends(get_db)):
     """обновить инструмент профиля"""
-    db_tool = db.get(ModelProfileTool, tool_id)
+    db_tool = db.get(ModelProfileTool, profile_tool_id)
     if not db_tool:
         raise HTTPException(status_code=404, detail="Инструмент не найден")
     update_data = tool.model_dump(exclude_unset=True)
@@ -90,10 +90,10 @@ def update_profile_tool( tool_id: int, tool: SchemaProfileToolUpdate, db: Sessio
 # =============================================================================
 # ROUTER.DELETE
 # =============================================================================
-@router.delete("/profile-tool/{tool_id}", response_model=dict)
-def delete_profile_tool(tool_id: int, db: Session = Depends(get_db)):
+@router.delete("/profile-tool/{profile_tool_id}", response_model=dict)
+def delete_profile_tool(profile_tool_id: int, db: Session = Depends(get_db)):
     """Удалить инструмент профиля по ID"""
-    tool = db.get(ModelProfileTool, tool_id)
+    tool = db.get(ModelProfileTool, profile_tool_id)
     if not tool:
         raise HTTPException(status_code=404, detail="Инструмент не найден")
     db.delete(tool)
@@ -109,14 +109,14 @@ def delete_profile_tool_by_profile(profile_id: int, db: Session = Depends(get_db
     db.commit()
     return {"detail": f"Удалены все инструменты и компоненты профиля {profile_id}"}
 
-@router.delete("/profile-tool/{tool_id}/component", response_model=dict)
-def delete_all_profile_tool_components(tool_id: int, db: Session = Depends(get_db)):
+@router.delete("/profile-tool/{profile_tool_id}/component", response_model=dict)
+def delete_all_profile_tool_components(profile_tool_id: int, db: Session = Depends(get_db)):
     """Удалить все компоненты инструмента (без удаления инструмента)"""
-    deleted_count = db.query(ModelProfileToolComponent).filter(ModelProfileToolComponent.tool_id == tool_id).delete()
+    deleted_count = db.query(ModelProfileToolComponent).filter(ModelProfileToolComponent.profile_tool_id == profile_tool_id).delete()
     if deleted_count == 0:
         raise HTTPException(status_code=404, detail="Компоненты не найдены")
     db.commit()
-    return {"detail": f"Удалены все компоненты инструмента {tool_id}"}
+    return {"detail": f"Удалены все компоненты инструмента {profile_tool_id}"}
 
 @router.delete("/profile-tool/component/{component_id}", response_model=dict)
 def delete_profile_tool_component_by_id(component_id: int, db: Session = Depends(get_db)):

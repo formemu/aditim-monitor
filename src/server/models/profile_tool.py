@@ -24,7 +24,7 @@ class ModelProfileToolComponent(Base):
     __tablename__ = "profile_tool_component"
     
     id = Column(Integer, primary_key=True, index=True)
-    tool_id = Column(Integer, ForeignKey("profile_tool.id", ondelete="CASCADE"), nullable=False)
+    profile_tool_id = Column(Integer, ForeignKey("profile_tool.id", ondelete="CASCADE"), nullable=False)
     type_id = Column(Integer, ForeignKey("dir_component_type.id"), nullable=False)
     variant = Column(Integer, nullable=True)
     description = Column(Text)

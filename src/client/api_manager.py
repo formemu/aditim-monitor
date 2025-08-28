@@ -302,5 +302,14 @@ class ApiManager:
                 results.append(profile)       
         return results
 
+    def get_search_product(self, find_name):
+        """Поиск продуктов по имени"""
+        results = []
+        for product in self.product:
+            name = product['name']
+            if find_name in name:
+                results.append(product)
+        return results
+
 # Глобальный экземпляр менеджера справочников
 api_manager = ApiManager()

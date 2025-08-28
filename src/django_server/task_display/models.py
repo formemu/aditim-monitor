@@ -104,8 +104,7 @@ class TaskComponent(models.Model):
     task = models.ForeignKey(Task, on_delete=models.CASCADE, related_name='component_list')
     profile_tool_component_id = models.IntegerField(null=True, blank=True)
     product_component_id = models.IntegerField(null=True, blank=True)
-    quantity = models.IntegerField(default=1)
-    
+
     class Meta:
         db_table = 'task_component'
         managed = False

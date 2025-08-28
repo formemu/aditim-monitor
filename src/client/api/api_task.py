@@ -30,6 +30,6 @@ class ApiTask(ApiClient):
         endpoint = f"api/task/{task_id}/task_component"
         return self._request("GET", endpoint)
 
-    def create_task_component(self, component_data):
+    def create_task_component(self, task_id, component_data):
         """Создание компонента задачи"""
-        return self._request("POST", "api/task/task_component", json=component_data)
+        return self._request("POST", f"api/task/{task_id}/component", json=component_data)

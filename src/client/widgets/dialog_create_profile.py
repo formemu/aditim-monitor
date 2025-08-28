@@ -14,7 +14,7 @@ class DialogCreateProfile(QDialog):
         super().__init__(parent)
         self.sketch_data = None
         self.load_ui()
-        self.setup_logic()
+        self.setup_ui()
 
     def load_ui(self):
         """Загружает UI из файла."""
@@ -25,7 +25,7 @@ class DialogCreateProfile(QDialog):
         ui_file.close()
         self.setLayout(self.ui.layout())
 
-    def setup_logic(self):
+    def setup_ui(self):
         """Настраивает логику диалога."""
         # Подключаем обработчики кнопок
         self.ui.buttonBox.accepted.connect(self.accept)

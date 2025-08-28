@@ -49,6 +49,6 @@ class ProfileToolComponentUpdate(BaseModel):
 
 class SchemaProfileToolComponentResponse(ProfileToolComponentBase):
     id: int
-    tool_id: int
+    profile_tool_id: int
     type: Optional[DirComponentType] = None
     status: Optional[DirComponentStatus] = None
