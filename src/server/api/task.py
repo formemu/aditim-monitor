@@ -2,16 +2,18 @@
 from typing import List, Optional
 from fastapi import APIRouter, Depends, HTTPException, Query, Path, Body
 from sqlalchemy.orm import Session
+from sqlalchemy import func
 import traceback
 from ..database import get_db
 from ..models.task import ModelTask, ModelTaskComponent
 from ..models.directory import ModelDirTaskStatus
 from ..schemas.task import (
     SchemaTaskCreate,
-    SchemaTaskStatusUpdate,
+    SchemaTaskUpdate,
     SchemaTaskComponentCreate,
     SchemaTaskResponse,
     SchemaTaskComponentResponse,
+    SchemaQueueReorderRequest
 )
 
 router = APIRouter(prefix="/api", tags=["task"])
@@ -22,14 +24,30 @@ router = APIRouter(prefix="/api", tags=["task"])
 @router.get("/task", response_model=List[SchemaTaskResponse])
 def get_task(
     status: Optional[str] = Query(None, description="Фильтр по названию статуса"),
-    limit: int = Query(20, ge=1, le=100, description="Ограничение количества результатов"),
     db: Session = Depends(get_db)
 ):
     """Получить список задач с необязательным фильтром по статусу"""
     query = db.query(ModelTask)
     if status:
         query = query.join(ModelDirTaskStatus).filter(ModelDirTaskStatus.name == status)
-    return query.order_by(ModelTask.position).limit(limit).all()
+    return query.order_by(ModelTask.id).all()
+
+@router.get("/task/queue", response_model=List[SchemaTaskResponse])
+def get_queue(db: Session = Depends(get_db)):
+    status = db.query(ModelDirTaskStatus).filter(ModelDirTaskStatus.name == "В работе").first()
+    if not status:
+        return []
+
+    tasks = (
+        db.query(ModelTask)
+        .filter(
+            ModelTask.status_id == status.id,
+            ModelTask.position.isnot(None)
+        )
+        .order_by(ModelTask.position)
+        .all()
+    )
+    return tasks
 
 @router.get("/task/{task_id}/component", response_model=List[SchemaTaskComponentResponse])
 def get_task_component_list(task_id: int, db: Session = Depends(get_db)):
@@ -83,75 +101,52 @@ def create_task_component(
     db: Session = Depends(get_db)
 ):
     """Создать новый компонент задачи"""
-    try:
-        # Проверим, существует ли задача
-        task = db.query(ModelTask).filter(ModelTask.id == task_id).first()
-        if not task:
-            raise HTTPException(status_code=404, detail="Задача не найдена")
+    # Проверим, существует ли задача
+    task = db.query(ModelTask).filter(ModelTask.id == task_id).first()
+    if not task:
+        raise HTTPException(status_code=404, detail="Задача не найдена")
 
-        # Создаём компонент
-        if component.profile_tool_component_id:
-            db_component = ModelTaskComponent(
-                task_id=task_id,
-                profile_tool_component_id=component.profile_tool_component_id,
-                description=component.description
-            )
-        elif component.product_component_id:
-            db_component = ModelTaskComponent(
-                task_id=task_id,
-                product_component_id=component.product_component_id,
-                description=component.description
-            )
-        else:
-            raise HTTPException(
-                status_code=422,
-                detail="Требуется profile_tool_component_id или product_component_id"
-            )
-
-        db.add(db_component)
-        db.commit()
-        db.refresh(db_component)
-        return db_component
-
-    except HTTPException:
-        db.rollback()
-        raise
-    except Exception as e:
-        db.rollback()
+    # Создаём компонент
+    if component.profile_tool_component_id:
+        db_component = ModelTaskComponent(
+            task_id=task_id,
+            profile_tool_component_id=component.profile_tool_component_id,
+            description=component.description
+        )
+    elif component.product_component_id:
+        db_component = ModelTaskComponent(
+            task_id=task_id,
+            product_component_id=component.product_component_id,
+            description=component.description
+        )
+    else:
         raise HTTPException(
-            status_code=500,
-            detail=f"Не удалось создать компонент задачи: {type(e).__name__}: {str(e)}"
+            status_code=422,
+            detail="Требуется profile_tool_component_id или product_component_id"
         )
 
-# =============================================================================
-# ROUTER.PATCH
-# =============================================================================
+    db.add(db_component)
+    db.commit()
+    db.refresh(db_component)
+    return db_component
 
+
+@router.post("/task/queue/reorder", status_code=204)
+def reorder_queue(request: SchemaQueueReorderRequest, db: Session = Depends(get_db)):
+    """Изменение порядка задач в очереди"""
+    # 1. Сбросить позиции у задач у всех
+    db.query(ModelTask).update({ModelTask.position: None}, synchronize_session='fetch')
+    # 2. Установить новые позиции для переданных задач
+    for position, task_id in enumerate(request.task_ids, start=1):
+        db.query(ModelTask).filter(ModelTask.id == task_id).update({ModelTask.position: position}, synchronize_session='fetch')
+    db.commit()
+ 
+    
 @router.patch("/task/{task_id}/status", response_model=SchemaTaskResponse)
-def update_task_status( task_id: int, task: SchemaTaskStatusUpdate, db: Session = Depends(get_db)):
+def update_task_status( task_id: int, task: SchemaTaskUpdate, db: Session = Depends(get_db)):
     """Обновить статус задачи"""
     db_task = db.get(ModelTask, task_id)
-    if not db_task:
-        raise HTTPException(status_code=404, detail="Задача не найдена")
-
-    status_exists = db.get(ModelDirTaskStatus, task.status_id)
-    if not status_exists:
-        raise HTTPException(status_code=400, detail="Invalid status_id")
-
     db_task.status_id = task.status_id
-    db.commit()
-    db.refresh(db_task)
-    return db_task
-
-
-@router.patch("/task/{task_id}/position", response_model=SchemaTaskResponse)
-def update_task_position(task_id: int, position: int = Body(..., embed=True, description="Новая позиция"), db: Session = Depends(get_db)):
-    """Обновить позицию задачи"""
-    db_task = db.get(ModelTask, task_id)
-    if not db_task:
-        raise HTTPException(status_code=404, detail="Задача не найдена")
-
-    db_task.position = position
     db.commit()
     db.refresh(db_task)
     return db_task
@@ -159,7 +154,6 @@ def update_task_position(task_id: int, position: int = Body(..., embed=True, des
 # =============================================================================
 # ROUTER.DELETE
 # =============================================================================
-
 @router.delete("/task/{task_id}", response_model=dict)
 def delete_task(task_id: int, db: Session = Depends(get_db)):
     """Удалить задачу по ID"""

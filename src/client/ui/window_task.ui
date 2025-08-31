@@ -10,122 +10,201 @@
     <height>733</height>
    </rect>
   </property>
-  <layout class="QGridLayout" name="gridLayout">
-   <item row="1" column="0">
-    <layout class="QVBoxLayout" name="verticalLayout_left">
-     <item>
-      <layout class="QHBoxLayout" name="horizontalLayout_toolbar">
+  <layout class="QHBoxLayout" name="horizontalLayout">
+   <item>
+    <widget class="QTabWidget" name="tabWidget_tasks">
+     <property name="currentIndex">
+      <number>0</number>
+     </property>
+     <widget class="QWidget" name="tab_task">
+      <attribute name="title">
+       <string>Задачи</string>
+      </attribute>
+      <layout class="QVBoxLayout" name="verticalLayout">
        <item>
-        <widget class="QPushButton" name="pushButton_task_add">
-         <property name="minimumSize">
-          <size>
-           <width>100</width>
-           <height>35</height>
-          </size>
-         </property>
-         <property name="text">
-          <string>Добавить</string>
-         </property>
-        </widget>
-       </item>
-       <item>
-        <widget class="QPushButton" name="pushButton_task_delete">
-         <property name="minimumSize">
-          <size>
-           <width>100</width>
-           <height>35</height>
-          </size>
-         </property>
-         <property name="text">
-          <string>Удалить</string>
-         </property>
-        </widget>
-       </item>
-       <item>
-        <spacer name="horizontalSpacer">
-         <property name="orientation">
-          <enum>Qt::Orientation::Horizontal</enum>
-         </property>
-         <property name="sizeHint" stdset="0">
-          <size>
-           <width>40</width>
-           <height>20</height>
-          </size>
-         </property>
-        </spacer>
+        <layout class="QVBoxLayout" name="verticalLayout_task">
+         <item>
+          <layout class="QHBoxLayout" name="horizontalLayout_toolbar_task">
+           <item>
+            <widget class="QPushButton" name="pushButton_task_add">
+             <property name="minimumSize">
+              <size>
+               <width>100</width>
+               <height>35</height>
+              </size>
+             </property>
+             <property name="text">
+              <string>Добавить</string>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="QPushButton" name="pushButton_task_delete">
+             <property name="minimumSize">
+              <size>
+               <width>100</width>
+               <height>35</height>
+              </size>
+             </property>
+             <property name="text">
+              <string>Удалить</string>
+             </property>
+            </widget>
+           </item>
+          </layout>
+         </item>
+         <item>
+          <widget class="QTableWidget" name="tableWidget_tasks">
+           <property name="alternatingRowColors">
+            <bool>true</bool>
+           </property>
+           <property name="selectionMode">
+            <enum>QAbstractItemView::SelectionMode::SingleSelection</enum>
+           </property>
+           <property name="selectionBehavior">
+            <enum>QAbstractItemView::SelectionBehavior::SelectRows</enum>
+           </property>
+           <property name="sortingEnabled">
+            <bool>true</bool>
+           </property>
+           <column>
+            <property name="text">
+             <string>Название</string>
+            </property>
+           </column>
+           <column>
+            <property name="text">
+             <string>Статус</string>
+            </property>
+           </column>
+           <column>
+            <property name="text">
+             <string>Срок</string>
+            </property>
+           </column>
+           <column>
+            <property name="text">
+             <string>Создано</string>
+            </property>
+           </column>
+          </widget>
+         </item>
+        </layout>
        </item>
       </layout>
-     </item>
-     <item>
-      <layout class="QHBoxLayout" name="horizontalLayout_search">
+     </widget>
+     <widget class="QWidget" name="tab_queue">
+      <attribute name="title">
+       <string>Очередь</string>
+      </attribute>
+      <layout class="QVBoxLayout" name="verticalLayout_2">
        <item>
-        <widget class="QLineEdit" name="lineEdit_search">
-         <property name="placeholderText">
-          <string>Поиск задач...</string>
-         </property>
-        </widget>
+        <layout class="QVBoxLayout" name="verticalLayout_queue">
+         <item>
+          <layout class="QHBoxLayout" name="horizontalLayout_toolbar_queue">
+           <item>
+            <widget class="QPushButton" name="pushButton_position_up">
+             <property name="text">
+              <string>поднять
+в очереди</string>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="QPushButton" name="pushButton_position_down">
+             <property name="text">
+              <string>опустить
+в очереди</string>
+             </property>
+            </widget>
+           </item>
+          </layout>
+         </item>
+         <item>
+          <widget class="QTableWidget" name="tableWidget_queue">
+           <property name="alternatingRowColors">
+            <bool>true</bool>
+           </property>
+           <property name="selectionMode">
+            <enum>QAbstractItemView::SelectionMode::SingleSelection</enum>
+           </property>
+           <property name="selectionBehavior">
+            <enum>QAbstractItemView::SelectionBehavior::SelectRows</enum>
+           </property>
+           <property name="sortingEnabled">
+            <bool>true</bool>
+           </property>
+           <column>
+            <property name="text">
+             <string>Позиция</string>
+            </property>
+           </column>
+           <column>
+            <property name="text">
+             <string>Название</string>
+            </property>
+           </column>
+           <column>
+            <property name="text">
+             <string>Статус</string>
+            </property>
+           </column>
+           <column>
+            <property name="text">
+             <string>Срок</string>
+            </property>
+           </column>
+           <column>
+            <property name="text">
+             <string>Создано</string>
+            </property>
+           </column>
+          </widget>
+         </item>
+        </layout>
        </item>
       </layout>
-     </item>
-     <item>
-      <widget class="QTableWidget" name="tableWidget_tasks">
-       <property name="alternatingRowColors">
-        <bool>true</bool>
-       </property>
-       <property name="selectionMode">
-        <enum>QAbstractItemView::SelectionMode::SingleSelection</enum>
-       </property>
-       <property name="selectionBehavior">
-        <enum>QAbstractItemView::SelectionBehavior::SelectRows</enum>
-       </property>
-       <property name="sortingEnabled">
-        <bool>true</bool>
-       </property>
-       <column>
-        <property name="text">
-         <string>Название</string>
-        </property>
-       </column>
-       <column>
-        <property name="text">
-         <string>Статус</string>
-        </property>
-       </column>
-       <column>
-        <property name="text">
-         <string>Позиция</string>
-        </property>
-       </column>
-       <column>
-        <property name="text">
-         <string>Срок</string>
-        </property>
-       </column>
-       <column>
-        <property name="text">
-         <string>Создано</string>
-        </property>
-       </column>
-      </widget>
-     </item>
-    </layout>
+     </widget>
+    </widget>
    </item>
-   <item row="1" column="1">
+   <item>
     <layout class="QVBoxLayout" name="verticalLayout_right">
      <property name="sizeConstraint">
       <enum>QLayout::SizeConstraint::SetFixedSize</enum>
      </property>
      <item>
-      <widget class="QLabel" name="label_task">
+      <widget class="QLabel" name="label_logo">
        <property name="minimumSize">
         <size>
          <width>350</width>
+         <height>100</height>
+        </size>
+       </property>
+       <property name="maximumSize">
+        <size>
+         <width>16777215</width>
+         <height>100</height>
+        </size>
+       </property>
+       <property name="text">
+        <string>ADITIM</string>
+       </property>
+       <property name="alignment">
+        <set>Qt::AlignmentFlag::AlignCenter</set>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QLabel" name="label_task">
+       <property name="minimumSize">
+        <size>
+         <width>0</width>
          <height>30</height>
         </size>
        </property>
        <property name="maximumSize">
         <size>
-         <width>350</width>
+         <width>16777215</width>
          <height>30</height>
         </size>
        </property>
@@ -141,13 +220,13 @@
       <widget class="QLabel" name="label_task_name">
        <property name="minimumSize">
         <size>
-         <width>350</width>
+         <width>0</width>
          <height>25</height>
         </size>
        </property>
        <property name="maximumSize">
         <size>
-         <width>350</width>
+         <width>16777215</width>
          <height>25</height>
         </size>
        </property>
@@ -179,13 +258,13 @@
       <widget class="QLabel" name="label_components_title">
        <property name="minimumSize">
         <size>
-         <width>350</width>
+         <width>0</width>
          <height>30</height>
         </size>
        </property>
        <property name="maximumSize">
         <size>
-         <width>350</width>
+         <width>16777215</width>
          <height>30</height>
         </size>
        </property>
@@ -201,13 +280,13 @@
       <widget class="QTableWidget" name="tableWidget_components">
        <property name="minimumSize">
         <size>
-         <width>350</width>
+         <width>0</width>
          <height>300</height>
         </size>
        </property>
        <property name="maximumSize">
         <size>
-         <width>350</width>
+         <width>16777215</width>
          <height>300</height>
         </size>
        </property>
@@ -225,28 +304,6 @@
          <string>Название</string>
         </property>
        </column>
-      </widget>
-     </item>
-     <item>
-      <widget class="QLabel" name="label_logo">
-       <property name="minimumSize">
-        <size>
-         <width>350</width>
-         <height>100</height>
-        </size>
-       </property>
-       <property name="maximumSize">
-        <size>
-         <width>350</width>
-         <height>100</height>
-        </size>
-       </property>
-       <property name="text">
-        <string>ADITIM</string>
-       </property>
-       <property name="alignment">
-        <set>Qt::AlignmentFlag::AlignCenter</set>
-       </property>
       </widget>
      </item>
      <item>

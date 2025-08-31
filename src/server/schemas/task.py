@@ -1,6 +1,6 @@
 """Pydantic schemas for task"""
 from datetime import datetime, date
-from typing import Optional
+from typing import Optional, List
 from pydantic import BaseModel, ConfigDict
 from .directory import DirTaskStatus
 from .profile_tool import SchemaProfileToolComponentResponse
@@ -15,7 +15,7 @@ class TaskBase(BaseModel):
     stage: Optional[str] = None
     deadline_on: Optional[date] = None
     created_at: Optional[date] = None
-    position: int = 0
+    position: Optional[int] = None
     status_id: int = 1
     description: Optional[str] = None
 
@@ -25,7 +25,7 @@ class SchemaTaskCreate(TaskBase):
     """Создание задачи — сервер сам установит created_at и id"""
     pass  # Все поля из Base
 
-class TaskUpdate(BaseModel):
+class SchemaTaskUpdate(BaseModel):
     """Частичное обновление задачи — все поля опциональны"""
     product_id: Optional[int] = None
     profile_tool_id: Optional[int] = None
@@ -41,12 +41,7 @@ class SchemaTaskResponse(TaskBase):
     created_at: date
     status: Optional[DirTaskStatus] = None
     component: Optional[list["SchemaTaskComponentResponse"]] = None
-
-# === TASK STATUS UPDATE (частное обновление статуса) ===
-
-class SchemaTaskStatusUpdate(BaseModel):
-    """Только для обновления статуса задачи"""
-    status_id: int
+    position: Optional[int] = None
 
 # === TASK COMPONENT SCHEMAS ===
 
@@ -72,3 +67,7 @@ class SchemaTaskComponentResponse(TaskComponentBase):
     id: int
     profile_tool_component: Optional[SchemaProfileToolComponentResponse] = None
     product_component: Optional[SchemaProductComponentResponse] = None
+
+
+class SchemaQueueReorderRequest(BaseModel):
+    task_ids: List[int]

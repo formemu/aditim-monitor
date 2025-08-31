@@ -14,6 +14,7 @@ class WindowTask(QWidget):
     def __init__(self):
         super().__init__()
         self.task = None
+        self.tab_index = 0  # Индекс текущей вкладки
         self.selected_row = None
         self.load_ui()
         self.setup_ui()
@@ -35,11 +36,18 @@ class WindowTask(QWidget):
         # Настройка контекстного меню для таблицы задач
         self.ui.tableWidget_tasks.setContextMenuPolicy(Qt.CustomContextMenu)
         self.ui.tableWidget_tasks.customContextMenuRequested.connect(self.show_context_menu)
-        # Подключение сигналов
+
+        # Общие подключения
+        self.ui.tabWidget_tasks.currentChanged.connect(self.on_tab_changed)
+        # Подключение сигналов вкладки задач
         self.ui.pushButton_task_add.clicked.connect(self.on_create_task)
         self.ui.pushButton_task_delete.clicked.connect(self.on_delete_clicked)
         self.ui.tableWidget_tasks.itemSelectionChanged.connect(self.on_selection_changed)
-        self.ui.lineEdit_search.textChanged.connect(self.filter_table)
+
+        #подключение сигналов вкладки очереди
+        self.ui.pushButton_position_up.clicked.connect(self.on_position_up_clicked)
+        self.ui.pushButton_position_down.clicked.connect(self.on_position_down_clicked)
+        self.ui.tableWidget_queue.itemSelectionChanged.connect(self.on_selection_changed)
         # Настройка таблицы задач
         table = self.ui.tableWidget_tasks
         table.setSelectionBehavior(QAbstractItemView.SelectRows)
@@ -53,10 +61,19 @@ class WindowTask(QWidget):
     # =============================================================================
     def refresh_data(self):
         """Принудительное обновление данных"""
-        api_manager.refresh_task_async()
-        self.update_task_table()
-        if self.selected_row is not None:
-            self.update_task_info_panel()
+        if self.tab_index == 0:
+            api_manager.load_task()
+            self.update_task_table()
+        elif self.tab_index == 1:
+            api_manager.load_queue()
+            self.update_queue_table()
+    
+    def on_tab_changed(self):
+        """Обработчик смены вкладки — обновляет данные для выбранной вкладки"""
+        self.tab_index = self.ui.tabWidget_tasks.currentIndex()
+        self.clear_component()
+        self.selected_row = 0
+        self.refresh_data()
 
     # =============================================================================
     # ОТОБРАЖЕНИЕ ДАННЫХ: ТАБЛИЦЫ И ИНФОРМАЦИОННЫЕ ПАНЕЛИ
@@ -65,38 +82,70 @@ class WindowTask(QWidget):
         """Обновление таблицы задач с корректным отображением и заполнением по ширине"""
         table = self.ui.tableWidget_tasks
         table.setRowCount(len(api_manager.task))
-        table.setColumnCount(6) 
+        table.setColumnCount(7) 
         # Заголовки столбцов
-        table.setHorizontalHeaderLabels(["Название", "Статус", "Позиция", "Срок", "Создано", "Описание"])
+        table.setHorizontalHeaderLabels(["id", "№ задачи", "Название", "Статус", "Срок", "Создано", "Описание"])
         header = table.horizontalHeader()
         for col in range(table.columnCount() - 1):
             header.setSectionResizeMode(col, QHeaderView.ResizeToContents)
         header.setSectionResizeMode(table.columnCount() - 1, QHeaderView.Stretch)
-
         for row, task in enumerate(api_manager.task):
+            id = task['id']
+            table.setItem(row, 0, QTableWidgetItem(str(id)))
+            table.setItem(row, 1, QTableWidgetItem(f"Задача № {id}"))
             name = self.get_task_name(task)
-            table.setItem(row, 0, QTableWidgetItem(name))
+            table.setItem(row, 2, QTableWidgetItem(name))
             status = task['status']['name']
-            table.setItem(row, 1, QTableWidgetItem(status))
-            position = str(task['position'])
-            table.setItem(row, 2, QTableWidgetItem(position))
+            table.setItem(row, 3, QTableWidgetItem(status))
             deadline = task['deadline_on']
-            table.setItem(row, 3, QTableWidgetItem(deadline))
+            table.setItem(row, 4, QTableWidgetItem(deadline))
             created = task['created_at']
-            table.setItem(row, 4, QTableWidgetItem(created))
+            table.setItem(row, 5, QTableWidgetItem(created))
             description = task['description']
-            table.setItem(row, 5, QTableWidgetItem(description))
+            table.setItem(row, 6, QTableWidgetItem(description))
+        table.setColumnHidden(0, True)  
+
+    def update_queue_table(self):
+        """Обновление таблицы очереди с корректным отображением и заполнением по ширине"""
+        table = self.ui.tableWidget_queue
+        table.setRowCount(len(api_manager.queue))
+        table.setColumnCount(7) 
+        # Заголовки столбцов
+        table.setHorizontalHeaderLabels(["id", "Позиция", "Название", "Статус", "Срок", "Создано", "Описание"])
+        header = table.horizontalHeader()
+        for col in range(table.columnCount() - 1):
+            header.setSectionResizeMode(col, QHeaderView.ResizeToContents)
+        header.setSectionResizeMode(table.columnCount() - 1, QHeaderView.Stretch)
+        for row, task in enumerate(api_manager.queue):
+            id = task['id']
+
+            table.setItem(row, 0, QTableWidgetItem(str(id)))
+            position = task['position']
+            table.setItem(row, 1, QTableWidgetItem(str(position)))
+            name = self.get_task_name(task)
+            table.setItem(row, 2, QTableWidgetItem(name))
+            status = task['status']['name']
+            table.setItem(row, 3, QTableWidgetItem(status))
+            deadline = task['deadline_on']
+            table.setItem(row, 4, QTableWidgetItem(deadline))
+            created = task['created_at']
+            table.setItem(row, 5, QTableWidgetItem(created))
+            description = task['description']
+            table.setItem(row, 6, QTableWidgetItem(description))    
+        table.setColumnHidden(0, True)  
 
     def update_task_info_panel(self):
         """Обновление панели информации о задаче"""
-        self.task = api_manager.task[self.selected_row]
-        name = self.get_task_name(self.task)
-        deadline = self.task['deadline_on']
-        created = self.task['created_at']
-        status = self.task['status']['name']
-        self.ui.label_task_name.setText(f"Название: {name}")
-        self.ui.label_task_info.setText(f"Статус: {status} | Срок: {deadline} | Создано: {created}")
-        self.load_component()
+        if self.task is not None:
+            name = self.get_task_name(self.task)
+            deadline = self.task['deadline_on']
+            created = self.task['created_at']
+            status = self.task['status']['name']
+            self.ui.label_task_name.setText(f"Название: {name}")
+            self.ui.label_task_info.setText(f"Статус: {status} | Срок: {deadline} | Создано: {created}")
+            self.load_component()
+        else:
+            self.clear_task_info_panel()
 
     def get_task_name(self, task):
         """Возвращает название задачи: артикул профиля или имя изделия"""
@@ -112,6 +161,7 @@ class WindowTask(QWidget):
         """Очистка панели задачи"""
         self.ui.label_task_name.setText("Название: -")
         self.ui.label_task_info.setText("Статус: - | Срок: - | Создано: -")
+        self.clear_component()
 
     def load_component(self):
         """Загрузка компонентов задачи по её идентификатору. """
@@ -150,6 +200,75 @@ class WindowTask(QWidget):
     # =============================================================================
     # ОБРАБОТЧИКИ СОБЫТИЙ: УПРАВЛЕНИЕ
     # =============================================================================
+    def on_position_up_clicked(self):
+        selected_row = self.ui.tableWidget_queue.currentRow()
+        if selected_row <= 0:
+            return
+        # Получаем ID задачи из таблицы (колонка 0 — ID)
+        item = self.ui.tableWidget_queue.item(selected_row, 0)
+        if not item:
+            return
+        current_task_id = int(item.text())
+        # Теперь получаем ПОЛНЫЙ список ID задач в порядке очереди
+        task_ids = [task['id'] for task in api_manager.queue]
+        try:
+            # Находим индекс задачи в api_manager.queue (не в таблице!)
+            current_idx_in_list = next(i for i, t in enumerate(task_ids) if t == current_task_id)
+        except StopIteration:
+            return  # Задача не найдена в списке
+        if current_idx_in_list == 0:
+            return  # Уже на верху
+        # Меняем местами в списке
+        above_idx = current_idx_in_list - 1
+        task_ids[current_idx_in_list], task_ids[above_idx] = task_ids[above_idx], task_ids[current_idx_in_list]
+        # Отправляем
+        api_manager.api_task.reorder_task_queue(task_ids)
+        # Обновляем
+        self.refresh_data()
+        # Выделяем перемещённую задачу
+        self.select_row_by_task_id(current_task_id)
+
+
+    def on_position_down_clicked(self):
+        """Переместить задачу вниз"""
+        selected_row = self.ui.tableWidget_queue.currentRow()
+        if selected_row == -1:
+            return
+        # Получаем ID задачи из текущей строки (колонка 0 — ID)
+        item = self.ui.tableWidget_queue.item(selected_row, 0)
+        if not item:
+            return
+        current_task_id = int(item.text())
+        # Получаем текущий порядок задач в очереди (в статусе "В работе")
+        task_ids = [task['id'] for task in api_manager.queue]
+        # Находим индекс задачи в списке api_manager.queue (не в таблице!)
+        try:
+            current_idx_in_list = next(i for i, tid in enumerate(task_ids) if tid == current_task_id)
+        except StopIteration:
+            return  # Задача не найдена в списке — возможно, данные устарели
+        # Проверяем: можно ли переместить вниз?
+        if current_idx_in_list >= len(task_ids) - 1:
+            return  # Уже последняя
+        # Меняем местами с нижестоящей задачей
+        below_idx = current_idx_in_list + 1
+        task_ids[current_idx_in_list], task_ids[below_idx] = task_ids[below_idx], task_ids[current_idx_in_list]
+        # Отправляем обновлённый порядок на сервер
+        api_manager.api_task.reorder_task_queue(task_ids)
+        # Обновляем интерфейс
+        self.refresh_data()
+        # Восстанавливаем выделение на перемещённой задаче
+        self.select_row_by_task_id(current_task_id)
+
+    def select_row_by_task_id(self, task_id):
+        """Находит строку по ID задачи и выделяет её"""
+        table = self.ui.tableWidget_queue
+        for row in range(table.rowCount()):
+            item = table.item(row, 0)  # Колонка 0 — ID
+            if item and item.text() == str(task_id):
+                table.selectRow(row)
+                table.scrollToItem(item, QAbstractItemView.PositionAtCenter)
+                return
+
     def on_create_task(self):
         """Открытие диалога создания задачи"""
         dialog = DialogCreateTask(self)
@@ -159,6 +278,13 @@ class WindowTask(QWidget):
     def on_delete_clicked(self):
         """Удаление задачи с подтверждением"""
         api_manager.api_task.delete_task(self.task['id'])
+        if self.ui.tableWidget_tasks.rowCount() > 0:
+            item = self.ui.tableWidget_tasks.item(0, 0)
+            if item is not None:
+                self.ui.tableWidget_tasks.setCurrentItem(item)
+                self.selected_row = 0
+        else:
+            self.selected_row = None
         self.refresh_data()
 
     def show_context_menu(self, pos):
@@ -169,44 +295,75 @@ class WindowTask(QWidget):
         for status in api_manager.task_status:
             action = QAction(status['name'], status_menu)
             action.setCheckable(True)
-            action.triggered.connect(lambda _, sid=status['id']: self.change_task_status(sid))
+            action.triggered.connect(lambda _, status_id=status['id']: self.change_task_status(status_id))
             status_menu.addAction(action)
         menu.addMenu(status_menu)
         menu.exec(table.viewport().mapToGlobal(pos))
 
     def change_task_status(self, status_id):
-        """Изменить статус задачи через API"""
-        api_manager.api_task.update_task_status(self.task['id'], status_id)
-        self.refresh_data()
+        # 1. Обновить статус
+        task = api_manager.api_task.update_task_status(self.task['id'], status_id)
 
-    def get_selected_row(self):
-        """Возвращает выбранную задачу или None"""
-        selected = self.ui.tableWidget_tasks.selectedItems()
-        if selected:
-            return selected[0].row()
+        # 2. Получить ВСЕ задачи в статусе "В работе"
+        queue = api_manager.api_task.get_queue() or []
+        # 3. Формируем новый список ВСЕХ task_ids в правильном порядке
+        task_ids = [t['id'] for t in queue]
+        
+        # 4. Добавляем или удаляем текущую задачу
+        if task['status']['name'] == 'В работе':
+            if task['id'] not in task_ids:
+                task_ids.append(task['id'])
         else:
-            return None
+            if task['id'] in task_ids:
+                task_ids.remove(task['id'])
+        # 5. Сохраняем ВСЮ очередь
+        api_manager.api_task.reorder_task_queue(task_ids)
+            
+
+        
+        self.refresh_data()
 
     # =============================================================================
     # ОБРАБОТЧИКИ СОБЫТИЙ: ВЫДЕЛЕНИЕ И ПОИСК
     # =============================================================================
     def on_selection_changed(self):
         """Обработка выбора задачи"""
-        self.selected_row = self.get_selected_row()
-        if self.selected_row is not None:
+        if self.tab_index == 0:
+            row = self.ui.tableWidget_tasks.currentRow()
+            if row >= 0:
+                self.selected_row = row
+                item = self.ui.tableWidget_tasks.item(row, 0)
+                if item is not None:
+                    task_id = item.text()
+                    self.task = api_manager.get_task_by_id(task_id)
+                    self.selected_row = row
+                else:
+                    self.task = None
+                    self.selected_row = None
+            else:
+                self.task = None
+                self.selected_row = None
+
             self.update_task_info_panel()
+
+        elif self.tab_index == 1:
+            row = self.ui.tableWidget_queue.currentRow()
+            if row >= 0:
+                self.selected_row = row
+                item = self.ui.tableWidget_queue.item(row, 0)
+                if item:
+                    task_id = item.text()
+                    self.task = api_manager.get_task_by_id(task_id)
+            else:
+                self.selected_row = None
+                self.task = None
+
+            self.update_task_info_panel()
+
         else:
             self.selected_row = None
-            self.clear_task_info_panel()
-
-    def filter_table(self):
-        """Фильтрация строк таблицы по первому столбцу"""
-        table = self.ui.tableWidget_tasks
-        text = self.ui.lineEdit_search.text().lower()
-        for row in range(table.rowCount()):
-            item = table.item(row, 0)
-            visible = item and text in item.text().lower()
-            table.setRowHidden(row, not visible)
+            self.task = None
+            self.update_task_info_panel()
     # =============================================================================
     # УПРАВЛЕНИЕ АВТООБНОВЛЕНИЕМ
     # =============================================================================

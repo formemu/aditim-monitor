@@ -14,7 +14,7 @@ from ..schemas.product import (
     SchemaProductComponentResponse,
 )
 
-router = APIRouter(prefix="/api", tags=["products"])
+router = APIRouter(prefix="/api", tags=["product"])
 
 # =============================================================================
 # ROUTER.GET

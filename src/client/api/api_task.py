@@ -1,25 +1,27 @@
 """API для работы с задачами"""
 from .api_client import ApiClient
 
-
 class ApiTask(ApiClient):
     """API для задач"""
-
     def get_task(self):
         """Получение всех задач"""
         return self._request("GET", "api/task")
+    
+    def get_queue(self):
+        """Получить текущую очередь (в статусе 'в работе', с position)"""
+        return self._request("GET", "api/task/queue")
 
     def create_task(self, task_data):
         """Создание новой задачи"""
         return self._request("POST", "api/task", json=task_data)
 
+    def reorder_task_queue(self, task_ids: list):
+        """Отправить новый порядок очереди"""
+        return self._request("POST", "api/task/queue/reorder", json={"task_ids": task_ids})
+
     def update_task_status(self, task_id, status_id):
         """Обновление статуса задачи"""
         return self._request("PATCH", f"api/task/{task_id}/status", json={"status_id": status_id})
-
-    def update_task_position(self, task_id, position):
-        """Обновление позиции задачи"""
-        return self._request("PATCH", f"api/task/{task_id}/position", json={"position": position})
 
     def delete_task(self, task_id):
         """Удаление задачи"""
@@ -33,3 +35,4 @@ class ApiTask(ApiClient):
     def create_task_component(self, task_id, component_data):
         """Создание компонента задачи"""
         return self._request("POST", f"api/task/{task_id}/component", json=component_data)
+    

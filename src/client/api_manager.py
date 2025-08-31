@@ -29,7 +29,6 @@ class ApiManager:
         self.api_profile_tool = ApiProfileTool()
         self.api_product = ApiProduct()
         self.api_task = ApiTask()
-
         self.api_directory = ApiDirectory()
 
 
@@ -38,6 +37,7 @@ class ApiManager:
         self.profile_tool = []
         self.product = []
         self.task = []
+        self.queue = []
 
         # Словари для хранения загруженных справочников
         self.department = []
@@ -51,6 +51,7 @@ class ApiManager:
         self.profile_tool_loaded = False
         self.product_loaded = False
         self.task_loaded = False
+        self.queue_loaded = False
 
         self.department_loaded = False
         self.component_type_loaded = False
@@ -75,6 +76,7 @@ class ApiManager:
         self.load_profile_tool()
         self.load_product()
         self.load_task()
+        self.load_queue()
 
 
     # Базовые методы загрузки данных
@@ -131,6 +133,16 @@ class ApiManager:
         except Exception as e:
             print("ошибка при загрузке задач:", e)
             self.task_loaded = False
+
+    def load_queue(self):
+        """загрузка очереди"""
+        try:
+            self.queue = self.api_task.get_queue()
+            self.queue_loaded = True
+            print("данные о всех задачах в очереди обновились")
+        except Exception as e:
+            self.queue_loaded = False
+            print("ошибка при загрузке очереди:", e)
 
     # Базовые методы загрузки справочников
 
@@ -272,6 +284,14 @@ class ApiManager:
             return self.task
         run_async(refresh)
 
+    def refresh_queue_async(self):
+        """Асинхронное обновление таблицы очереди"""
+        def refresh():
+            self.queue_loaded = False
+            self.load_queue()
+            return self.queue
+        run_async(refresh)
+
     def refresh_all_table_async(self):
         """Асинхронное обновление всех таблиц"""
         def refresh():
@@ -279,18 +299,37 @@ class ApiManager:
             return True
         run_async(refresh)
 
-    # поиск по артикулу
+    # поиск по id
     def get_profile_by_id(self, id):
-        """Поиск профиля по артикулу"""
-        return next((p for p in self.profile if p['id'] == id), None)
+        """Поиск профиля по идентификатору"""
+        try:
+            profile_id = int(id)
+            return next((p for p in self.profile if p['id'] == profile_id), None)
+        except (ValueError, TypeError):
+            return None
 
     def get_profile_tool_by_id(self, id):
         """Поиск инструмента профиля по идентификатору"""
-        return next((pt for pt in self.profile_tool if pt['id'] == id), None)
+        try:
+            profile_tool_id = int(id)
+            return next((pt for pt in self.profile_tool if pt['id'] == profile_tool_id), None)
+        except (ValueError, TypeError):
+            return None
 
     def get_product_by_id(self, id):
         """Поиск продукта по идентификатору"""
-        return next((p for p in self.product if p['id'] == id), None)
+        try:
+            product_id = int(id)
+            return next((p for p in self.product if p['id'] == product_id), None)
+        except (ValueError, TypeError):
+            return None
+
+    def get_task_by_id(self, id):
+        try:
+            task_id = int(id)
+            return next((t for t in self.task if t['id'] == task_id), None)
+        except (ValueError, TypeError):
+            return None
 
     # Поиск профилей по артикулу
     def get_search_profile(self, find_article):
@@ -310,6 +349,14 @@ class ApiManager:
             if find_name in name:
                 results.append(product)
         return results
+
+    # манипуляции с задачами
+
+    def add_to_queue(self, task):
+        """Добавить задачу в очередь"""
+        ApiTask.add_task_queue(task['id'])
+
+
 
 # Глобальный экземпляр менеджера справочников
 api_manager = ApiManager()

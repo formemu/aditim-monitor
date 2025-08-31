@@ -8,7 +8,7 @@ from ..database import get_db
 from ..models.profile import ModelProfile
 from ..schemas.profile import SchemaProfileCreate, SchemaProfileUpdate, SchemaProfileResponse
 
-router = APIRouter(prefix="/api", tags=["profiles"])
+router = APIRouter(prefix="/api", tags=["profile"])
 
 # =============================================================================
 # ROUTER.GET
