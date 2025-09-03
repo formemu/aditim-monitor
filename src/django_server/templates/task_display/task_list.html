@@ -5,103 +5,52 @@
 {% block content %}
 <div class="row">
     <div class="col-12">
-        <div class="d-flex justify-content-between align-items-center mb-3">
-            <h1>Список задач</h1>
-            <div class="d-flex align-items-center">
-                <span id="last-update" class="badge bg-secondary me-2">Обновлено: --:--</span>
-                <span id="update-status" class="badge bg-success">Автообновление включено</span>
-            </div>
-        </div>
-        
-        <!-- Форма фильтрации -->
-        <div class="search-form">
-            <form method="get" class="row g-3">
-                <div class="col-md-3">
-                    <select name="status" class="form-select">
-                        <option value="">Все статусы</option>
-                        {% for status in status_list %}
-                        <option value="{{ status.id }}" {% if current_status == status.id|stringformat:"s" %}selected{% endif %}>
-                            {{ status.name }}
-                        </option>
-                        {% endfor %}
-                    </select>
-                </div>
-                <div class="col-md-3">
-                    <select name="department" class="form-select">
-                        <option value="">Все департаменты</option>
-                        {% for department in department_list %}
-                        <option value="{{ department.id }}" {% if current_department == department.id|stringformat:"s" %}selected{% endif %}>
-                            {{ department.name }}
-                        </option>
-                        {% endfor %}
-                    </select>
-                </div>
-                <div class="col-md-4">
-                    <input type="text" name="search" class="form-control" placeholder="Поиск по названию..." value="{{ search_query }}">
-                </div>
-                <div class="col-md-2">
-                    <button type="submit" class="btn btn-primary w-100">Фильтр</button>
-                </div>
-            </form>
-        </div>
-
-        <!-- Список задач -->
         <div id="tasks-container">
-        {% for task in page_obj %}
-        <div class="card task-card" data-task-id="{{ task.id }}">
-            <div class="card-body">
-                <div class="row align-items-center">
-                    <div class="col-md-6">
-                        <h5 class="card-title mb-1">
-                            <a href="{% url 'task_display:task_detail' task.id %}" class="text-decoration-none">
-                                {{ task.get_display_name }}
-                            </a>
-                        </h5>
-                        <p class="text-muted mb-0">Департамент: {{ task.department.name }}</p>
-                    </div>
-                    <div class="col-md-2">
-                        <span class="badge bg-info status-badge">{{ task.status.name }}</span>
-                    </div>
-                    <div class="col-md-2">
-                        <small class="text-muted">Позиция: {{ task.position }}</small>
-                    </div>
-                    <div class="col-md-2">
-                        {% if task.deadline_on %}
-                        <small class="text-muted">Срок: {{ task.deadline_on|date:"d.m.Y" }}</small>
-                        {% endif %}
+            {% for task in task_list %}
+                <div class="card task-card" data-task-id="{{ task.id }}">
+                    <div class="card-body">
+                        <div class="row align-items-center">
+                            <!-- Название задачи и департамент -->
+                            <div class="col-md-6">
+                                <h5 class="card-title mb-1 task-title">
+                                    <a href="{% url 'task_display:task_detail' task.id %}" class="text-decoration-none">
+                                        {{ task.get_display_name }}
+                                    </a>
+                                </h5>
+                                <p class="text-muted mb-0 task-department">
+                                    {% if task.product %}
+                                        Департамент: {{ task.product.department.name }}
+                                    {% elif task.profile_tool %}
+                                        Департамент: —
+                                    {% else %}
+                                        Департамент: не указан
+                                    {% endif %}
+                                </p>
+                            </div>
+
+                            <!-- Статус -->
+                            <div class="col-md-2">
+                                <span class="badge status-badge task-status {{ task.status.css_class }}">{{ task.status.name }}</span>
+                            </div>
+
+                            <!-- Позиция -->
+                            <div class="col-md-2">
+                                <small class="text-muted task-position">Позиция: {{ task.position }}</small>
+                            </div>
+
+                            <!-- Срок -->
+                            <div class="col-md-2">
+                                {% if task.deadline_on %}
+                                    <small class="text-muted task-deadline">Срок: {{ task.deadline_on|date:"d.m.Y" }}</small>
+                                {% endif %}
+                            </div>
+                        </div>
                     </div>
                 </div>
-            </div>
+            {% empty %}
+                <div class="alert alert-info">Задачи не найдены.</div>
+            {% endfor %}
         </div>
-        {% empty %}
-        <div class="alert alert-info">
-            Задачи не найдены.
-        </div>
-        {% endfor %}
-        </div>
-
-        <!-- Пагинация -->
-        {% if page_obj.has_other_pages %}
-        <nav aria-label="Навигация по страницам">
-            <ul class="pagination justify-content-center">
-                {% if page_obj.has_previous %}
-                <li class="page-item">
-                    <a class="page-link" href="?{% if request.GET.status %}status={{ request.GET.status }}&{% endif %}{% if request.GET.department %}department={{ request.GET.department }}&{% endif %}{% if search_query %}search={{ search_query }}&{% endif %}page={{ page_obj.previous_page_number }}">Предыдущая</a>
-                </li>
-                {% endif %}
-                
-                <li class="page-item active">
-                    <span class="page-link">{{ page_obj.number }} из {{ page_obj.paginator.num_pages }}</span>
-                </li>
-                
-                {% if page_obj.has_next %}
-                <li class="page-item">
-                    <a class="page-link" href="?{% if request.GET.status %}status={{ request.GET.status }}&{% endif %}{% if request.GET.department %}department={{ request.GET.department }}&{% endif %}{% if search_query %}search={{ search_query }}&{% endif %}page={{ page_obj.next_page_number }}">Следующая</a>
-                </li>
-                {% endif %}
-            </ul>
-        </nav>
-        {% endif %}
     </div>
 </div>
 {% endblock %}
@@ -110,17 +59,6 @@
 <script>
 let updateInterval;
 let isUpdating = false;
-
-// Получение текущих параметров фильтрации из URL
-function getCurrentFilters() {
-    const urlParams = new URLSearchParams(window.location.search);
-    return {
-        status: urlParams.get('status') || '',
-        department: urlParams.get('department') || '',
-        search: urlParams.get('search') || '',
-        page: urlParams.get('page') || '1'
-    };
-}
 
 // Обновление времени последнего обновления
 function updateLastUpdateTime() {
@@ -164,21 +102,21 @@ function updateTasksContainer(tasks) {
             <div class="card-body">
                 <div class="row align-items-center">
                     <div class="col-md-6">
-                        <h5 class="card-title mb-1">
+                        <h5 class="card-title mb-1 task-title">
                             <a href="${task.url}" class="text-decoration-none">
                                 ${task.name}
                             </a>
                         </h5>
-                        <p class="text-muted mb-0">Департамент: ${task.department}</p>
+                        <p class="text-muted mb-0 task-department">Департамент: ${task.department}</p>
                     </div>
                     <div class="col-md-2">
-                        <span class="badge bg-info status-badge">${task.status}</span>
+                        <span class="badge bg-info status-badge task-status">${task.status}</span>
                     </div>
                     <div class="col-md-2">
-                        <small class="text-muted">Позиция: ${task.position}</small>
+                        <small class="text-muted task-position">Позиция: ${task.position}</small>
                     </div>
                     <div class="col-md-2">
-                        ${task.deadline_on ? `<small class="text-muted">Срок: ${task.deadline_on}</small>` : ''}
+                        ${task.deadline_on ? `<small class="text-muted task-deadline">Срок: ${task.deadline_on}</small>` : ''}
                     </div>
                 </div>
             </div>
@@ -196,10 +134,7 @@ async function loadUpdatedData() {
     updateConnectionStatus(true, true);
     
     try {
-        const filters = getCurrentFilters();
-        const params = new URLSearchParams(filters);
-        
-        const response = await fetch(`/api/task/live/?${params}`);
+        const response = await fetch('/api/task/live/');
         if (!response.ok) throw new Error('Network response was not ok');
         
         const data = await response.json();
@@ -225,12 +160,8 @@ async function loadUpdatedData() {
 
 // Запуск автообновления
 function startAutoUpdate() {
-    // Первоначальная загрузка
-    loadUpdatedData();
-    
-    // Обновление каждую минуту (60000 мс)
-    updateInterval = setInterval(loadUpdatedData, 60000);
-    
+    loadUpdatedData(); // Первоначальная загрузка
+    updateInterval = setInterval(loadUpdatedData, 60000); // каждую минуту
     console.log('Автообновление запущено (каждую минуту)');
 }
 
@@ -242,19 +173,19 @@ function stopAutoUpdate() {
     }
 }
 
-// Инициализация при загрузке страницы
+// Инициализация
 document.addEventListener('DOMContentLoaded', function() {
     startAutoUpdate();
     
-    // Остановка автообновления при переходе на другую страницу
+    // Остановка при уходе со страницы
     window.addEventListener('beforeunload', stopAutoUpdate);
     
-    // Возобновление автообновления при возврате на вкладку
+    // Перезапуск при возврате на вкладку
     document.addEventListener('visibilitychange', function() {
-        if (document.hidden) {
-            stopAutoUpdate();
-        } else {
+        if (!document.hidden) {
             startAutoUpdate();
+        } else {
+            stopAutoUpdate();
         }
     });
 });

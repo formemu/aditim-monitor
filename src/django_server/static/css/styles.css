@@ -1,0 +1,66 @@
+body {
+    background-color: #f8f9fa;
+}
+
+/* Логотип в шапке */
+.header-logo {
+    width: 400px;
+    height: 150px;
+    object-fit: contain;
+}
+
+/* Карточка задачи */
+.task-card {
+    margin-bottom: 1rem;
+    box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.1);
+    border-left: 4px solid #007bff;
+    transition: transform 0.1s;
+}
+
+.task-card:hover {
+    transform: scale(1.01);
+}
+
+/* Увеличенный заголовок в шапке */
+.navbar-brand {
+    font-size: 5.5rem !important;
+    color: #14426a !important;
+    font-weight: bold;
+}
+
+/* Название задачи */
+.task-title {
+    font-size: 1.25rem;
+    font-weight: 600;
+}
+
+/* Департамент — увеличенный второстепенный текст */
+.task-department {
+    font-size: 1rem;
+    font-weight: 500;
+    color: #495057 !important;
+}
+
+/* Позиция */
+.task-position {
+    font-size: 1rem;
+    font-weight: 500;
+    color: #6c757d;
+}
+
+/* Статус */
+.status-badge {
+    font-size: 1rem;
+    padding: 0.5em 0.75em;
+}
+
+/* Срок */
+.task-deadline {
+    font-size: 1rem;
+    font-weight: 500;
+    color: #6c757d;
+}
+
+.status-badge.bg-primary { background-color: #0056b3 !important; }
+.status-badge.bg-success { background-color: #28a745 !important; }
+.status-badge.bg-info { background-color: #17a2b8 !important; }

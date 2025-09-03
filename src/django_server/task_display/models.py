@@ -12,6 +12,16 @@ class DirTaskStatus(models.Model):
     
     def __str__(self):
         return self.name
+    
+    @property
+    def css_class(self):
+        """Возвращает CSS-класс в зависимости от имени статуса"""
+        mapping = {
+            'В работе': 'bg-primary',
+            'Выполнено': 'bg-success',
+            'Новая': 'bg-info'
+        }
+        return mapping.get(self.name, 'bg-secondary')
 
 class DirDepartment(models.Model):
     name = models.CharField(max_length=100)
@@ -71,12 +81,11 @@ class ProfileTool(models.Model):
 class Task(models.Model):
     product = models.ForeignKey(Product, on_delete=models.CASCADE, null=True, blank=True)
     profile_tool = models.ForeignKey(ProfileTool, on_delete=models.CASCADE, null=True, blank=True)
-    department = models.ForeignKey(DirDepartment, on_delete=models.CASCADE)
     status = models.ForeignKey(DirTaskStatus, on_delete=models.CASCADE, db_column='status_id')
     position = models.IntegerField(default=0)
     deadline_on = models.DateField(null=True, blank=True)
     stage = models.TextField(blank=True)
-    created_at = models.DateTimeField()
+    created_at = models.DateField()
     
     class Meta:
         db_table = 'task'
