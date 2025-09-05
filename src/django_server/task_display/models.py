@@ -83,16 +83,15 @@ class Task(models.Model):
     profile_tool = models.ForeignKey(ProfileTool, on_delete=models.CASCADE, null=True, blank=True)
     status = models.ForeignKey(DirTaskStatus, on_delete=models.CASCADE, db_column='status_id')
     position = models.IntegerField(default=0)
-    deadline_on = models.DateField(null=True, blank=True)
-    stage = models.TextField(blank=True)
-    created_at = models.DateField()
+    deadline = models.DateField(null=True, blank=True)
+    created = models.DateField()
     
     class Meta:
         db_table = 'task'
         managed = False
         verbose_name = 'Задача'
         verbose_name_plural = 'Задачи'
-        ordering = ['position', '-created_at']
+        ordering = ['position', '-created']
     
     def __str__(self):
         if self.product:

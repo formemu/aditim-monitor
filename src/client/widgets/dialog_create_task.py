@@ -219,15 +219,15 @@ class DialogCreateTask(QDialog):
         """Создание задачи для инструмента с компонентами."""
         # Собираем данные формы
         deadline = self.ui.dateEdit_profile_tool_deadline.date().toString("yyyy-MM-dd")
-        created_at = QDate.currentDate().toString("yyyy-MM-dd")
+        created = QDate.currentDate().toString("yyyy-MM-dd")
         description = self.ui.textEdit_profile_tool_description.toPlainText().strip()
         # Получаем выбранные компоненты
         self.get_selected_profile_tool_component()
         # Создаем задачу через API
         task_data = {
             "profile_tool_id": self.profile_tool['id'],
-            "deadline_on": deadline,
-            "created_at": created_at,
+            "deadline": deadline,
+            "created": created,
             "description": description,
             "status_id": 1
         }
@@ -248,16 +248,16 @@ class DialogCreateTask(QDialog):
         """Создание задачи для изделия с компонентами."""
         # Собираем данные формы
         deadline = self.ui.dateEdit_product_deadline.date().toString("yyyy-MM-dd")
-        created_at = QDate.currentDate().toString("yyyy-MM-dd")
+        created = QDate.currentDate().toString("yyyy-MM-dd")
         description = self.ui.textEdit_product_description.toPlainText().strip()
         self.get_selected_product_component()
         # Создаем задачу через API
         task_data = {
             "product_id": self.product['id'],
-            "deadline_on": deadline,
+            "deadline": deadline,
             "description": description,
             "status_id": 1,
-            "created_at": created_at
+            "created": created
         }
         task = api_manager.api_task.create_task(task_data)
         task_id = task['id']

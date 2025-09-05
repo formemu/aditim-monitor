@@ -2,10 +2,8 @@
 from typing import List, Optional
 from fastapi import APIRouter, Depends, HTTPException, Query, Path, Body
 from sqlalchemy.orm import Session
-from sqlalchemy import func
-import traceback
 from ..database import get_db
-from ..models.task import ModelTask, ModelTaskComponent
+from ..models.task import ModelTask, ModelTaskComponent, ModelTaskComponentStage
 from ..models.directory import ModelDirTaskStatus
 from ..schemas.task import (
     SchemaTaskCreate,
@@ -54,6 +52,7 @@ def get_task_component_list(task_id: int, db: Session = Depends(get_db)):
     """Получить компоненты задачи по ID задачи"""
     return db.query(ModelTaskComponent).filter(ModelTaskComponent.task_id == task_id).all()
 
+
 # @router.get("/task/{task_id}", response_model=SchemaTaskResponse)
 # def get_task_by_id(task_id: int = Path(..., description="ID задачи"), db: Session = Depends(get_db)):
 #     """Получить задачу по ID"""
@@ -74,11 +73,11 @@ def create_task(task: SchemaTaskCreate, db: Session = Depends(get_db)):
             product_id=task.product_id,
             profile_tool_id=task.profile_tool_id,
             stage=task.stage,
-            deadline_on=task.deadline_on,
+            deadline=task.deadline,
             position=task.position,
             status_id=task.status_id,
             description=task.description,
-            created_at=task.created_at
+            created=task.created
         )
         
         db.add(task)
@@ -130,7 +129,6 @@ def create_task_component(
     db.refresh(db_component)
     return db_component
 
-
 @router.post("/task/queue/reorder", status_code=204)
 def reorder_queue(request: SchemaQueueReorderRequest, db: Session = Depends(get_db)):
     """Изменение порядка задач в очереди"""
@@ -140,8 +138,7 @@ def reorder_queue(request: SchemaQueueReorderRequest, db: Session = Depends(get_
     for position, task_id in enumerate(request.task_ids, start=1):
         db.query(ModelTask).filter(ModelTask.id == task_id).update({ModelTask.position: position}, synchronize_session='fetch')
     db.commit()
- 
-    
+     
 @router.patch("/task/{task_id}/status", response_model=SchemaTaskResponse)
 def update_task_status( task_id: int, task: SchemaTaskUpdate, db: Session = Depends(get_db)):
     """Обновить статус задачи"""

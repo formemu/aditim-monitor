@@ -47,8 +47,8 @@ def task_api_view(request):
             'name': task.get_display_name(),
             'status': task.status.name,
             'position': task.position,
-            'deadline_on': task.deadline_on.isoformat() if task.deadline_on else None,
-            'created_at': task.created_at.isoformat(),
+            'deadline': task.deadline.isoformat() if task.deadline else None,
+            'created': task.created.isoformat(),
         })
 
     return JsonResponse({
@@ -74,8 +74,8 @@ def task_live_update_api(request):
             'status': task.status.name,
             'position': task.position,
             'department': task.product.department.name if task.product else '—',
-            'deadline_on': task.deadline_on.strftime('%d.%m.%Y') if task.deadline_on else None,
-            'created_at': task.created_at.strftime('%d.%m.%Y %H:%M'),
+            'deadline': task.deadline.strftime('%d.%m.%Y') if task.deadline else None,
+            'created': task.created.strftime('%d.%m.%Y %H:%M'),
             'url': f'/task/{task.id}/',
         })
 

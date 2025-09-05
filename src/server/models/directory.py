@@ -42,3 +42,17 @@ class ModelDirComponentStatus(Base):
     name = Column(String(50), nullable=False, unique=True)
     description = Column(Text)
     component = relationship("ModelProfileToolComponent", back_populates="status")
+
+class ModelDirTaskComponentStage(Base):
+    __tablename__= "dir_task_component_stage"
+    id = Column(Integer, primary_key=True, index=True)
+    name = Column(String(50), nullable=False)
+    description = Column(Text)
+    component_stage = relationship("ModelTaskComponentStage", back_populates="stage")
+
+class ModelDirMachine(Base):
+    __tablename__= "dir_machine"
+    id = Column(Integer, primary_key=True, index=True)
+    name = Column(String(50), nullable=False)
+    description = Column(Text)
+    component_stage = relationship("ModelTaskComponentStage", back_populates="machine")

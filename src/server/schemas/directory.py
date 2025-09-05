@@ -40,3 +40,12 @@ class DirComponentStatus(DirectoryResponse):
 
 class DirToolDimension(DirectoryResponse):
     """Справочник: размерности инструментов"""
+    pass
+
+class DirMachine(DirectoryResponse):
+    """Справочник: станки"""
+    pass
+
+class DirTaskComponentStage(DirectoryResponse):  
+    """Справочник: статусы компонентов задач"""
+    pass

@@ -97,9 +97,9 @@ class WindowTask(QWidget):
             table.setItem(row, 2, QTableWidgetItem(name))
             status = task['status']['name']
             table.setItem(row, 3, QTableWidgetItem(status))
-            deadline = task['deadline_on']
+            deadline = task['deadline']
             table.setItem(row, 4, QTableWidgetItem(deadline))
-            created = task['created_at']
+            created = task['created']
             table.setItem(row, 5, QTableWidgetItem(created))
             description = task['description']
             table.setItem(row, 6, QTableWidgetItem(description))
@@ -126,9 +126,9 @@ class WindowTask(QWidget):
             table.setItem(row, 2, QTableWidgetItem(name))
             status = task['status']['name']
             table.setItem(row, 3, QTableWidgetItem(status))
-            deadline = task['deadline_on']
+            deadline = task['deadline']
             table.setItem(row, 4, QTableWidgetItem(deadline))
-            created = task['created_at']
+            created = task['created']
             table.setItem(row, 5, QTableWidgetItem(created))
             description = task['description']
             table.setItem(row, 6, QTableWidgetItem(description))    
@@ -138,8 +138,8 @@ class WindowTask(QWidget):
         """Обновление панели информации о задаче"""
         if self.task is not None:
             name = self.get_task_name(self.task)
-            deadline = self.task['deadline_on']
-            created = self.task['created_at']
+            deadline = self.task['deadline']
+            created = self.task['created']
             status = self.task['status']['name']
             self.ui.label_task_name.setText(f"Название: {name}")
             self.ui.label_task_info.setText(f"Статус: {status} | Срок: {deadline} | Создано: {created}")
@@ -170,6 +170,7 @@ class WindowTask(QWidget):
         table.setRowCount(len(self.task['component']))
 
         # Проверяем по первому элементу, какой тип компонента
+        print(self.task)
         if self.task['component'] and self.task['component'][0]['product_component_id']:
             table.setColumnCount(2)
             header = table.horizontalHeader()

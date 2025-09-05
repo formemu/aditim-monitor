@@ -40,8 +40,8 @@
 
                             <!-- Срок -->
                             <div class="col-md-2">
-                                {% if task.deadline_on %}
-                                    <small class="text-muted task-deadline">Срок: {{ task.deadline_on|date:"d.m.Y" }}</small>
+                                {% if task.deadline %}
+                                    <small class="text-muted task-deadline">Срок: {{ task.deadline|date:"d.m.Y" }}</small>
                                 {% endif %}
                             </div>
                         </div>
@@ -116,7 +116,7 @@ function updateTasksContainer(tasks) {
                         <small class="text-muted task-position">Позиция: ${task.position}</small>
                     </div>
                     <div class="col-md-2">
-                        ${task.deadline_on ? `<small class="text-muted task-deadline">Срок: ${task.deadline_on}</small>` : ''}
+                        ${task.deadline ? `<small class="text-muted task-deadline">Срок: ${task.deadline}</small>` : ''}
                     </div>
                 </div>
             </div>

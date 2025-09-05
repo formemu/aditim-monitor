@@ -1,20 +1,20 @@
 """Pydantic schemas for task"""
-from datetime import datetime, date
+from datetime import date
 from typing import Optional, List
 from pydantic import BaseModel, ConfigDict
-from .directory import DirTaskStatus
+from .directory import DirTaskStatus, DirTaskComponentStage, DirMachine
 from .profile_tool import SchemaProfileToolComponentResponse
 from .product import SchemaProductComponentResponse
 
 # === TASK SCHEMAS ===
 
 class TaskBase(BaseModel):
-    """Базовые поля задачи (без id и created_at)"""
+    """Базовые поля задачи (без id и created)"""
     product_id: Optional[int] = None
     profile_tool_id: Optional[int] = None
     stage: Optional[str] = None
-    deadline_on: Optional[date] = None
-    created_at: Optional[date] = None
+    deadline: Optional[date] = None
+    created: Optional[date] = None
     position: Optional[int] = None
     status_id: int = 1
     description: Optional[str] = None
@@ -22,23 +22,23 @@ class TaskBase(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
 class SchemaTaskCreate(TaskBase):
-    """Создание задачи — сервер сам установит created_at и id"""
-    pass  # Все поля из Base
+    """Создание задачи — сервер сам установит created и id"""
+    pass
 
 class SchemaTaskUpdate(BaseModel):
     """Частичное обновление задачи — все поля опциональны"""
     product_id: Optional[int] = None
     profile_tool_id: Optional[int] = None
     stage: Optional[str] = None
-    deadline_on: Optional[date] = None
+    deadline: Optional[date] = None
     position: Optional[int] = None
     status_id: Optional[int] = None
     description: Optional[str] = None
 
 class SchemaTaskResponse(TaskBase):
-    """Ответ API — включает id и created_at"""
+    """Ответ API — включает id и created"""
     id: int
-    created_at: date
+    created: date
     status: Optional[DirTaskStatus] = None
     component: Optional[list["SchemaTaskComponentResponse"]] = None
     position: Optional[int] = None
@@ -53,8 +53,8 @@ class TaskComponentBase(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
 class SchemaTaskComponentCreate(TaskComponentBase):
-    """Создание компонента — привязка к задаче обязательна"""
-    
+    """Создание компонента"""
+    pass
 
 class TaskComponentUpdate(BaseModel):
     """Частичное обновление компонента"""
@@ -71,3 +71,34 @@ class SchemaTaskComponentResponse(TaskComponentBase):
 
 class SchemaQueueReorderRequest(BaseModel):
     task_ids: List[int]
+
+
+# === TASK COMPONENT STAGE SCHEMAS ===
+
+
+class TaskComponentStageBase(BaseModel):
+    """Базовая модель компонента задачи"""
+    stage_num : Optional[int] = None
+    task_component_id : Optional[int] = None
+    stage_id : Optional[int] = None
+    machine_id : Optional[int] = None
+    description: Optional[str] = None
+
+class TaskComponentStageCreate(TaskComponentStageBase):
+    pass
+
+class TaskComponentStageUpdate(TaskComponentStageBase):
+    id: int
+    task_component_id : Optional[int] = None
+    stage : Optional[DirTaskComponentStage] = None
+    machine : Optional[DirMachine] = None
+    start : Optional[date] = None
+    finish : Optional[date] = None
+
+class SchemaTaskComponentRStageResponse(TaskComponentStageBase):
+    id: int
+    task_component : Optional[SchemaTaskComponentResponse] = None
+    stage : Optional[DirTaskComponentStage] = None
+    machine : Optional[DirMachine] = None
+    start : Optional[date] = None
+    finish : Optional[date] = None
