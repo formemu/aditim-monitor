@@ -1,10 +1,10 @@
 """Содержимое задач для ADITIM Monitor Client"""
-from PySide6.QtWidgets import QWidget, QTableWidgetItem, QAbstractItemView,  QMenu, QHeaderView, QDialog
+from PySide6.QtWidgets import QWidget, QTableWidgetItem, QAbstractItemView,  QMenu, QHeaderView, QDialog, QWizard
 from PySide6.QtCore import QFile, Qt, QTimer
 from PySide6.QtGui import QAction
 from PySide6.QtUiTools import QUiLoader
 from ..constant import UI_PATHS_ABS as UI_PATHS, get_style_path
-from ..widgets.dialog_create_task import DialogCreateTask
+from ..widgets.wizard_task_create import WizardTaskCreate
 from ..style_util import load_styles
 from ..api_manager import api_manager
 
@@ -272,8 +272,11 @@ class WindowTask(QWidget):
 
     def on_create_task(self):
         """Открытие диалога создания задачи"""
-        dialog = DialogCreateTask(self)
-        if dialog.exec() == QDialog.Accepted:
+        # dialog = DialogCreateTask(self)
+        # if dialog.exec() == QDialog.Accepted:
+        #     self.refresh_data()
+        wizard = WizardTaskCreate(self)
+        if wizard.exec() == QWizard.Accepted:
             self.refresh_data()
 
     def on_delete_clicked(self):
