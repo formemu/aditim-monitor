@@ -7,6 +7,7 @@ from ..constant import UI_PATHS_ABS as UI_PATHS, get_style_path
 from ..widgets.wizard_task_create import WizardTaskCreate
 from ..style_util import load_styles
 from ..api_manager import api_manager
+from PySide6.QtWidgets import QMessageBox
 
 
 class WindowTask(QWidget):
@@ -170,7 +171,6 @@ class WindowTask(QWidget):
         table.setRowCount(len(self.task['component']))
 
         # Проверяем по первому элементу, какой тип компонента
-        print(self.task)
         if self.task['component'] and self.task['component'][0]['product_component_id']:
             table.setColumnCount(2)
             header = table.horizontalHeader()
@@ -281,15 +281,22 @@ class WindowTask(QWidget):
 
     def on_delete_clicked(self):
         """Удаление задачи с подтверждением"""
+        if self.task is None:
+            self.show_warning_dialog("Задача не выбрана")
+            return
         api_manager.api_task.delete_task(self.task['id'])
         if self.ui.tableWidget_tasks.rowCount() > 0:
             item = self.ui.tableWidget_tasks.item(0, 0)
             if item is not None:
                 self.ui.tableWidget_tasks.setCurrentItem(item)
+                self.task = api_manager.get_task_by_id(item.text())
                 self.selected_row = 0
         else:
+            self.task = None
             self.selected_row = None
+            self.clear_task_info_panel()
         self.refresh_data()
+
 
     def show_context_menu(self, pos):
         """Показать контекстное меню для изменения статуса задачи"""
@@ -333,35 +340,22 @@ class WindowTask(QWidget):
     def on_selection_changed(self):
         """Обработка выбора задачи"""
         if self.tab_index == 0:
-            row = self.ui.tableWidget_tasks.currentRow()
-            if row >= 0:
-                self.selected_row = row
-                item = self.ui.tableWidget_tasks.item(row, 0)
-                if item is not None:
-                    task_id = item.text()
-                    self.task = api_manager.get_task_by_id(task_id)
-                    self.selected_row = row
-                else:
-                    self.task = None
-                    self.selected_row = None
+            self.selected_row = self.ui.tableWidget_tasks.currentRow()
+            item = self.ui.tableWidget_tasks.item(self.selected_row, 0)
+            if item is not None:
+                task_id = item.text()
+                self.task = api_manager.get_task_by_id(task_id)
             else:
                 self.task = None
                 self.selected_row = None
-
             self.update_task_info_panel()
 
         elif self.tab_index == 1:
-            row = self.ui.tableWidget_queue.currentRow()
-            if row >= 0:
-                self.selected_row = row
-                item = self.ui.tableWidget_queue.item(row, 0)
-                if item:
-                    task_id = item.text()
-                    self.task = api_manager.get_task_by_id(task_id)
-            else:
-                self.selected_row = None
-                self.task = None
-
+            self.selected_row = self.ui.tableWidget_queue.currentRow()
+            item = self.ui.tableWidget_queue.item(self.selected_row, 0)
+            if item:
+                task_id = item.text()
+                self.task = api_manager.get_task_by_id(task_id)
             self.update_task_info_panel()
 
         else:
@@ -381,3 +375,12 @@ class WindowTask(QWidget):
         """Остановка автообновления"""
         if self.update_timer.isActive():
             self.update_timer.stop()
+
+    def show_warning_dialog(self, message: str):
+        """Показать окно предупреждения с заданным сообщением"""
+        warning_box = QMessageBox(self)
+        warning_box.setIcon(QMessageBox.Warning)
+        warning_box.setWindowTitle("Внимание")
+        warning_box.setText(message)
+        warning_box.setStandardButtons(QMessageBox.Ok)
+        warning_box.exec()

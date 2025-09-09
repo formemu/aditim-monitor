@@ -1,4 +1,5 @@
 """API роутеры для задач"""
+import traceback
 from typing import List, Optional
 from fastapi import APIRouter, Depends, HTTPException, Query, Path, Body
 from sqlalchemy.orm import Session
@@ -72,7 +73,6 @@ def create_task(task: SchemaTaskCreate, db: Session = Depends(get_db)):
         task = ModelTask(
             product_id=task.product_id,
             profile_tool_id=task.profile_tool_id,
-            stage=task.stage,
             deadline=task.deadline,
             position=task.position,
             status_id=task.status_id,

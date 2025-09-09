@@ -77,19 +77,22 @@ class WindowProfile(QWidget):
         """Обновление таблицы профилей с корректным отображением и заполнением по ширине"""
         table = self.ui.tableWidget_profiles
         table.setRowCount(len(api_manager.profile))
-        table.setColumnCount(2)
+        table.setColumnCount(3)
         # Заголовки столбцов
-        table.setHorizontalHeaderLabels(["Артикул", "Описание"])
+        table.setHorizontalHeaderLabels(["id", "Артикул", "Описание"])
         header = table.horizontalHeader()
         header.setSectionResizeMode(0, QHeaderView.ResizeToContents)
         header.setSectionResizeMode(1, QHeaderView.Stretch)
         
         for row, profile in enumerate(api_manager.profile):
+            id = profile['id']
+            table.setItem(row, 0, QTableWidgetItem(str(id)))
             article = profile['article']
-            table.setItem(row, 0, QTableWidgetItem(article))
+            table.setItem(row, 1, QTableWidgetItem(article))
             description = profile['description']
-            table.setItem(row, 1, QTableWidgetItem(description))
-        
+            table.setItem(row, 2, QTableWidgetItem(description))
+        table.setColumnHidden(0, True)
+
     def update_profile_info_panel(self):
         """Обновление панели информации о профиле"""
         self.profile = api_manager.profile[self.selected_row]
@@ -135,25 +138,37 @@ class WindowProfile(QWidget):
 
     def on_delete_clicked(self):
         """Удаление профиля с подтверждением и опцией удаления инструментов"""
+        if self.profile is None:
+            self.show_warning_dialog("Профиль не выбран")
+            return
         api_manager.api_profile.delete_profile(self.profile['id'])
+        if self.ui.tableWidget_profiles.rowCount() > 0:
+            item = self.ui.tableWidget_profiles.item(0, 0)
+            if item is not None:
+                self.ui.tableWidget_profiles.setCurrentItem(item)
+                self.profile = api_manager.get_profile_by_id(item.text())
+                self.selected_row = 0
+        else:
+            self.profile = None
+            self.selected_row = None
+            self.clear_profile_info_panel()
         self.refresh_data()
 
-    def get_selected_row(self):
-        """Возвращает индекс выбранной строки или None"""
-        selected = self.ui.tableWidget_profiles.selectedItems()
-        if selected:
-            return selected[0].row()
-        else:
-            return None
 
     # =============================================================================
     # ОБРАБОТЧИКИ СОБЫТИЙ: ВЫДЕЛЕНИЕ И ПОИСК
     # =============================================================================
     def on_selection_changed(self):
         """Обработка выбора строки"""
-        self.selected_row = self.get_selected_row()
-        if self.selected_row is not None:
-            self.update_profile_info_panel()
+        row = self.ui.tableWidget_profiles.currentRow()
+        if row >= 0:
+            self.selected_row = row
+            item = self.ui.tableWidget_profiles.item(row, 0)
+            if item is not None:
+                profile_id = item.text()
+                print(profile_id)
+                self.profile = api_manager.get_profile_by_id(profile_id)
+                self.update_profile_info_panel()
         else:
             self.selected_row = None
             self.clear_profile_info_panel()
@@ -163,7 +178,7 @@ class WindowProfile(QWidget):
         table = self.ui.tableWidget_profiles
         text = self.ui.lineEdit_search.text().lower()
         for row in range(table.rowCount()):
-            item = table.item(row, 0)
+            item = table.item(row, 1)
             visible = item and text in item.text().lower()
             table.setRowHidden(row, not visible)
 
@@ -191,3 +206,12 @@ class WindowProfile(QWidget):
         """Остановка автообновления"""
         if self.update_timer.isActive():
             self.update_timer.stop()
+
+    def show_warning_dialog(self, message: str):
+        """Показать окно предупреждения с заданным сообщением"""
+        warning_box = QMessageBox(self)
+        warning_box.setIcon(QMessageBox.Warning)
+        warning_box.setWindowTitle("Внимание")
+        warning_box.setText(message)
+        warning_box.setStandardButtons(QMessageBox.Ok)
+        warning_box.exec()
