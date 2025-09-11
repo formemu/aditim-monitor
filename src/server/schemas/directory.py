@@ -3,49 +3,50 @@ from typing import Optional
 from pydantic import BaseModel, ConfigDict
 
 # Базовая модель — общие поля для всех справочников
-class DirectoryBase(BaseModel):
+class SchemaDirectoryBase(BaseModel):
     name: str
 
 # Схема для создания — без id!
-class DirectoryCreate(DirectoryBase):
+class SchemaDirectoryCreate(SchemaDirectoryBase):
     description: Optional[str] = None
 
 # Схема для обновления — все поля опциональны
-class DirectoryUpdate(BaseModel):
+class SchemaDirectoryUpdate(BaseModel):
     name: Optional[str] = None
     description: Optional[str] = None
 
 # Схема для ответа — включает id и поддержку ORM
-class DirectoryResponse(DirectoryBase):
+class SchemaDirectoryResponse(SchemaDirectoryBase):
     id: int
     description: Optional[str] = None
     model_config = ConfigDict(from_attributes=True)
 
 # Конкретные справочники — наследуются и расширяются
-class DirDepartment(DirectoryResponse):
+class SchemaDirDepartment(SchemaDirectoryResponse):
     """Справочник: Подразделения"""
     pass
 
-class DirTaskStatus(DirectoryResponse):
+class SchemaDirTaskStatus(SchemaDirectoryResponse):
     """Справочник: Статусы задач"""
     pass
 
-class DirComponentType(DirectoryResponse):
+class SchemaDirComponentType(SchemaDirectoryResponse):
     """Справочник: Типы компонентов"""
     pass
 
-class DirComponentStatus(DirectoryResponse):
+class SchemaDirComponentStatus(SchemaDirectoryResponse):
     """Справочник: Статусы компонентов"""
     pass
 
-class DirToolDimension(DirectoryResponse):
+class SchemaDirToolDimension(SchemaDirectoryResponse):
     """Справочник: размерности инструментов"""
     pass
 
-class DirMachine(DirectoryResponse):
+class SchemaDirMachine(SchemaDirectoryResponse):
     """Справочник: станки"""
     pass
 
-class DirTaskComponentStage(DirectoryResponse):  
+class SchemaDirTaskComponentStage(SchemaDirectoryResponse):  
     """Справочник: статусы компонентов задач"""
     pass
+

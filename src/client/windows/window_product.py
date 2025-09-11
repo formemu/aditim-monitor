@@ -7,10 +7,10 @@ from PySide6.QtUiTools import QUiLoader
 from ..constant import UI_PATHS_ABS as UI_PATHS, get_style_path
 from ..style_util import load_styles
 from ..api_manager import api_manager
-from ..widgets.dialog_create_profile_tool import DialogCreateProfileTool
-from ..widgets.dialog_edit_profile_tool import DialogEditProfileTool
-from ..widgets.dialog_create_product import DialogCreateProduct
-from ..widgets.dialog_edit_product import DialogEditProduct
+from ..widgets.profile_tool.dialog_create_profile_tool import DialogCreateProfileTool
+from ..widgets.profile_tool.dialog_edit_profile_tool import DialogEditProfileTool
+from ..widgets.product.dialog_create_product import DialogCreateProduct
+from ..widgets.product.dialog_edit_product import DialogEditProduct
 
 
 class WindowProduct(QWidget):

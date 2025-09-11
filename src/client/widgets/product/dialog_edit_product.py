@@ -3,8 +3,8 @@ from typing import Dict, Any, List
 from PySide6.QtWidgets import (QDialog, QMessageBox, QTableWidgetItem, QSpinBox, QAbstractItemView, QHeaderView)
 from PySide6.QtCore import Signal, QFile, Qt, Slot
 from PySide6.QtUiTools import QUiLoader
-from ..constant import UI_PATHS_ABS
-from ..api_manager import api_manager
+from ...constant import UI_PATHS_ABS
+from ...api_manager import api_manager
 import warnings
 
 

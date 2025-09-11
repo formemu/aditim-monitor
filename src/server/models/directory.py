@@ -1,5 +1,5 @@
 """Directory models for ADITIM Monitor"""
-from sqlalchemy import Column, Integer, String, Text
+from sqlalchemy import Column, Integer, String, Text, ForeignKey
 from sqlalchemy.orm import relationship
 from ..database import Base
 
@@ -9,6 +9,7 @@ class ModelDirDepartment(Base):
     id = Column(Integer, primary_key=True, index=True)
     name = Column(String(100), nullable=False, unique=True)
     description = Column(Text)
+    # Relationships
     product = relationship("ModelProduct", back_populates="department")
 
 class ModelDirTaskStatus(Base):
@@ -17,6 +18,7 @@ class ModelDirTaskStatus(Base):
     id = Column(Integer, primary_key=True, index=True)
     name = Column(String(50), nullable=False, unique=True)
     description = Column(Text)
+    # Relationships
     task = relationship("ModelTask", back_populates="status")
 
 class ModelDirToolDimension(Base):
@@ -25,6 +27,7 @@ class ModelDirToolDimension(Base):
     id = Column(Integer, primary_key=True, index=True)
     name = Column(String(100), nullable=False, unique=True)
     description = Column(Text)
+    # Relationships
     profile_tool = relationship("ModelProfileTool", back_populates="dimension")
 
 class ModelDirComponentType(Base):
@@ -33,7 +36,9 @@ class ModelDirComponentType(Base):
     id = Column(Integer, primary_key=True, index=True)
     name = Column(String(50), nullable=False, unique=True)
     description = Column(Text)
+    # Relationships
     component = relationship("ModelProfileToolComponent", back_populates="type")
+    plan_stage = relationship("ModelPlanTaskComponentStage", back_populates="component_type")
 
 class ModelDirComponentStatus(Base):
     """Справочник статусов компонентов"""
@@ -41,6 +46,7 @@ class ModelDirComponentStatus(Base):
     id = Column(Integer, primary_key=True, index=True)
     name = Column(String(50), nullable=False, unique=True)
     description = Column(Text)
+    # Relationships
     component = relationship("ModelProfileToolComponent", back_populates="status")
 
 class ModelDirTaskComponentStage(Base):
@@ -48,11 +54,16 @@ class ModelDirTaskComponentStage(Base):
     id = Column(Integer, primary_key=True, index=True)
     name = Column(String(50), nullable=False)
     description = Column(Text)
+    # Relationships
     component_stage = relationship("ModelTaskComponentStage", back_populates="stage")
+    plan_stage = relationship("ModelPlanTaskComponentStage", back_populates="task_component_stage")
 
 class ModelDirMachine(Base):
     __tablename__= "dir_machine"
     id = Column(Integer, primary_key=True, index=True)
     name = Column(String(50), nullable=False)
     description = Column(Text)
+    # Relationships
     component_stage = relationship("ModelTaskComponentStage", back_populates="machine")
+
+

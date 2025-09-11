@@ -6,10 +6,10 @@ from PySide6.QtWidgets import (QDialog, QMessageBox, QTableWidgetItem,
 from PySide6.QtCore import Signal, QFile, Qt, Slot
 from PySide6.QtUiTools import QUiLoader
 
-from ..constant import UI_PATHS_ABS
-from ..api.api_product import ApiProduct
-from ..api_manager import api_manager
-from ..style_util import load_styles
+from ...constant import UI_PATHS_ABS
+from ...api.api_product import ApiProduct
+from ...api_manager import api_manager
+from ...style_util import load_styles
 import warnings
 
 

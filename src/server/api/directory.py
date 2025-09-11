@@ -12,41 +12,41 @@ from ..models.directory import (
     ModelDirToolDimension as DirToolDimensionModel,
 )
 from ..schemas.directory import (
-    DirDepartment,
-    DirTaskStatus,
-    DirComponentType,
-    DirComponentStatus,
-    DirToolDimension,
+    SchemaDirDepartment,
+    SchemaDirTaskStatus,
+    SchemaDirComponentType,
+    SchemaDirComponentStatus,
+    SchemaDirToolDimension,
 )
 
 router = APIRouter(prefix="/api/directory", tags=["directory"], redirect_slashes=False)
 
 
-@router.get("/dir_department", response_model=List[DirDepartment])
+@router.get("/dir_department", response_model=List[SchemaDirDepartment])
 def get_department(db: Session = Depends(get_db)):
     """Получить все отделы"""
     return db.query(DirDepartmentModel).all()
 
 
-@router.get("/dir_task_status", response_model=List[DirTaskStatus])
+@router.get("/dir_task_status", response_model=List[SchemaDirTaskStatus])
 def get_task_status(db: Session = Depends(get_db)):
     """Получить все статусы задач"""
     return db.query(DirTaskStatusModel).all()
 
 
-@router.get("/dir_component_type", response_model=List[DirComponentType])
+@router.get("/dir_component_type", response_model=List[SchemaDirComponentType])
 def get_component_type(db: Session = Depends(get_db)):
     """Получить все типы компонентов"""
     return db.query(DirComponentTypeModel).all()
 
 
-@router.get("/dir_component_status", response_model=List[DirComponentStatus])
+@router.get("/dir_component_status", response_model=List[SchemaDirComponentStatus])
 def get_component_status(db: Session = Depends(get_db)):
     """Получить все статусы компонентов"""
     return db.query(DirComponentStatusModel).all()
 
 
-@router.get("/dir_tool_dimension", response_model=List[DirToolDimension])
+@router.get("/dir_tool_dimension", response_model=List[SchemaDirToolDimension])
 def get_tool_dimension(db: Session = Depends(get_db)):
     """Получить все размерности инструмента"""
     return db.query(DirToolDimensionModel).all()

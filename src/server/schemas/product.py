@@ -1,7 +1,7 @@
 """Pydantic schemas for product"""
 from typing import Optional, List
 from pydantic import BaseModel, ConfigDict
-from .directory import DirDepartment
+from .directory import SchemaDirDepartment
 
 
 # === PRODUCT SCHEMAS ===
@@ -21,12 +21,12 @@ class SchemaProductUpdate(BaseModel):
     """Схема для частичного обновления — все поля опциональны"""
     name: Optional[str] = None
     description: Optional[str] = None
-    department: DirDepartment = None
+    department: SchemaDirDepartment = None
 
 class SchemaProductResponse(SchemaProductBase):
     """Схема для ответа — включает id и поддержку ORM"""
     id: int
-    department: DirDepartment = None
+    department: SchemaDirDepartment = None
     component: List["SchemaProductComponentResponse"] = []
 
 

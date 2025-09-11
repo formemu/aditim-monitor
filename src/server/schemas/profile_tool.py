@@ -1,7 +1,7 @@
 """Pydantic schemas for profile_tool"""
 from typing import Optional, List
 from pydantic import BaseModel, ConfigDict
-from ..schemas.directory import DirToolDimension, DirComponentStatus, DirComponentType
+from ..schemas.directory import SchemaDirToolDimension, SchemaDirComponentStatus, SchemaDirComponentType
 
 
 # === PROFILE TOOL SCHEMAS ===
@@ -21,7 +21,7 @@ class SchemaProfileToolUpdate(BaseModel):
 class SchemaProfileToolResponse(SchemaProfileToolBase):
     id: int
     profile: Optional["SchemaProfileBase"] = None
-    dimension: Optional[DirToolDimension] = None
+    dimension: Optional[SchemaDirToolDimension] = None
     component: List["SchemaProfileToolComponentResponse"] = []
 
 
@@ -50,5 +50,5 @@ class ProfileToolComponentUpdate(BaseModel):
 class SchemaProfileToolComponentResponse(ProfileToolComponentBase):
     id: int
     profile_tool_id: int
-    type: Optional[DirComponentType] = None
-    status: Optional[DirComponentStatus] = None
+    type: Optional[SchemaDirComponentType] = None
+    status: Optional[SchemaDirComponentStatus] = None

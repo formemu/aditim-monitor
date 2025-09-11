@@ -5,8 +5,8 @@ from PySide6.QtCore import QFile, Qt, QTimer
 from PySide6.QtUiTools import QUiLoader
 from PySide6.QtGui import QPixmap
 from ..constant import UI_PATHS_ABS as UI_PATHS, ICON_PATHS_ABS as ICON_PATHS, get_style_path
-from ..widgets.dialog_create_profile import DialogCreateProfile
-from ..widgets.dialog_edit_profile import DialogEditProfile
+from ..widgets.profile.dialog_create_profile import DialogCreateProfile
+from ..widgets.profile.dialog_edit_profile import DialogEditProfile
 from ..api_manager import api_manager
 from ..style_util import load_styles
 

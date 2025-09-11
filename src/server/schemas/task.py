@@ -2,7 +2,7 @@
 from datetime import date
 from typing import Optional, List
 from pydantic import BaseModel, ConfigDict
-from .directory import DirTaskStatus, DirTaskComponentStage, DirMachine
+from .directory import SchemaDirTaskStatus, SchemaDirTaskComponentStage, SchemaDirMachine
 from .profile_tool import SchemaProfileToolComponentResponse
 from .product import SchemaProductComponentResponse
 
@@ -39,7 +39,7 @@ class SchemaTaskResponse(TaskBase):
     """Ответ API — включает id и created"""
     id: int
     created: date
-    status: Optional[DirTaskStatus] = None
+    status: Optional[SchemaDirTaskStatus] = None
     component: Optional[list["SchemaTaskComponentResponse"]] = None
     position: Optional[int] = None
 
@@ -90,15 +90,15 @@ class TaskComponentStageCreate(TaskComponentStageBase):
 class TaskComponentStageUpdate(TaskComponentStageBase):
     id: int
     task_component_id : Optional[int] = None
-    stage : Optional[DirTaskComponentStage] = None
-    machine : Optional[DirMachine] = None
+    stage : Optional[SchemaDirTaskComponentStage] = None
+    machine : Optional[SchemaDirMachine] = None
     start : Optional[date] = None
     finish : Optional[date] = None
 
 class SchemaTaskComponentRStageResponse(TaskComponentStageBase):
     id: int
     task_component : Optional[SchemaTaskComponentResponse] = None
-    stage : Optional[DirTaskComponentStage] = None
-    machine : Optional[DirMachine] = None
+    stage : Optional[SchemaDirTaskComponentStage] = None
+    machine : Optional[SchemaDirMachine] = None
     start : Optional[date] = None
     finish : Optional[date] = None

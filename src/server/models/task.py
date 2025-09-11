@@ -43,7 +43,6 @@ class ModelTaskComponent(Base):
     product_component = relationship("ModelProductComponent", back_populates="task_component")
     component_stage = relationship("ModelTaskComponentStage", back_populates="task_component", cascade="all, delete-orphan")
 
-
 class ModelTaskComponentStage(Base):
     __tablename__ = "task_component_stage"
 
@@ -63,3 +62,4 @@ class ModelTaskComponentStage(Base):
     task_component = relationship("ModelTaskComponent", back_populates="component_stage")
     stage = relationship("ModelDirTaskComponentStage", back_populates="component_stage")
     machine = relationship("ModelDirMachine", back_populates="component_stage")
+

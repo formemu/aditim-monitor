@@ -11,6 +11,7 @@ from .api.directory import router as directory_router
 from .api.product import router as product_router
 from .api.profile import router as profile_router
 from .api.profile_tool import router as profile_tool_router
+from .api.plan import router as plan_router
 
 # Create database tables
 Base.metadata.create_all(bind=engine)
@@ -38,6 +39,7 @@ app.include_router(directory_router)
 app.include_router(product_router)
 app.include_router(profile_router)
 app.include_router(profile_tool_router)
+app.include_router(plan_router)
 
 
 @app.get("/")

@@ -8,7 +8,8 @@ from .api.api_profile import ApiProfile
 from .api.api_profile_tool import ApiProfileTool
 from .api.api_product import ApiProduct
 from .api.api_task import ApiTask
-from.api.api_directory import ApiDirectory
+from .api.api_directory import ApiDirectory
+from .api.api_plan import ApiPlanTaskComponentStage
 from .async_util import run_async
 
 
@@ -30,6 +31,7 @@ class ApiManager:
         self.api_product = ApiProduct()
         self.api_task = ApiTask()
         self.api_directory = ApiDirectory()
+        self.api_plan_task_component_stage = ApiPlanTaskComponentStage()
 
 
         # списки для хранения загруженных данных
@@ -46,6 +48,9 @@ class ApiManager:
         self.task_status = []
         self.profile_tool_dimension = []
 
+        #планы
+        self.plan_task_component_stage = []
+
         # Флаги загрузки
         self.profile_loaded = False
         self.profile_tool_loaded = False
@@ -59,10 +64,13 @@ class ApiManager:
         self.task_status_loaded = False
         self.profile_dimension_loaded = False
 
+        self.plan_task_component_stage_loaded = False
+
         self.initialized = True
 
         self.load_all_directory()
         self.load_all_table()
+        self.load_all_plan()
 
     def load_all_directory(self):
         self.load_department()
@@ -70,6 +78,9 @@ class ApiManager:
         self.load_component_status()
         self.load_task_status()
         self.load_profile_tool_dimension()
+
+    def load_all_plan(self):
+        self.load_plan_task_component_stage()
 
     def load_all_table(self):
         self.load_profile()
@@ -196,6 +207,16 @@ class ApiManager:
             self.profile_tool_dimension_loaded = False
             print("ошибка при загрузке размерностей профилей:", e)
 
+    def load_plan_task_component_stage(self):
+        """загрузка планов стадий задач для компонентов"""
+        try:
+            self.plan_task_component_stage = self.api_plan_task_component_stage.get_plan_task_component_stage()
+            self.plan_task_component_stage_loaded = True
+            print("данные о всех планах стадий задач для компонентов обновились")
+        except Exception as e:
+            self.plan_task_component_stage_loaded = False
+            print("ошибка при загрузке планов стадий задач для компонентов:", e)
+
     # асинхронное обновление справочников
     def refresh_department_async(self):
         """Асинхронное обновление справочника департаментов"""
@@ -249,6 +270,14 @@ class ApiManager:
             return True
         
         # Запускаем обновление асинхронно
+        run_async(refresh)
+
+    def refresh_plan_task_component_stage_async(self):
+        """Асинхронное обновление таблицы планов стадий задач для компонентов"""
+        def refresh():
+            self.plan_task_component_stage_loaded = False
+            self.load_plan_task_component_stage()
+            return self.plan_task_component_stage
         run_async(refresh)
 
     # асинхронное обновление данных таблиц
