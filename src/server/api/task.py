@@ -12,7 +12,8 @@ from ..schemas.task import (
     SchemaTaskComponentCreate,
     SchemaTaskResponse,
     SchemaTaskComponentResponse,
-    SchemaQueueReorderRequest
+    SchemaQueueReorderRequest,
+    SchemaTaskComponentStageCreate
 )
 
 router = APIRouter(prefix="/api", tags=["task"])
@@ -100,10 +101,6 @@ def create_task_component(
     db: Session = Depends(get_db)
 ):
     """Создать новый компонент задачи"""
-    # Проверим, существует ли задача
-    task = db.query(ModelTask).filter(ModelTask.id == task_id).first()
-    if not task:
-        raise HTTPException(status_code=404, detail="Задача не найдена")
 
     # Создаём компонент
     if component.profile_tool_component_id:
@@ -128,6 +125,25 @@ def create_task_component(
     db.commit()
     db.refresh(db_component)
     return db_component
+
+@router.post("/task/component/{component_id}/stage", response_model=dict)
+def create_task_component_stage(component_id: int, stage_data: SchemaTaskComponentStageCreate, db: Session = Depends(get_db)):
+    """
+    Добавить этап к компоненту задачи
+    """
+    # Создаём запись
+    stage = ModelTaskComponentStage(
+        task_component_id=component_id,
+        stage_id=stage_data.stage_id,
+        machine_id=stage_data.machine_id,
+        stage_num=stage_data.stage_num,
+        description=stage_data.description or ""
+    )
+
+    db.add(stage)
+    db.commit()
+    db.refresh(stage)
+    return {"id": stage.id}
 
 @router.post("/task/queue/reorder", status_code=204)
 def reorder_queue(request: SchemaQueueReorderRequest, db: Session = Depends(get_db)):

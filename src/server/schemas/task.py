@@ -76,7 +76,7 @@ class SchemaQueueReorderRequest(BaseModel):
 # === TASK COMPONENT STAGE SCHEMAS ===
 
 
-class TaskComponentStageBase(BaseModel):
+class SchemaTaskComponentStageBase(BaseModel):
     """Базовая модель компонента задачи"""
     stage_num : Optional[int] = None
     task_component_id : Optional[int] = None
@@ -84,10 +84,10 @@ class TaskComponentStageBase(BaseModel):
     machine_id : Optional[int] = None
     description: Optional[str] = None
 
-class TaskComponentStageCreate(TaskComponentStageBase):
+class SchemaTaskComponentStageCreate(SchemaTaskComponentStageBase):
     pass
 
-class TaskComponentStageUpdate(TaskComponentStageBase):
+class SchemaTaskComponentStageUpdate(SchemaTaskComponentStageBase):
     id: int
     task_component_id : Optional[int] = None
     stage : Optional[SchemaDirTaskComponentStage] = None
@@ -95,7 +95,7 @@ class TaskComponentStageUpdate(TaskComponentStageBase):
     start : Optional[date] = None
     finish : Optional[date] = None
 
-class SchemaTaskComponentRStageResponse(TaskComponentStageBase):
+class SchemaTaskComponentStageResponse(SchemaTaskComponentStageBase):
     id: int
     task_component : Optional[SchemaTaskComponentResponse] = None
     stage : Optional[SchemaDirTaskComponentStage] = None

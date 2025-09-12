@@ -54,16 +54,28 @@ class ModelDirTaskComponentStage(Base):
     id = Column(Integer, primary_key=True, index=True)
     name = Column(String(50), nullable=False)
     description = Column(Text)
+    type_id = Column(Integer, ForeignKey("dir_machine_type.id"), nullable=False)
     # Relationships
     component_stage = relationship("ModelTaskComponentStage", back_populates="stage")
     plan_stage = relationship("ModelPlanTaskComponentStage", back_populates="task_component_stage")
+    type = relationship("ModelDirMachineType", back_populates="task_component_stage")
 
 class ModelDirMachine(Base):
     __tablename__= "dir_machine"
     id = Column(Integer, primary_key=True, index=True)
     name = Column(String(50), nullable=False)
+    type_id = Column(Integer, ForeignKey("dir_machine_type.id"), nullable=False)
     description = Column(Text)
     # Relationships
     component_stage = relationship("ModelTaskComponentStage", back_populates="machine")
+    type = relationship("ModelDirMachineType", back_populates="machine")
 
 
+class ModelDirMachineType(Base):
+    __tablename__= "dir_machine_type"
+    id = Column(Integer, primary_key=True, index=True)
+    name = Column(String(50), nullable=False)
+    description = Column(Text)
+    # Relationships
+    machine = relationship("ModelDirMachine", back_populates="type")
+    task_component_stage = relationship("ModelDirTaskComponentStage", back_populates="type")

@@ -65,9 +65,28 @@ class WizardTaskCreate(QWizard):
         task = api_manager.api_task.create_task(task_data)
         task_id = task['id']
         for component in self.list_selected_profile_tool_component:
-            print(component)
+            # 1. Создаём компонент задачи
             component_data = {"profile_tool_component_id": component['id'], "description": ""}
-            api_manager.api_task.create_task_component(task_id, component_data)
+            task_component = api_manager.api_task.create_task_component(task_id, component_data)
+            task_component_id = task_component['id']
+
+            # 2. Создаём этапы (если есть)
+            selected_stages = component.get('list_selected_stage', [])
+            for item in selected_stages:
+                stage = item['stage']
+                machine = item['machine']
+
+                stage = {
+                    "stage_id": stage['id'],
+                    "machine_id": machine['id'] if machine else None,
+                    "stage_num": stage['num_stage'],
+                    "description": f"Этап {stage['num_stage']} — {stage['name']}"
+                }
+
+                try:
+                    api_manager.api_task.create_task_component_stage(task_component_id, stage)
+                except Exception as e:
+                    print(f"Ошибка при создании этапа: {e}")
 
     def create_product_task(self):
         deadline = self.field("deadline").toString("yyyy-MM-dd")

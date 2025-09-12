@@ -47,6 +47,7 @@ class ApiManager:
         self.component_status = []
         self.task_status = []
         self.profile_tool_dimension = []
+        self.machine = []
 
         #планы
         self.plan_task_component_stage = []
@@ -63,6 +64,7 @@ class ApiManager:
         self.component_status_loaded = False
         self.task_status_loaded = False
         self.profile_dimension_loaded = False
+        self.machine_loaded = False
 
         self.plan_task_component_stage_loaded = False
 
@@ -78,6 +80,7 @@ class ApiManager:
         self.load_component_status()
         self.load_task_status()
         self.load_profile_tool_dimension()
+        self.load_machine()
 
     def load_all_plan(self):
         self.load_plan_task_component_stage()
@@ -217,6 +220,16 @@ class ApiManager:
             self.plan_task_component_stage_loaded = False
             print("ошибка при загрузке планов стадий задач для компонентов:", e)
 
+    def load_machine(self):
+        """загрузка станков"""
+        try:
+            self.machine = self.api_directory.get_machine()
+            self.machine_loaded = True
+            print("данные о всех станках обновились")
+        except Exception as e:
+            self.machine_loaded = False
+            print("ошибка при загрузке станков:", e)
+
     # асинхронное обновление справочников
     def refresh_department_async(self):
         """Асинхронное обновление справочника департаментов"""
@@ -256,6 +269,14 @@ class ApiManager:
             self.profile_tool_dimension_loaded = False
             self.load_profile_tool_dimension()
             return self.profile_tool_dimension
+        run_async(refresh)
+
+    def refresh_machine_async(self):
+        """Асинхронное обновление справочника станков"""
+        def refresh():
+            self.machine_loaded = False
+            self.load_machine()
+            return self.machine
         run_async(refresh)
 
     def refresh_directory_async(self):

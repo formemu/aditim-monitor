@@ -28,3 +28,7 @@ class ApiDirectory(ApiClient):
     def get_task_status(self):
         """Получение статусов задач"""
         return self._request("GET", "/api/directory/dir_task_status")
+
+    def get_machine(self):
+        """Получение всех станков"""
+        return self._request("GET", "/api/directory/dir_machine")

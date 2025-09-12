@@ -35,4 +35,7 @@ class ApiTask(ApiClient):
     def create_task_component(self, task_id, component_data):
         """Создание компонента задачи"""
         return self._request("POST", f"api/task/{task_id}/component", json=component_data)
-    
+
+    def create_task_component_stage(self, task_component_id, stage_data):
+        """Создание этапа компонента задачи"""
+        return self._request("POST", f"api/task/component/{task_component_id}/stage", json=stage_data)

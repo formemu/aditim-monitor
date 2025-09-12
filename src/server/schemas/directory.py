@@ -44,9 +44,17 @@ class SchemaDirToolDimension(SchemaDirectoryResponse):
 
 class SchemaDirMachine(SchemaDirectoryResponse):
     """Справочник: станки"""
-    pass
+    type_id: int
+    type: Optional['SchemaDirMachineType']
+
 
 class SchemaDirTaskComponentStage(SchemaDirectoryResponse):  
-    """Справочник: статусы компонентов задач"""
+    """Справочник:  стадии задач компонентов"""
+    type_id: Optional[int]
+    type: Optional['SchemaDirMachineType']
+
+
+class SchemaDirMachineType(SchemaDirectoryResponse):
+    """Справочник: типы станков"""
     pass
 
