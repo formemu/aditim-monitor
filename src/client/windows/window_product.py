@@ -18,8 +18,10 @@ class WindowProduct(QWidget):
     
     def __init__(self):
         super().__init__()
-        self.tab_index = 0  # Индекс текущей вкладки
-        self.selected_row = 0 # Индекс выбранной строки
+        self.tab_index = 0 
+        self.selected_row = 0 
+        self.profile_tool = None
+        self.product = None
         self.load_ui()
         self.setup_ui()
 
@@ -76,10 +78,10 @@ class WindowProduct(QWidget):
     def refresh_data(self):
         """Принудительное обновление данных"""
         if self.tab_index == 0:
-            api_manager.refresh_profile_tool_async()
+            api_manager.load_profile_tool()
             self.update_table_profile_tool()
         elif self.tab_index == 1:
-            api_manager.refresh_product_async()
+            api_manager.load_product()
             self.update_table_product()
 
     def on_tab_changed(self):
@@ -111,6 +113,7 @@ class WindowProduct(QWidget):
             table.setItem(row, 2, QTableWidgetItem(description))
         table.setColumnHidden(0, True) 
 
+
     def update_table_product(self):
         """Обновление таблицы изделий с корректным отображением и заполнением по ширине"""
         table = self.ui.tableWidget_product
@@ -133,6 +136,7 @@ class WindowProduct(QWidget):
             desc = product['description']
             table.setItem(row, 3, QTableWidgetItem(desc))
         table.setColumnHidden(0, True)
+
 
     def load_profile_tool_component(self, item_id):
         """Загрузка компонентов инструмента профиля"""
@@ -190,17 +194,20 @@ class WindowProduct(QWidget):
     # =============================================================================
     def on_selection_changed(self):
         """Обработчик выбора элемента"""
+
         if self.tab_index == 0:
             self.selected_row = self.ui.tableWidget_profile_tool.currentRow()
             item = self.ui.tableWidget_profile_tool.item(self.selected_row, 0)
             if item is not None:
                 profile_tool_id = item.text()
+                self.profile_tool = api_manager.get_profile_tool_by_id(profile_tool_id)
                 self.load_profile_tool_component(profile_tool_id)
         elif self.tab_index == 1:
             self.selected_row = self.ui.tableWidget_product.currentRow()
             item = self.ui.tableWidget_product.item(self.selected_row, 0)
             if item is not None:
                 product_id = item.text()
+                self.product = api_manager.get_product_by_id(product_id)
                 self.load_product_component(product_id)
         else:
             self.selected_row = None
@@ -216,21 +223,21 @@ class WindowProduct(QWidget):
         dialog = DialogCreateProfileTool(self)
         if dialog.exec():
             self.refresh_data()
-            self.load_profile_tool_component(api_manager.profile_tool[self.selected_row]['id'])
+
 
     def on_product_add_clicked(self):
         """Добавление изделия"""
         dialog = DialogCreateProduct(self)
         if dialog.exec():
             self.refresh_data()
-            self.load_product_component(api_manager.product[self.selected_row]['id'])
+
 
     def on_profile_tool_edit_clicked(self):
         """Редактирование инструмента профиля"""
         dialog = DialogEditProfileTool(self.profile_tool, self)
         if dialog.exec():
             self.refresh_data()
-            self.load_profile_tool_component(self.profile_tool['id'])
+
 
     def on_profile_tool_delete_clicked(self):
         """Удаление инструмента"""
@@ -238,17 +245,19 @@ class WindowProduct(QWidget):
             self.show_warning_dialog("Инструмент профиля не выбран.")
             return
         api_manager.api_profile_tool.delete_profile_tool(self.profile_tool['id'])
+        self.refresh_data()
         if self.ui.tableWidget_profile_tool.rowCount() > 0:
             item = self.ui.tableWidget_profile_tool.item(0, 0)
             if item is not None:
                 self.ui.tableWidget_profile_tool.setCurrentItem(item)
                 self.profile_tool = api_manager.get_profile_tool_by_id(item.text())
                 self.selected_row = 0
+            else:
+                self.profile_tool = None
         else:
             self.profile_tool = None
             self.selected_row = None
             self.clear_info_panel()
-        self.refresh_data()
 
 
     def on_product_edit_clicked(self):
@@ -256,7 +265,7 @@ class WindowProduct(QWidget):
         dialog = DialogEditProduct(self.product, self)
         if dialog.exec():
             self.refresh_data()
-            self.load_product_component(self.product['id'])
+
 
     def on_product_delete_clicked(self):
         """Удаление изделия"""
@@ -264,6 +273,7 @@ class WindowProduct(QWidget):
             self.show_warning_dialog("Изделие не выбрано.")
             return
         api_manager.api_product.delete_product(self.product['id'])
+        self.refresh_data()
         if self.ui.tableWidget_product.rowCount() > 0:
             item = self.ui.tableWidget_product.item(0, 0)
             if item is not None:
@@ -274,7 +284,6 @@ class WindowProduct(QWidget):
             self.product = None
             self.selected_row = None
             self.clear_info_panel()
-        self.refresh_data()
 
     def on_component_add_clicked(self):
         """Добавление компонента"""

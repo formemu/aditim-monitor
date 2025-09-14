@@ -2,7 +2,7 @@
 from datetime import date
 from typing import Optional, List
 from pydantic import BaseModel, ConfigDict
-from .directory import SchemaDirTaskStatus, SchemaDirTaskComponentStage, SchemaDirMachine
+from .directory import SchemaDirTaskStatus, SchemaDirTaskComponentStageName, SchemaDirMachine
 from .profile_tool import SchemaProfileToolComponentResponse
 from .product import SchemaProductComponentResponse
 
@@ -29,7 +29,6 @@ class SchemaTaskUpdate(BaseModel):
     """Частичное обновление задачи — все поля опциональны"""
     product_id: Optional[int] = None
     profile_tool_id: Optional[int] = None
-    stage: Optional[str] = None
     deadline: Optional[date] = None
     position: Optional[int] = None
     status_id: Optional[int] = None
@@ -80,7 +79,7 @@ class SchemaTaskComponentStageBase(BaseModel):
     """Базовая модель компонента задачи"""
     stage_num : Optional[int] = None
     task_component_id : Optional[int] = None
-    stage_id : Optional[int] = None
+    stage_name_id : Optional[int] = None
     machine_id : Optional[int] = None
     description: Optional[str] = None
 
@@ -90,7 +89,7 @@ class SchemaTaskComponentStageCreate(SchemaTaskComponentStageBase):
 class SchemaTaskComponentStageUpdate(SchemaTaskComponentStageBase):
     id: int
     task_component_id : Optional[int] = None
-    stage : Optional[SchemaDirTaskComponentStage] = None
+    stage_name : Optional[SchemaDirTaskComponentStageName] = None
     machine : Optional[SchemaDirMachine] = None
     start : Optional[date] = None
     finish : Optional[date] = None
@@ -98,7 +97,7 @@ class SchemaTaskComponentStageUpdate(SchemaTaskComponentStageBase):
 class SchemaTaskComponentStageResponse(SchemaTaskComponentStageBase):
     id: int
     task_component : Optional[SchemaTaskComponentResponse] = None
-    stage : Optional[SchemaDirTaskComponentStage] = None
+    stage_name : Optional[SchemaDirTaskComponentStageName] = None
     machine : Optional[SchemaDirMachine] = None
     start : Optional[date] = None
     finish : Optional[date] = None

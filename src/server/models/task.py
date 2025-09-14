@@ -7,8 +7,8 @@ from ..database import Base
 
 class ModelTask(Base):
     __tablename__ = "task"
-    id = Column(Integer, primary_key=True, index=True)
 
+    id = Column(Integer, primary_key=True, index=True)
     position = Column(Integer, nullable=True)
     deadline = Column(Date, nullable=True)
     created = Column(Date, nullable=True)
@@ -53,13 +53,13 @@ class ModelTaskComponentStage(Base):
     finish = Column(Date, nullable=True)
 
     task_component_id = Column(Integer, ForeignKey("task_component.id"), nullable=True)
-    stage_id = Column(Integer, ForeignKey("dir_task_component_stage.id"), nullable=True)
+    stage_name_id = Column(Integer, ForeignKey("dir_task_component_stage_name.id"), nullable=True)
     machine_id = Column(Integer, ForeignKey("dir_machine.id"), nullable=True)
 
     description = Column(Text, nullable=True)
 
     # Relationships
     task_component = relationship("ModelTaskComponent", back_populates="component_stage")
-    stage = relationship("ModelDirTaskComponentStage", back_populates="component_stage")
+    stage_name = relationship("ModelDirTaskComponentStageName", back_populates="component_stage")
     machine = relationship("ModelDirMachine", back_populates="component_stage")
 

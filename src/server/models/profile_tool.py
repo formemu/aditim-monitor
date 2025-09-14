@@ -9,12 +9,12 @@ class ModelProfileTool(Base):
     
     id = Column(Integer, primary_key=True, index=True)
     profile_id = Column(Integer, ForeignKey("profile.id", ondelete="CASCADE"), nullable=False)
-    dimension_id = Column(Integer, ForeignKey("dir_tool_dimension.id"), nullable=False)
+    dimension_id = Column(Integer, ForeignKey("dir_profiletool_dimension.id"), nullable=False)
     description = Column(Text)
     
     # Связи
     profile = relationship("ModelProfile", back_populates="profile_tool")
-    dimension = relationship("ModelDirToolDimension", back_populates="profile_tool")
+    dimension = relationship("ModelDirProfileToolDimension", back_populates="profile_tool")
     component = relationship("ModelProfileToolComponent", back_populates="profile_tool", cascade="all, delete-orphan")
     task = relationship("ModelTask", back_populates="profile_tool")
 
@@ -25,13 +25,13 @@ class ModelProfileToolComponent(Base):
     
     id = Column(Integer, primary_key=True, index=True)
     profile_tool_id = Column(Integer, ForeignKey("profile_tool.id", ondelete="CASCADE"), nullable=False)
-    type_id = Column(Integer, ForeignKey("dir_component_type.id"), nullable=False)
+    type_id = Column(Integer, ForeignKey("dir_profiletool_component_type.id"), nullable=False)
     variant = Column(Integer, nullable=True)
     description = Column(Text)
-    status_id = Column(Integer, ForeignKey("dir_component_status.id"), nullable=False)
+    status_id = Column(Integer, ForeignKey("dir_profiletool_component_status.id"), nullable=False)
     
     # Связи
     profile_tool = relationship("ModelProfileTool", back_populates="component")
-    type = relationship("ModelDirComponentType", back_populates="component")
-    status = relationship("ModelDirComponentStatus", back_populates="component")
+    type = relationship("ModelDirProfileToolComponentType", back_populates="component")
+    status = relationship("ModelDirProfileToolComponentStatus", back_populates="component")
     task_component = relationship("ModelTaskComponent", back_populates="profile_tool_component")

@@ -101,7 +101,7 @@ class WidgetGrid(QWidget):
         for stage in list_stage:
             layout = QHBoxLayout()
             # Чекбокс операции
-            checkBox_stage = QCheckBox(f"{stage['num_stage']}. {stage['name']}")
+            checkBox_stage = QCheckBox(f"{stage['stage_num']}. {stage['name']}")
             checkBox_stage.setProperty("stage", stage)
             layout.addWidget(checkBox_stage)
             # ComboBox со станками
@@ -110,7 +110,7 @@ class WidgetGrid(QWidget):
             comboBox_machine.setEnabled(False)
             list_machine = [
                 machine for machine in api_manager.machine
-                if machine['type_id'] == stage['type_id']
+                if machine['work_type_id'] == stage['work_type_id']
             ]
             for machine in list_machine:
                 comboBox_machine.addItem(f"{machine['name']}", machine)
@@ -128,19 +128,20 @@ class WidgetGrid(QWidget):
             self.layout().addLayout(layout)
 
     def load_stage(self, component):
-        component_type_id = component['type']['id']
+
+        profiletool_component_type_id = component['type']['id']
         list_stage = []
 
-        for item in api_manager.plan_task_component_stage:
-            if item['component_type']['id'] == component_type_id:
-                stage_data = item['task_component_stage']
+        for item in api_manager.plan_task_component_stage_name:
+            if item['profiletool_component_type']['id'] == profiletool_component_type_id:
+                stage_name_data = item['task_component_stage_name']
                 list_stage.append({
-                    "name": stage_data['name'],
-                    "id": stage_data['id'],
-                    "num_stage": item['num_stage'],
-                    "type_id": stage_data['type_id'],
-                    "description": stage_data.get('description', '')
+                    "name": stage_name_data['name'],
+                    "id": stage_name_data['id'],
+                    "stage_num": item['stage_num'],
+                    "description": stage_name_data.get('description', ''),
+                    "work_type_id": stage_name_data.get('work_type_id')
                 })
 
-        list_stage.sort(key=lambda x: x['num_stage'])
+        list_stage.sort(key=lambda x: x['stage_num'])
         return list_stage

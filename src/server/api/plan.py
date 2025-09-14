@@ -32,8 +32,8 @@ def get_plan(
     try:
         # Загружаем основные данные + связи сразу (без lazy loading)
         query = db.query(ModelPlanTaskComponentStage).options(
-            joinedload(ModelPlanTaskComponentStage.component_type),
-            joinedload(ModelPlanTaskComponentStage.task_component_stage)
+            joinedload(ModelPlanTaskComponentStage.profiletool_component_type),
+            joinedload(ModelPlanTaskComponentStage.task_component_stage_name)
         )
         plans = query.all()
 

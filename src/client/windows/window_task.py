@@ -104,7 +104,8 @@ class WindowTask(QWidget):
             table.setItem(row, 5, QTableWidgetItem(created))
             description = task['description']
             table.setItem(row, 6, QTableWidgetItem(description))
-        table.setColumnHidden(0, True)  
+        table.setColumnHidden(0, True) 
+
 
     def update_queue_table(self):
         """Обновление таблицы очереди с корректным отображением и заполнением по ширине"""
@@ -134,6 +135,7 @@ class WindowTask(QWidget):
             description = task['description']
             table.setItem(row, 6, QTableWidgetItem(description))    
         table.setColumnHidden(0, True)  
+
 
     def update_task_info_panel(self):
         """Обновление панели информации о задаче"""
@@ -285,6 +287,8 @@ class WindowTask(QWidget):
             self.show_warning_dialog("Задача не выбрана")
             return
         api_manager.api_task.delete_task(self.task['id'])
+        self.refresh_data()
+
         if self.ui.tableWidget_tasks.rowCount() > 0:
             item = self.ui.tableWidget_tasks.item(0, 0)
             if item is not None:
@@ -295,7 +299,6 @@ class WindowTask(QWidget):
             self.task = None
             self.selected_row = None
             self.clear_task_info_panel()
-        self.refresh_data()
 
 
     def show_context_menu(self, pos):

@@ -10,10 +10,23 @@ class ApiTask(ApiClient):
     def get_queue(self):
         """Получить текущую очередь (в статусе 'в работе', с position)"""
         return self._request("GET", "api/task/queue")
+    
+    def get_task_component(self, task_id):
+        """Получение компонентов задач"""
+        endpoint = f"api/task/{task_id}/task_component"
+        return self._request("GET", endpoint)
 
     def create_task(self, task_data):
         """Создание новой задачи"""
         return self._request("POST", "api/task", json=task_data)
+    
+    def create_task_component(self, task_id, component_data):
+        """Создание компонента задачи"""
+        return self._request("POST", f"api/task/{task_id}/component", json=component_data)
+
+    def create_task_component_stage(self, task_component_id, stage_data):
+        """Создание этапа компонента задачи"""
+        return self._request("POST", f"api/task/component/{task_component_id}/stage", json=stage_data)
 
     def reorder_task_queue(self, task_ids: list):
         """Отправить новый порядок очереди"""
@@ -27,15 +40,5 @@ class ApiTask(ApiClient):
         """Удаление задачи"""
         return self._request("DELETE", f"api/task/{task_id}")
 
-    def get_task_component(self, task_id):
-        """Получение компонентов задач"""
-        endpoint = f"api/task/{task_id}/task_component"
-        return self._request("GET", endpoint)
 
-    def create_task_component(self, task_id, component_data):
-        """Создание компонента задачи"""
-        return self._request("POST", f"api/task/{task_id}/component", json=component_data)
 
-    def create_task_component_stage(self, task_component_id, stage_data):
-        """Создание этапа компонента задачи"""
-        return self._request("POST", f"api/task/component/{task_component_id}/stage", json=stage_data)

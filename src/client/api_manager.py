@@ -50,7 +50,7 @@ class ApiManager:
         self.machine = []
 
         #планы
-        self.plan_task_component_stage = []
+        self.plan_task_component_stage_name = []
 
         # Флаги загрузки
         self.profile_loaded = False
@@ -213,7 +213,7 @@ class ApiManager:
     def load_plan_task_component_stage(self):
         """загрузка планов стадий задач для компонентов"""
         try:
-            self.plan_task_component_stage = self.api_plan_task_component_stage.get_plan_task_component_stage()
+            self.plan_task_component_stage_name = self.api_plan_task_component_stage.get_plan_task_component_stage()
             self.plan_task_component_stage_loaded = True
             print("данные о всех планах стадий задач для компонентов обновились")
         except Exception as e:
@@ -298,7 +298,7 @@ class ApiManager:
         def refresh():
             self.plan_task_component_stage_loaded = False
             self.load_plan_task_component_stage()
-            return self.plan_task_component_stage
+            return self.plan_task_component_stage_name
         run_async(refresh)
 
     # асинхронное обновление данных таблиц

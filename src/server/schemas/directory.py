@@ -30,8 +30,8 @@ class SchemaDirTaskStatus(SchemaDirectoryResponse):
     """Справочник: Статусы задач"""
     pass
 
-class SchemaDirComponentType(SchemaDirectoryResponse):
-    """Справочник: Типы компонентов"""
+class SchemaDirProfiletoolComponentType(SchemaDirectoryResponse):
+    """Справочник: Типы компонентов инструментов профиля"""
     pass
 
 class SchemaDirComponentStatus(SchemaDirectoryResponse):
@@ -44,17 +44,17 @@ class SchemaDirToolDimension(SchemaDirectoryResponse):
 
 class SchemaDirMachine(SchemaDirectoryResponse):
     """Справочник: станки"""
-    type_id: int
-    type: Optional['SchemaDirMachineType']
+    work_type_id: int
+    work_type: Optional['SchemaDirWorkType']
 
 
-class SchemaDirTaskComponentStage(SchemaDirectoryResponse):  
+class SchemaDirTaskComponentStageName(SchemaDirectoryResponse):  
     """Справочник:  стадии задач компонентов"""
-    type_id: Optional[int]
-    type: Optional['SchemaDirMachineType']
+    work_type_id: Optional[int]
+    work_type: Optional['SchemaDirWorkType']
 
 
-class SchemaDirMachineType(SchemaDirectoryResponse):
+class SchemaDirWorkType(SchemaDirectoryResponse):
     """Справочник: типы станков"""
     pass
 

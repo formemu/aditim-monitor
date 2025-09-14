@@ -29,7 +29,7 @@ class PageProfileSelection(QWizardPage):
             return
         results = api_manager.get_search_profile(text)[:10]
         for profile in results:
-            item = QListWidgetItem(f"{profile['article']} - {profile['description']}")
+            item = QListWidgetItem(f"{profile['article']}")
             item.setData(Qt.UserRole, profile)
             self.results_list.addItem(item)
   

@@ -54,19 +54,9 @@ def get_task_component_list(task_id: int, db: Session = Depends(get_db)):
     """Получить компоненты задачи по ID задачи"""
     return db.query(ModelTaskComponent).filter(ModelTaskComponent.task_id == task_id).all()
 
-
-# @router.get("/task/{task_id}", response_model=SchemaTaskResponse)
-# def get_task_by_id(task_id: int = Path(..., description="ID задачи"), db: Session = Depends(get_db)):
-#     """Получить задачу по ID"""
-#     task = db.query(ModelTask).filter(ModelTask.id == task_id).first()
-#     if not task:
-#         raise HTTPException(status_code=404, detail="Задача не найдена")
-#     return task
-
 # =============================================================================
 # ROUTER.POST
 # =============================================================================
-
 @router.post("/task", response_model=SchemaTaskResponse)
 def create_task(task: SchemaTaskCreate, db: Session = Depends(get_db)):
     """Создать новую задачу"""
@@ -134,7 +124,7 @@ def create_task_component_stage(component_id: int, stage_data: SchemaTaskCompone
     # Создаём запись
     stage = ModelTaskComponentStage(
         task_component_id=component_id,
-        stage_id=stage_data.stage_id,
+        stage_name_id=stage_data.stage_name_id,
         machine_id=stage_data.machine_id,
         stage_num=stage_data.stage_num,
         description=stage_data.description or ""
@@ -154,7 +144,10 @@ def reorder_queue(request: SchemaQueueReorderRequest, db: Session = Depends(get_
     for position, task_id in enumerate(request.task_ids, start=1):
         db.query(ModelTask).filter(ModelTask.id == task_id).update({ModelTask.position: position}, synchronize_session='fetch')
     db.commit()
-     
+
+# =============================================================================
+# ROUTER.PATCH
+# ===========================================================================
 @router.patch("/task/{task_id}/status", response_model=SchemaTaskResponse)
 def update_task_status( task_id: int, task: SchemaTaskUpdate, db: Session = Depends(get_db)):
     """Обновить статус задачи"""

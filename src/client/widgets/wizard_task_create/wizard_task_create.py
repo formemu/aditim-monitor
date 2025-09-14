@@ -77,10 +77,10 @@ class WizardTaskCreate(QWizard):
                 machine = item['machine']
 
                 stage = {
-                    "stage_id": stage['id'],
+                    "stage_name_id": stage['id'],
                     "machine_id": machine['id'] if machine else None,
-                    "stage_num": stage['num_stage'],
-                    "description": f"Этап {stage['num_stage']} — {stage['name']}"
+                    "stage_num": stage['stage_num'],
+                    "description": f"Этап {stage['stage_num']} — {stage['name']}"
                 }
 
                 try:

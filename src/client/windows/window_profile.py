@@ -65,7 +65,7 @@ class WindowProfile(QWidget):
     # =============================================================================
     def refresh_data(self):
         """Принудительное обновление данных"""
-        api_manager.refresh_profile_async()
+        api_manager.load_profile()
         self.update_profile_table()
         if self.selected_row is not None:
             self.update_profile_info_panel()
@@ -92,6 +92,7 @@ class WindowProfile(QWidget):
             description = profile['description']
             table.setItem(row, 2, QTableWidgetItem(description))
         table.setColumnHidden(0, True)
+
 
     def update_profile_info_panel(self):
         """Обновление панели информации о профиле"""
@@ -142,6 +143,7 @@ class WindowProfile(QWidget):
             self.show_warning_dialog("Профиль не выбран")
             return
         api_manager.api_profile.delete_profile(self.profile['id'])
+        self.refresh_data()
         if self.ui.tableWidget_profiles.rowCount() > 0:
             item = self.ui.tableWidget_profiles.item(0, 0)
             if item is not None:
@@ -152,7 +154,7 @@ class WindowProfile(QWidget):
             self.profile = None
             self.selected_row = None
             self.clear_profile_info_panel()
-        self.refresh_data()
+
 
 
     # =============================================================================

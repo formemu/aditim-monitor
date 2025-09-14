@@ -6,9 +6,9 @@ from ..database import Base
 class ModelPlanTaskComponentStage(Base):
     __tablename__= "plan_task_component_stage"
     id = Column(Integer, primary_key=True, index=True)
-    component_type_id = Column(Integer, ForeignKey("dir_component_type.id"), nullable=False)
-    task_component_stage_id = Column(Integer, ForeignKey("dir_task_component_stage.id"), nullable=False)
-    num_stage = Column(Integer, nullable=False)
+    profiletool_component_type_id = Column(Integer, ForeignKey("dir_profiletool_component_type.id"), nullable=False)
+    task_component_stage_name_id = Column(Integer, ForeignKey("dir_task_component_stage_name.id"), nullable=False)
+    stage_num = Column(Integer, nullable=False)
     # Relationships
-    component_type = relationship("ModelDirComponentType", back_populates="plan_stage")
-    task_component_stage = relationship("ModelDirTaskComponentStage", back_populates="plan_stage")
+    profiletool_component_type = relationship("ModelDirProfileToolComponentType", back_populates="plan_stage")
+    task_component_stage_name = relationship("ModelDirTaskComponentStageName", back_populates="plan_stage")
