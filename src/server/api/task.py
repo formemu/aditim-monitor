@@ -67,6 +67,7 @@ def create_task(task: SchemaTaskCreate, db: Session = Depends(get_db)):
             deadline=task.deadline,
             position=task.position,
             status_id=task.status_id,
+            type_id=task.type_id,
             description=task.description,
             created=task.created
         )

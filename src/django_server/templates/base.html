@@ -7,38 +7,35 @@
     <title>{% block title %}ADITIM ЗАДАЧИ{% endblock %}</title>
 
     <!-- Bootstrap CSS -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-1BmE4kWBq78iYhFldvKuhfTAU6auU8tT94WrHftjDbrCEXSU1oBoqyl2QvZ6jIW3" crossorigin="anonymous">
 
     <!-- Ваши стили -->
     <link rel="stylesheet" href="{% static 'css/styles.css' %}">
 </head>
 <body>
     <nav class="navbar navbar-expand-lg navbar-light bg-light">
-        <div class="container d-flex justify-content-between align-items-center">
+        <div class="container d-flex justify-content-between align-items-start">
             <!-- Заголовок слева -->
             <div>
-                <h1 class="navbar-brand mb-0 display-4 fw-bold">Список задач</h1>
-                <div class="d-flex align-items-center mt-1">
-                    <span id="last-update" class="badge bg-secondary me-2">Обновлено: --:--</span>
-                    <span id="update-status" class="badge bg-success">Автообновление включено</span>
-                </div>
+                <h1 class="navbar-brand mb-0">Список задач</h1>
             </div>
 
             <!-- Логотип справа -->
-            <a href="{% url 'task_display:task_list' %}">
+            <a href="{% url 'task_display:task_list' %}" aria-label="На главную">
                 <img src="{% static 'img/aditim_logo.png' %}" alt="Логотип ADITIM" class="header-logo">
             </a>
         </div>
     </nav>
 
-    <div class="container mt-4">
+    <div class="container mt-0">
         {% block content %}
         {% endblock %}
     </div>
 
-    <!-- Bootstrap JS -->
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- Bootstrap JS Bundle с Popper -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-ka7Sk0Gln4gmtz2MlQnikT1wXgYsOg+OMhuP+IlRH9sENBO0LRn5q+8nbTov4+1p" crossorigin="anonymous"></script>
 
+    <!-- Блок для кастомных скриптов -->
     {% block scripts %}{% endblock %}
 </body>
 </html>

@@ -58,3 +58,6 @@ class SchemaDirWorkType(SchemaDirectoryResponse):
     """Справочник: типы станков"""
     pass
 
+class SchemaDirTaskType(SchemaDirectoryResponse):
+    """Справочник: типы задач"""
+    pass

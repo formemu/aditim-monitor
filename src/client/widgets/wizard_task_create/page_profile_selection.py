@@ -1,5 +1,5 @@
 from PySide6.QtCore import  Qt
-from PySide6.QtWidgets import QWizardPage, QVBoxLayout, QLabel, QLineEdit, QListWidget, QListWidgetItem
+from PySide6.QtWidgets import QWizardPage, QVBoxLayout, QLabel, QLineEdit, QListWidget, QListWidgetItem, QComboBox
 from ...api_manager import api_manager
 
 
@@ -15,10 +15,14 @@ class PageProfileSelection(QWizardPage):
         self.search_edit = QLineEdit()
         self.search_edit.setPlaceholderText("Поиск профиля...")
         self.results_list = QListWidget()
+        self.type_combo = QComboBox()
+
 
         layout.addWidget(QLabel("Поиск:"))
         layout.addWidget(self.search_edit)
         layout.addWidget(self.results_list)
+        layout.addWidget(QLabel("Тип задачи:"))
+        layout.addWidget(self.type_combo)   
         self.setLayout(layout)
 
         self.search_edit.textChanged.connect(self.on_search)
@@ -36,6 +40,15 @@ class PageProfileSelection(QWizardPage):
 
     def initializePage(self):
         self.results_list.clear()
+        self.fill_type_combo()
+
+    def fill_type_combo(self):
+        self.type_combo.clear()
+        types = api_manager.task_type
+        for task_type in types:
+            self.type_combo.addItem(task_type['name'], task_type['id'])
+
+        self.registerField("type_id", self.type_combo , "currentData")
 
     def validatePage(self):
         current_item = self.results_list.currentItem()

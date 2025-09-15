@@ -2,7 +2,7 @@
 from datetime import date
 from typing import Optional, List
 from pydantic import BaseModel, ConfigDict
-from .directory import SchemaDirTaskStatus, SchemaDirTaskComponentStageName, SchemaDirMachine
+from .directory import SchemaDirTaskStatus, SchemaDirTaskComponentStageName, SchemaDirMachine, SchemaDirTaskType
 from .profile_tool import SchemaProfileToolComponentResponse
 from .product import SchemaProductComponentResponse
 
@@ -17,6 +17,7 @@ class TaskBase(BaseModel):
     created: Optional[date] = None
     position: Optional[int] = None
     status_id: int = 1
+    type_id: Optional[int] = None
     description: Optional[str] = None
 
     model_config = ConfigDict(from_attributes=True)
@@ -32,6 +33,7 @@ class SchemaTaskUpdate(BaseModel):
     deadline: Optional[date] = None
     position: Optional[int] = None
     status_id: Optional[int] = None
+    type_id: Optional[int] = None
     description: Optional[str] = None
 
 class SchemaTaskResponse(TaskBase):
@@ -39,6 +41,7 @@ class SchemaTaskResponse(TaskBase):
     id: int
     created: date
     status: Optional[SchemaDirTaskStatus] = None
+    type: Optional[SchemaDirTaskType] = None
     component: Optional[list["SchemaTaskComponentResponse"]] = None
     position: Optional[int] = None
 

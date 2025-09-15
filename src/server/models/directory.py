@@ -79,3 +79,11 @@ class ModelDirWorkType(Base): # +
     # Relationships
     machine = relationship("ModelDirMachine", back_populates="work_type")
     task_component_stage_name = relationship("ModelDirTaskComponentStageName", back_populates="work_type")
+
+class ModelDirTaskType(Base): # +
+    __tablename__= "dir_task_type"
+    id = Column(Integer, primary_key=True, index=True)
+    name = Column(String(50), nullable=False)
+    description = Column(Text)
+    # Relationships
+    task = relationship("ModelTask", back_populates="type")

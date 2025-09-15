@@ -55,12 +55,15 @@ class WizardTaskCreate(QWizard):
     def create_profile_tool_task(self):
         deadline = self.field("deadline").toString("yyyy-MM-dd")
         description = self.field("description")
+        type_id = self.field("type_id")
+
         task_data = {
             "profile_tool_id": self.profile_tool['id'],
             "deadline": deadline,
             "created": QDate.currentDate().toString("yyyy-MM-dd"),
             "description": description,
-            "status_id": 1
+            "status_id": 1,
+            "type_id": type_id
         }
         task = api_manager.api_task.create_task(task_data)
         task_id = task['id']
@@ -91,12 +94,14 @@ class WizardTaskCreate(QWizard):
     def create_product_task(self):
         deadline = self.field("deadline").toString("yyyy-MM-dd")
         description = self.field("description")
+        type_id = self.field("type_id")
         task_data = {
             "product_id": self.product['id'],
             "deadline": deadline,
             "created": QDate.currentDate().toString("yyyy-MM-dd"),
             "description": description,
-            "status_id": 1
+            "status_id": 1,
+            "type_id": type_id
         }
         task = api_manager.api_task.create_task(task_data)
         task_id = task['id']

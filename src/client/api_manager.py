@@ -3,7 +3,7 @@
 Загружает все справочники один раз при запуске и предоставляет к ним доступ
 Поддерживает асинхронное обновление справочников во время работы
 """
-
+from PySide6.QtCore import QRunnable, QThreadPool, Slot
 from .api.api_profile import ApiProfile
 from .api.api_profile_tool import ApiProfileTool
 from .api.api_product import ApiProduct
@@ -12,6 +12,15 @@ from .api.api_directory import ApiDirectory
 from .api.api_plan import ApiPlanTaskComponentStage
 from .async_util import run_async
 
+
+class Worker(QRunnable):
+    def __init__(self, fn):
+        super().__init__()
+        self.fn = fn
+
+    @Slot()
+    def run(self):
+        self.fn()
 
 class ApiManager:
     """Менеджер справочников с однократной загрузкой при запуске"""
@@ -25,6 +34,8 @@ class ApiManager:
     def __init__(self):
         if self.initialized:
             return
+        
+        self.thread_pool = QThreadPool()
         # Создаем экземпляры API-клиентов
         self.api_profile = ApiProfile()
         self.api_profile_tool = ApiProfileTool()
@@ -48,6 +59,7 @@ class ApiManager:
         self.task_status = []
         self.profile_tool_dimension = []
         self.machine = []
+        self.task_type = []
 
         #планы
         self.plan_task_component_stage_name = []
@@ -65,14 +77,15 @@ class ApiManager:
         self.task_status_loaded = False
         self.profile_dimension_loaded = False
         self.machine_loaded = False
+        self.task_type_loaded = False
 
         self.plan_task_component_stage_loaded = False
 
         self.initialized = True
 
-        self.load_all_directory()
-        self.load_all_table()
-        self.load_all_plan()
+        self.load_all_directory_async()
+        self.load_all_table_async()
+        self.load_all_plan_async()
 
     def load_all_directory(self):
         self.load_department()
@@ -81,9 +94,25 @@ class ApiManager:
         self.load_task_status()
         self.load_profile_tool_dimension()
         self.load_machine()
+        self.load_task_type()
+
+    def load_all_directory_async(self):
+        """Асинхронная (в фоне) загрузка всех справочников"""
+        # Запускаем каждый метод в отдельном потоке
+        self.thread_pool.start(Worker(self.load_department))
+        self.thread_pool.start(Worker(self.load_component_type))
+        self.thread_pool.start(Worker(self.load_component_status))
+        self.thread_pool.start(Worker(self.load_task_status))
+        self.thread_pool.start(Worker(self.load_profile_tool_dimension))
+        self.thread_pool.start(Worker(self.load_machine))
+        self.thread_pool.start(Worker(self.load_task_type))
 
     def load_all_plan(self):
         self.load_plan_task_component_stage()
+
+    def load_all_plan_async(self):
+        """Асинхронная (в фоне) загрузка всех планов"""
+        self.thread_pool.start(Worker(self.load_plan_task_component_stage))
 
     def load_all_table(self):
         self.load_profile()
@@ -92,6 +121,13 @@ class ApiManager:
         self.load_task()
         self.load_queue()
 
+    def load_all_table_async(self):
+        """Асинхронная (в фоне) загрузка всех таблиц"""
+        self.thread_pool.start(Worker(self.load_profile))
+        self.thread_pool.start(Worker(self.load_profile_tool))
+        self.thread_pool.start(Worker(self.load_product))
+        self.thread_pool.start(Worker(self.load_task))
+        self.thread_pool.start(Worker(self.load_queue))
 
     # Базовые методы загрузки данных
     def load_profile(self):
@@ -230,6 +266,16 @@ class ApiManager:
             self.machine_loaded = False
             print("ошибка при загрузке станков:", e)
 
+    def load_task_type(self):
+        """загрузка типов задач"""
+        try:
+            self.task_type = self.api_directory.get_task_type()
+            self.task_type_loaded = True
+            print("данные о всех типах задач обновились")
+        except Exception as e:
+            self.task_type_loaded = False
+            print("ошибка при загрузке типов задач:", e)
+
     # асинхронное обновление справочников
     def refresh_department_async(self):
         """Асинхронное обновление справочника департаментов"""
@@ -277,6 +323,14 @@ class ApiManager:
             self.machine_loaded = False
             self.load_machine()
             return self.machine
+        run_async(refresh)
+
+    def refresh_task_type_async(self):
+        """Асинхронное обновление справочника типов задач"""
+        def refresh():
+            self.task_type_loaded = False
+            self.load_task_type()
+            return self.task_type
         run_async(refresh)
 
     def refresh_directory_async(self):

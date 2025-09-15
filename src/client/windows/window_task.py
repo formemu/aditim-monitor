@@ -83,9 +83,9 @@ class WindowTask(QWidget):
         """Обновление таблицы задач с корректным отображением и заполнением по ширине"""
         table = self.ui.tableWidget_tasks
         table.setRowCount(len(api_manager.task))
-        table.setColumnCount(7) 
+        table.setColumnCount(8) 
         # Заголовки столбцов
-        table.setHorizontalHeaderLabels(["id", "№ задачи", "Название", "Статус", "Срок", "Создано", "Описание"])
+        table.setHorizontalHeaderLabels(["id", "№ задачи", "Название","Тип работ", "Статус", "Срок", "Создано", "Описание"])
         header = table.horizontalHeader()
         for col in range(table.columnCount() - 1):
             header.setSectionResizeMode(col, QHeaderView.ResizeToContents)
@@ -96,24 +96,26 @@ class WindowTask(QWidget):
             table.setItem(row, 1, QTableWidgetItem(f"Задача № {id}"))
             name = self.get_task_name(task)
             table.setItem(row, 2, QTableWidgetItem(name))
+            work_type = task['type']['name']
+            table.setItem(row, 3, QTableWidgetItem(work_type))
             status = task['status']['name']
-            table.setItem(row, 3, QTableWidgetItem(status))
+            table.setItem(row, 4, QTableWidgetItem(status))
             deadline = task['deadline']
-            table.setItem(row, 4, QTableWidgetItem(deadline))
+            table.setItem(row, 5, QTableWidgetItem(deadline))
             created = task['created']
-            table.setItem(row, 5, QTableWidgetItem(created))
+            table.setItem(row, 6, QTableWidgetItem(created))
             description = task['description']
-            table.setItem(row, 6, QTableWidgetItem(description))
-        table.setColumnHidden(0, True) 
+            table.setItem(row, 7, QTableWidgetItem(description))
+        table.setColumnHidden(0, True)
 
 
     def update_queue_table(self):
         """Обновление таблицы очереди с корректным отображением и заполнением по ширине"""
         table = self.ui.tableWidget_queue
         table.setRowCount(len(api_manager.queue))
-        table.setColumnCount(7) 
+        table.setColumnCount(8) 
         # Заголовки столбцов
-        table.setHorizontalHeaderLabels(["id", "Позиция", "Название", "Статус", "Срок", "Создано", "Описание"])
+        table.setHorizontalHeaderLabels(["id", "Позиция", "Название", "Тип работ", "Статус", "Срок", "Создано", "Описание"])
         header = table.horizontalHeader()
         for col in range(table.columnCount() - 1):
             header.setSectionResizeMode(col, QHeaderView.ResizeToContents)
@@ -126,16 +128,17 @@ class WindowTask(QWidget):
             table.setItem(row, 1, QTableWidgetItem(str(position)))
             name = self.get_task_name(task)
             table.setItem(row, 2, QTableWidgetItem(name))
+            work_type = task['type']['name']
+            table.setItem(row, 3, QTableWidgetItem(work_type))
             status = task['status']['name']
-            table.setItem(row, 3, QTableWidgetItem(status))
+            table.setItem(row, 4, QTableWidgetItem(status))
             deadline = task['deadline']
-            table.setItem(row, 4, QTableWidgetItem(deadline))
+            table.setItem(row, 5, QTableWidgetItem(deadline))
             created = task['created']
-            table.setItem(row, 5, QTableWidgetItem(created))
+            table.setItem(row, 6, QTableWidgetItem(created))
             description = task['description']
-            table.setItem(row, 6, QTableWidgetItem(description))    
-        table.setColumnHidden(0, True)  
-
+            table.setItem(row, 7, QTableWidgetItem(description))
+        table.setColumnHidden(0, True)
 
     def update_task_info_panel(self):
         """Обновление панели информации о задаче"""

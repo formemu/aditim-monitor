@@ -23,6 +23,19 @@ class DirTaskStatus(models.Model):
         }
         return mapping.get(self.name, 'bg-secondary')
 
+class DirTaskType(models.Model):
+    name = models.CharField(max_length=50)
+    description = models.TextField(blank=True)
+
+    class Meta:
+        db_table = 'dir_task_type'
+        managed = False
+        verbose_name = 'Тип задачи'
+        verbose_name_plural = 'Типы задач'
+
+    def __str__(self):
+        return self.name
+
 class DirDepartment(models.Model):
     name = models.CharField(max_length=100)
     description = models.TextField(blank=True)
@@ -82,6 +95,9 @@ class Task(models.Model):
     product = models.ForeignKey(Product, on_delete=models.CASCADE, null=True, blank=True)
     profile_tool = models.ForeignKey(ProfileTool, on_delete=models.CASCADE, null=True, blank=True)
     status = models.ForeignKey(DirTaskStatus, on_delete=models.CASCADE, db_column='status_id')
+    type = models.ForeignKey(DirTaskType, on_delete=models.CASCADE, db_column='type_id')
+    description = models.TextField(blank=True, null=True)
+
     position = models.IntegerField(default=0)
     deadline = models.DateField(null=True, blank=True)
     created = models.DateField()
@@ -108,13 +124,70 @@ class Task(models.Model):
             return self.product.name
         return f"Задача #{self.id}"
 
+class DirProfileToolComponentType(models.Model):
+    id = models.IntegerField(primary_key=True)
+    name = models.CharField(max_length=50)
+
+    class Meta:
+        db_table = 'dir_profiletool_component_type'
+        managed = False
+
+class ProfileToolComponent(models.Model):
+    id = models.IntegerField(primary_key=True)
+    type = models.ForeignKey(DirProfileToolComponentType, on_delete=models.DO_NOTHING, db_column='type_id')
+
+    class Meta:
+        db_table = 'profile_tool_component'
+        managed = False
+
+class ProductComponent(models.Model):
+    id = models.IntegerField(primary_key=True)
+    name = models.CharField(max_length=100)
+
+    class Meta:
+        db_table = 'product_component'
+        managed = False
+
 class TaskComponent(models.Model):
     task = models.ForeignKey(Task, on_delete=models.CASCADE, related_name='component_list')
     profile_tool_component_id = models.IntegerField(null=True, blank=True)
     product_component_id = models.IntegerField(null=True, blank=True)
+
+    # Добавляем связи для получения имени
+    @property
+    def component_name(self):
+        if self.profile_tool_component_id:
+            try:
+                comp = ProfileToolComponent.objects.get(id=self.profile_tool_component_id)
+                return comp.type.name
+            except ProfileToolComponent.DoesNotExist:
+                return "—"
+        elif self.product_component_id:
+            try:
+                comp = ProductComponent.objects.get(id=self.product_component_id)
+                return comp.name
+            except ProductComponent.DoesNotExist:
+                return "—"
+        return "—"
 
     class Meta:
         db_table = 'task_component'
         managed = False
         verbose_name = 'Компонент задачи'
         verbose_name_plural = 'Компоненты задач'
+
+    def __str__(self):
+        return self.component_name
+
+class TaskComponentStage(models.Model):
+    task_component = models.ForeignKey(TaskComponent, on_delete=models.CASCADE, related_name='stage_list')
+    stage_name_id = models.IntegerField(null=True, blank=True)
+    machine_id = models.IntegerField(null=True, blank=True)
+    stage_num = models.IntegerField(null=True, blank=True)
+    description = models.TextField(blank=True)
+
+    class Meta:
+        db_table = 'task_component_stage'
+        managed = False
+        verbose_name = 'Этап работы компонента задачи'
+        verbose_name_plural = 'Этапы работы компонентов задач'

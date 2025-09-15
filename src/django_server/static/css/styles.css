@@ -1,66 +1,106 @@
 body {
-    background-color: #f8f9fa;
+    background-color: #f0f2f5;
+    font-family: Arial, sans-serif;
+    margin: 0;
+    padding: 0;
 }
 
-/* Логотип в шапке */
+/* Логотип */
 .header-logo {
-    width: 300px;
+    width: 320px;
     height: 100px;
     object-fit: contain;
 }
 
-/* Карточка задачи */
-.task-card {
-    margin-bottom: 1rem;
-    box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.1);
-    border-left: 4px solid #007bff;
-    transition: transform 0.1s;
-}
-
-.task-card:hover {
-    transform: scale(1.01);
-}
-
-/* Увеличенный заголовок в шапке */
+/* Заголовок — крупный, чистый */
 .navbar-brand {
-    font-size: 4.0rem !important;
+    font-size: 4.5rem;
     color: #14426a !important;
     font-weight: bold;
+    margin-bottom: 0;
+}
+
+/* Убрали всё про обновление — больше нет .badge с текстом */
+
+/* Основной контейнер */
+.container {
+    max-width: 95%;
+    margin: 1.5rem auto;
+    padding: 0;
+}
+
+/* Карточка задачи */
+.task-card {
+    margin-bottom: 1.5rem;
+    border-radius: 12px;
+    box-shadow: 0 0.25rem 0.75rem rgba(0, 0, 0, 0.15);
+    border-left: 6px solid #007bff;
+    background-color: white;
 }
 
 /* Название задачи */
-.task-title {
-    font-size: 1.25rem;
+.task-title a {
+    font-size: 3.2rem;
     font-weight: 600;
+    color: #003366;
+    text-decoration: none;
+    display: block;
+    padding: 0.3em 0;
 }
 
-/* Департамент — увеличенный второстепенный текст */
+/* Департамент */
 .task-department {
-    font-size: 1rem;
+    font-size: 2.4rem;
     font-weight: 500;
-    color: #495057 !important;
+    color: #2c3e50;
+    margin-top: 0.3em;
 }
 
-/* Позиция */
-.task-position {
-    font-size: 1rem;
-    font-weight: 500;
-    color: #6c757d;
-}
-
-/* Статус */
-.status-badge {
-    font-size: 1rem;
-    padding: 0.5em 0.75em;
-}
-
-/* Срок */
+/* Срок — справа, красный */
 .task-deadline {
-    font-size: 1rem;
+    font-size: 2.6rem;
     font-weight: 500;
-    color: #6c757d;
+    color: #d32f2f;
+    text-align: right;
+    padding: 0.5em 0;
+    white-space: nowrap;
 }
 
-.status-badge.bg-primary { background-color: #0056b3 !important; }
-.status-badge.bg-success { background-color: #28a745 !important; }
-.status-badge.bg-info { background-color: #17a2b8 !important; }
+
+/* Заголовок "Компонент:" */
+.component-label {
+    font-size: 2.0rem;
+    font-weight: 600;
+    color: #14426a;
+    margin-right: 0.5em;
+}
+
+/* Значение компонента */
+.component-value {
+    font-size: 2.2rem;
+    font-weight: 500;
+    color: #333;
+}
+
+/* Если компонентов нет */
+.component-empty {
+    font-size: 2.0rem;
+}
+
+/* Контейнер для компонентов */
+.component-chips {
+    margin-top: 0.5rem;
+    column-gap: 0.75rem;
+    row-gap: 0.5rem;
+}
+
+/* Метка компонента */
+.component-chip {
+    font-size: 2.0rem;
+    padding: 0.4em 0.8em;
+    border-radius: 6px;
+    border: 1px solid #dee2e6;
+    background-color: #f8f9fa;
+    white-space: nowrap;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+}

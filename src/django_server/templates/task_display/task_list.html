@@ -2,192 +2,61 @@
 
 {% block title %}Список задач - ADITIM{% endblock %}
 
+{% block head_extra %}
+    <meta http-equiv="refresh" content="60">
+{% endblock %}
+
 {% block content %}
 <div class="row">
     <div class="col-12">
-        <div id="tasks-container">
+        {% if task_list %}
             {% for task in task_list %}
-                <div class="card task-card" data-task-id="{{ task.id }}">
-                    <div class="card-body">
-                        <div class="row align-items-center">
-                            <!-- Название задачи и департамент -->
-                            <div class="col-md-6">
-                                <h5 class="card-title mb-1 task-title">
-                                    <a href="{% url 'task_display:task_detail' task.id %}" class="text-decoration-none">
-                                        {{ task.get_display_name }}
-                                    </a>
-                                </h5>
-                                <p class="text-muted mb-0 task-department">
-                                    {% if task.product %}
-                                        Департамент: {{ task.product.department.name }}
-                                    {% elif task.profile_tool %}
-                                        Департамент: —
-                                    {% else %}
-                                        Департамент: не указан
-                                    {% endif %}
-                                </p>
-                            </div>
-
-                            <!-- Статус -->
-                            <div class="col-md-2">
-                                <span class="badge status-badge task-status {{ task.status.css_class }}">{{ task.status.name }}</span>
-                            </div>
-
-                            <!-- Позиция -->
-                            <div class="col-md-2">
-                                <small class="text-muted task-position">Позиция: {{ task.position }}</small>
-                            </div>
-
-                            <!-- Срок -->
-                            <div class="col-md-2">
-                                {% if task.deadline %}
-                                    <small class="text-muted task-deadline">Срок: {{ task.deadline|date:"d.m.Y" }}</small>
+                <div class="card mb-2" style="border-left: 3px solid #007bff; border-radius: 0;">
+                    <div class="card-body p-2 row align-items-center">
+                        <!-- Колонка 1: Артикул + Компоненты -->
+                        <div class="col-3">
+                            <span class="h6 mb-0 text-primary">{{ task.get_display_name }}</span>
+                            {% with components=task.component_list.all %}
+                                {% if components %}
+                                    <div class="d-flex flex-wrap gap-1 mt-1">
+                                        {% for comp in components %}
+                                            <span class="badge bg-light border text-dark small">{{ comp.component_name }}</span>
+                                        {% endfor %}
+                                    </div>
                                 {% endif %}
-                            </div>
+                            {% endwith %}
+                        </div>
+
+                        <!-- Колонка 2: Тип работ -->
+                        <div class="col-2 text-muted small">
+                            {% if task.type.name %}
+                                {{ task.type.name }}
+                            {% else %}
+                                —
+                            {% endif %}
+                        </div>
+
+                        <!-- Колонка 3: Описание -->
+                        <div class="col-5 text-muted small">
+                            {% if task.description %}
+                                {{ task.description|truncatewords:10 }}
+                            {% endif %}
+                        </div>
+
+                        <!-- Колонка 4: Дата -->
+                        <div class="col-2 text-muted small text-end">
+                            {% if task.deadline %}
+                                {{ task.deadline|date:"d.m.Y" }}
+                            {% else %}
+                                —
+                            {% endif %}
                         </div>
                     </div>
                 </div>
-            {% empty %}
-                <div class="alert alert-info">Задачи не найдены.</div>
             {% endfor %}
-        </div>
+        {% else %}
+            <div class="alert alert-info">Задачи не найдены.</div>
+        {% endif %}
     </div>
 </div>
-{% endblock %}
-
-{% block scripts %}
-<script>
-let updateInterval;
-let isUpdating = false;
-
-// Обновление времени последнего обновления
-function updateLastUpdateTime() {
-    const now = new Date();
-    const timeString = now.toLocaleTimeString('ru-RU', { 
-        hour: '2-digit', 
-        minute: '2-digit',
-        second: '2-digit'
-    });
-    document.getElementById('last-update').textContent = `Обновлено: ${timeString}`;
-}
-
-// Обновление статуса подключения
-function updateConnectionStatus(isConnected, isLoading = false) {
-    const statusElement = document.getElementById('update-status');
-    if (isLoading) {
-        statusElement.textContent = 'Обновление...';
-        statusElement.className = 'badge bg-warning';
-    } else if (isConnected) {
-        statusElement.textContent = 'Автообновление включено';
-        statusElement.className = 'badge bg-success';
-    } else {
-        statusElement.textContent = 'Ошибка подключения';
-        statusElement.className = 'badge bg-danger';
-    }
-}
-
-// Обновление контейнера с задачами
-function updateTasksContainer(tasks) {
-    const container = document.getElementById('tasks-container');
-    
-    if (tasks.length === 0) {
-        container.innerHTML = '<div class="alert alert-info">Задачи не найдены.</div>';
-        return;
-    }
-    
-    let html = '';
-    tasks.forEach(task => {
-        html += `
-        <div class="card task-card" data-task-id="${task.id}">
-            <div class="card-body">
-                <div class="row align-items-center">
-                    <div class="col-md-6">
-                        <h5 class="card-title mb-1 task-title">
-                            <a href="${task.url}" class="text-decoration-none">
-                                ${task.name}
-                            </a>
-                        </h5>
-                        <p class="text-muted mb-0 task-department">Департамент: ${task.department}</p>
-                    </div>
-                    <div class="col-md-2">
-                        <span class="badge bg-info status-badge task-status">${task.status}</span>
-                    </div>
-                    <div class="col-md-2">
-                        <small class="text-muted task-position">Позиция: ${task.position}</small>
-                    </div>
-                    <div class="col-md-2">
-                        ${task.deadline ? `<small class="text-muted task-deadline">Срок: ${task.deadline}</small>` : ''}
-                    </div>
-                </div>
-            </div>
-        </div>`;
-    });
-    
-    container.innerHTML = html;
-}
-
-// Загрузка обновленных данных
-async function loadUpdatedData() {
-    if (isUpdating) return;
-    
-    isUpdating = true;
-    updateConnectionStatus(true, true);
-    
-    try {
-        const response = await fetch('/api/task/live/');
-        if (!response.ok) throw new Error('Network response was not ok');
-        
-        const data = await response.json();
-        
-        // Обновляем контейнер с задачами
-        updateTasksContainer(data.tasks);
-        
-        // Обновляем время последнего обновления
-        updateLastUpdateTime();
-        
-        // Обновляем статус подключения
-        updateConnectionStatus(true, false);
-        
-        console.log(`Обновлено ${data.tasks.length} задач в ${new Date().toLocaleTimeString()}`);
-        
-    } catch (error) {
-        console.error('Ошибка при обновлении данных:', error);
-        updateConnectionStatus(false, false);
-    } finally {
-        isUpdating = false;
-    }
-}
-
-// Запуск автообновления
-function startAutoUpdate() {
-    loadUpdatedData(); // Первоначальная загрузка
-    updateInterval = setInterval(loadUpdatedData, 60000); // каждую минуту
-    console.log('Автообновление запущено (каждую минуту)');
-}
-
-// Остановка автообновления
-function stopAutoUpdate() {
-    if (updateInterval) {
-        clearInterval(updateInterval);
-        updateInterval = null;
-    }
-}
-
-// Инициализация
-document.addEventListener('DOMContentLoaded', function() {
-    startAutoUpdate();
-    
-    // Остановка при уходе со страницы
-    window.addEventListener('beforeunload', stopAutoUpdate);
-    
-    // Перезапуск при возврате на вкладку
-    document.addEventListener('visibilitychange', function() {
-        if (!document.hidden) {
-            startAutoUpdate();
-        } else {
-            stopAutoUpdate();
-        }
-    });
-});
-</script>
 {% endblock %}
