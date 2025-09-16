@@ -36,3 +36,7 @@ class ApiDirectory(ApiClient):
     def get_task_type(self):
         """Получение всех типов задач"""
         return self._request("GET", "/api/directory/dir_task_type")
+
+    def get_task_location(self):
+        """Получение всех местоположений задач"""
+        return self._request("GET", "/api/directory/dir_task_location")

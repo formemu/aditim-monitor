@@ -63,7 +63,8 @@ class WizardTaskCreate(QWizard):
             "created": QDate.currentDate().toString("yyyy-MM-dd"),
             "description": description,
             "status_id": 1,
-            "type_id": type_id
+            "type_id": type_id,
+            "location_id": 1
         }
         task = api_manager.api_task.create_task(task_data)
         task_id = task['id']
@@ -101,7 +102,8 @@ class WizardTaskCreate(QWizard):
             "created": QDate.currentDate().toString("yyyy-MM-dd"),
             "description": description,
             "status_id": 1,
-            "type_id": type_id
+            "type_id": type_id,
+            "location_id": 1
         }
         task = api_manager.api_task.create_task(task_data)
         task_id = task['id']

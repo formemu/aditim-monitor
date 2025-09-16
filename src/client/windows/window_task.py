@@ -83,9 +83,9 @@ class WindowTask(QWidget):
         """Обновление таблицы задач с корректным отображением и заполнением по ширине"""
         table = self.ui.tableWidget_tasks
         table.setRowCount(len(api_manager.task))
-        table.setColumnCount(8) 
+        table.setColumnCount(9) 
         # Заголовки столбцов
-        table.setHorizontalHeaderLabels(["id", "№ задачи", "Название","Тип работ", "Статус", "Срок", "Создано", "Описание"])
+        table.setHorizontalHeaderLabels(["id", "№ задачи", "Название","Тип работ", "Статус", "Местоположение", "Срок", "Создано", "Описание"])
         header = table.horizontalHeader()
         for col in range(table.columnCount() - 1):
             header.setSectionResizeMode(col, QHeaderView.ResizeToContents)
@@ -100,12 +100,14 @@ class WindowTask(QWidget):
             table.setItem(row, 3, QTableWidgetItem(work_type))
             status = task['status']['name']
             table.setItem(row, 4, QTableWidgetItem(status))
+            location = task['location']['name']
+            table.setItem(row, 5, QTableWidgetItem(location))
             deadline = task['deadline']
-            table.setItem(row, 5, QTableWidgetItem(deadline))
+            table.setItem(row, 6, QTableWidgetItem(deadline))
             created = task['created']
-            table.setItem(row, 6, QTableWidgetItem(created))
+            table.setItem(row, 7, QTableWidgetItem(created))
             description = task['description']
-            table.setItem(row, 7, QTableWidgetItem(description))
+            table.setItem(row, 8, QTableWidgetItem(description))
         table.setColumnHidden(0, True)
 
 
@@ -309,12 +311,21 @@ class WindowTask(QWidget):
         table = self.ui.tableWidget_tasks
         menu = QMenu(table)
         status_menu = QMenu("Изменить статус", menu)
+        location_menu = QMenu("Изменить местоположение", menu)
         for status in api_manager.task_status:
             action = QAction(status['name'], status_menu)
             action.setCheckable(True)
             action.triggered.connect(lambda _, status_id=status['id']: self.change_task_status(status_id))
             status_menu.addAction(action)
         menu.addMenu(status_menu)
+
+        for location in api_manager.task_location:
+            action = QAction(location['name'], location_menu)
+            action.setCheckable(True)
+            action.triggered.connect(lambda _, location_id=location['id']: self.change_task_location(location_id))
+            location_menu.addAction(action)
+        menu.addMenu(location_menu)
+
         menu.exec(table.viewport().mapToGlobal(pos))
 
     def change_task_status(self, status_id):
@@ -338,6 +349,14 @@ class WindowTask(QWidget):
             
 
         
+        self.refresh_data()
+
+
+    def change_task_location(self, location_id):
+        # 1. Обновить местоположение
+        print(location_id, self.task['id'])
+        task = api_manager.api_task.update_task_location(self.task['id'], location_id)
+
         self.refresh_data()
 
     # =============================================================================

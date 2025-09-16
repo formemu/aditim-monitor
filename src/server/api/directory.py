@@ -6,11 +6,11 @@ from sqlalchemy.orm import Session
 from ..database import get_db
 from ..models.directory import ( ModelDirDepartment, ModelDirTaskStatus, ModelDirProfileToolComponentType,
                                  ModelDirProfileToolComponentStatus, ModelDirProfileToolDimension, ModelDirMachine,
-                                 ModelDirWorkType, ModelDirTaskComponentStageName, ModelDirTaskType)
+                                 ModelDirWorkType, ModelDirTaskComponentStageName, ModelDirTaskType, ModelDirTaskLocation)
 
 from ..schemas.directory import ( SchemaDirDepartment, SchemaDirTaskStatus, SchemaDirProfiletoolComponentType,
                                   SchemaDirComponentStatus, SchemaDirToolDimension, SchemaDirMachine,
-                                  SchemaDirWorkType, SchemaDirTaskComponentStageName, SchemaDirTaskType)
+                                  SchemaDirWorkType, SchemaDirTaskComponentStageName, SchemaDirTaskType, SchemaDirTaskLocation)
 
 router = APIRouter(prefix="/api/directory", tags=["directory"], redirect_slashes=False)
 
@@ -63,3 +63,8 @@ def get_task_component_stage(db: Session = Depends(get_db)):
 def get_task_type(db: Session = Depends(get_db)):
     """Получить все типы задач"""
     return db.query(ModelDirTaskType).all()
+
+@router.get("/dir_task_location", response_model=List[SchemaDirTaskLocation])
+def get_task_location(db: Session = Depends(get_db)):
+    """Получить все местоположения задач"""
+    return db.query(ModelDirTaskLocation).all()

@@ -60,6 +60,7 @@ class ApiManager:
         self.profile_tool_dimension = []
         self.machine = []
         self.task_type = []
+        self.task_location = []
 
         #планы
         self.plan_task_component_stage_name = []
@@ -78,6 +79,7 @@ class ApiManager:
         self.profile_dimension_loaded = False
         self.machine_loaded = False
         self.task_type_loaded = False
+        self.task_location_loaded = False
 
         self.plan_task_component_stage_loaded = False
 
@@ -95,6 +97,7 @@ class ApiManager:
         self.load_profile_tool_dimension()
         self.load_machine()
         self.load_task_type()
+        self.load_task_location()
 
     def load_all_directory_async(self):
         """Асинхронная (в фоне) загрузка всех справочников"""
@@ -106,6 +109,7 @@ class ApiManager:
         self.thread_pool.start(Worker(self.load_profile_tool_dimension))
         self.thread_pool.start(Worker(self.load_machine))
         self.thread_pool.start(Worker(self.load_task_type))
+        self.thread_pool.start(Worker(self.load_task_location))
 
     def load_all_plan(self):
         self.load_plan_task_component_stage()
@@ -276,6 +280,16 @@ class ApiManager:
             self.task_type_loaded = False
             print("ошибка при загрузке типов задач:", e)
 
+    def load_task_location(self):
+        """загрузка местоположений задач"""
+        try:
+            self.task_location = self.api_directory.get_task_location()
+            self.task_location_loaded = True
+            print("данные о всех местоположениях задач обновились")
+        except Exception as e:
+            self.task_location_loaded = False
+            print("ошибка при загрузке местоположений задач:", e)
+
     # асинхронное обновление справочников
     def refresh_department_async(self):
         """Асинхронное обновление справочника департаментов"""
@@ -333,6 +347,14 @@ class ApiManager:
             return self.task_type
         run_async(refresh)
 
+    def refresh_task_location_async(self):
+        """Асинхронное обновление справочника местоположений задач"""
+        def refresh():
+            self.task_location_loaded = False
+            self.load_task_location()
+            return self.task_location
+        run_async(refresh)
+
     def refresh_directory_async(self):
         """Асинхронное принудительное обновление всех справочников"""
         def refresh():
@@ -341,6 +363,7 @@ class ApiManager:
             self.component_status_loaded = False
             self.task_status_loaded = False
             self.profile_dimension_loaded = False
+            self.task_location_loaded = False
             self.load_all_directory()
             return True
         

@@ -87,3 +87,11 @@ class ModelDirTaskType(Base): # +
     description = Column(Text)
     # Relationships
     task = relationship("ModelTask", back_populates="type")
+
+class ModelDirTaskLocation(Base): # +
+    __tablename__= "dir_task_location"
+    id = Column(Integer, primary_key=True, index=True)
+    name = Column(String(50), nullable=False)
+    description = Column(Text)
+    # Relationships
+    task = relationship("ModelTask", back_populates="location")

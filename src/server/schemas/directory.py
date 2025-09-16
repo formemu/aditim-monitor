@@ -61,3 +61,7 @@ class SchemaDirWorkType(SchemaDirectoryResponse):
 class SchemaDirTaskType(SchemaDirectoryResponse):
     """Справочник: типы задач"""
     pass
+
+class SchemaDirTaskLocation(SchemaDirectoryResponse):
+    """Справочник:  местоположения задач"""
+    pass

@@ -4,103 +4,22 @@ body {
     margin: 0;
     padding: 0;
 }
-
 /* Логотип */
 .header-logo {
     width: 320px;
-    height: 100px;
+    height: 80px;
     object-fit: contain;
 }
-
 /* Заголовок — крупный, чистый */
 .navbar-brand {
-    font-size: 4.5rem;
+    font-size: 3.5rem;
     color: #14426a !important;
     font-weight: bold;
     margin-bottom: 0;
 }
-
-/* Убрали всё про обновление — больше нет .badge с текстом */
-
 /* Основной контейнер */
 .container {
     max-width: 95%;
     margin: 1.5rem auto;
     padding: 0;
-}
-
-/* Карточка задачи */
-.task-card {
-    margin-bottom: 1.5rem;
-    border-radius: 12px;
-    box-shadow: 0 0.25rem 0.75rem rgba(0, 0, 0, 0.15);
-    border-left: 6px solid #007bff;
-    background-color: white;
-}
-
-/* Название задачи */
-.task-title a {
-    font-size: 3.2rem;
-    font-weight: 600;
-    color: #003366;
-    text-decoration: none;
-    display: block;
-    padding: 0.3em 0;
-}
-
-/* Департамент */
-.task-department {
-    font-size: 2.4rem;
-    font-weight: 500;
-    color: #2c3e50;
-    margin-top: 0.3em;
-}
-
-/* Срок — справа, красный */
-.task-deadline {
-    font-size: 2.6rem;
-    font-weight: 500;
-    color: #d32f2f;
-    text-align: right;
-    padding: 0.5em 0;
-    white-space: nowrap;
-}
-
-
-/* Заголовок "Компонент:" */
-.component-label {
-    font-size: 2.0rem;
-    font-weight: 600;
-    color: #14426a;
-    margin-right: 0.5em;
-}
-
-/* Значение компонента */
-.component-value {
-    font-size: 2.2rem;
-    font-weight: 500;
-    color: #333;
-}
-
-/* Если компонентов нет */
-.component-empty {
-    font-size: 2.0rem;
-}
-
-/* Контейнер для компонентов */
-.component-chips {
-    margin-top: 0.5rem;
-    column-gap: 0.75rem;
-    row-gap: 0.5rem;
-}
-
-/* Метка компонента */
-.component-chip {
-    font-size: 2.0rem;
-    padding: 0.4em 0.8em;
-    border-radius: 6px;
-    border: 1px solid #dee2e6;
-    background-color: #f8f9fa;
-    white-space: nowrap;
-    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
 }

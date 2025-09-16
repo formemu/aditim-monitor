@@ -158,6 +158,16 @@ def update_task_status( task_id: int, task: SchemaTaskUpdate, db: Session = Depe
     db.refresh(db_task)
     return db_task
 
+# Обновление местоположения задачи
+@router.patch("/task/{task_id}/location", response_model=SchemaTaskResponse)
+def update_task_location(task_id: int, task: SchemaTaskUpdate, db: Session = Depends(get_db)):
+    """Обновить местоположение задачи"""
+    db_task = db.get(ModelTask, task_id)
+    db_task.location_id = task.location_id
+    db.commit()
+    db.refresh(db_task)
+    return db_task
+
 # =============================================================================
 # ROUTER.DELETE
 # =============================================================================

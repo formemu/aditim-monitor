@@ -2,23 +2,21 @@
 
 {% block title %}Список задач - ADITIM{% endblock %}
 
-{% block head_extra %}
-    <meta http-equiv="refresh" content="60">
-{% endblock %}
+
 
 {% block content %}
 <div class="row">
     <div class="col-12">
         {% if task_list %}
             {% for task in task_list %}
-                <div class="card mb-2" style="border-left: 3px solid #007bff; border-radius: 0;">
+                <div class="card mb-2">
                     <div class="card-body p-2 row align-items-center">
                         <!-- Колонка 1: Артикул + Компоненты -->
-                        <div class="col-3">
-                            <span class="h6 mb-0 text-primary">{{ task.get_display_name }}</span>
+                        <div class="col-2">
+                            <span class="h3 mb-0 text-primary">{{ task.get_display_name }}</span>
                             {% with components=task.component_list.all %}
                                 {% if components %}
-                                    <div class="d-flex flex-wrap gap-1 mt-1">
+                                    <div class="d-flex flex-wrap gap-1 mt-0">
                                         {% for comp in components %}
                                             <span class="badge bg-light border text-dark small">{{ comp.component_name }}</span>
                                         {% endfor %}
@@ -28,7 +26,7 @@
                         </div>
 
                         <!-- Колонка 2: Тип работ -->
-                        <div class="col-2 text-muted small">
+                        <div class="col-2 text-muted fs-5">
                             {% if task.type.name %}
                                 {{ task.type.name }}
                             {% else %}
@@ -36,15 +34,24 @@
                             {% endif %}
                         </div>
 
+                        <!-- Колонка 2: Местоположение -->
+                        <div class="col-2 text-muted fs-5">
+                            {% if task.location.name %}
+                                {{ task.location.name }}
+                            {% else %}
+                                —
+                            {% endif %}
+                        </div>    
+
                         <!-- Колонка 3: Описание -->
-                        <div class="col-5 text-muted small">
+                        <div class="col-4 text-muted fs-5">
                             {% if task.description %}
                                 {{ task.description|truncatewords:10 }}
                             {% endif %}
                         </div>
 
                         <!-- Колонка 4: Дата -->
-                        <div class="col-2 text-muted small text-end">
+                        <div class="col-2 text-muted text-end fs-4">
                             {% if task.deadline %}
                                 {{ task.deadline|date:"d.m.Y" }}
                             {% else %}

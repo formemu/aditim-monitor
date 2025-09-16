@@ -36,6 +36,10 @@ class ApiTask(ApiClient):
         """Обновление статуса задачи"""
         return self._request("PATCH", f"api/task/{task_id}/status", json={"status_id": status_id})
 
+    def update_task_location(self, task_id, location_id):
+        """Обновление местоположения задачи"""
+        return self._request("PATCH", f"api/task/{task_id}/location", json={"location_id": location_id})
+
     def delete_task(self, task_id):
         """Удаление задачи"""
         return self._request("DELETE", f"api/task/{task_id}")
