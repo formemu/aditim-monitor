@@ -1,10 +1,6 @@
-"""
-API для работы со справочниками
-"""
+"""API для работы со справочниками"""
 
 from .api_client import ApiClient
-from typing import List, Dict, Any
-
 
 class ApiDirectory(ApiClient):
     """API для справочников"""
@@ -32,6 +28,10 @@ class ApiDirectory(ApiClient):
     def get_machine(self):
         """Получение всех станков"""
         return self._request("GET", "/api/directory/dir_machine")
+
+    def get_work_type(self):
+        """Получение всех типов работ"""
+        return self._request("GET", "/api/directory/dir_work_type")
 
     def get_task_type(self):
         """Получение всех типов задач"""

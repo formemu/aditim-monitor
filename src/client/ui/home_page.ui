@@ -139,19 +139,6 @@
        <item>
         <layout class="QHBoxLayout" name="horizontalLayout_third">
          <item>
-          <spacer name="horizontalSpacer_tasks_left">
-           <property name="orientation">
-            <enum>Qt::Orientation::Horizontal</enum>
-           </property>
-           <property name="sizeHint" stdset="0">
-            <size>
-             <width>0</width>
-             <height>0</height>
-            </size>
-           </property>
-          </spacer>
-         </item>
-         <item>
           <widget class="QPushButton" name="pushButton_tasks_open">
            <property name="minimumSize">
             <size>
@@ -165,17 +152,17 @@
           </widget>
          </item>
          <item>
-          <spacer name="horizontalSpacer_tasks_right">
-           <property name="orientation">
-            <enum>Qt::Orientation::Horizontal</enum>
-           </property>
-           <property name="sizeHint" stdset="0">
+          <widget class="QPushButton" name="pushButton_machines_open">
+           <property name="minimumSize">
             <size>
-             <width>0</width>
-             <height>0</height>
+             <width>168</width>
+             <height>60</height>
             </size>
            </property>
-          </spacer>
+           <property name="text">
+            <string>Станки</string>
+           </property>
+          </widget>
          </item>
         </layout>
        </item>

@@ -22,7 +22,8 @@ class HomePage(QWidget):
     tasks_requested = Signal()
     settings_requested = Signal()
     reports_requested = Signal()
-    
+    machines_requested = Signal()
+
     def __init__(self):
         super().__init__()
         self.load_ui()
@@ -52,6 +53,7 @@ class HomePage(QWidget):
         self.ui.pushButton_tasks_open.clicked.connect(self.tasks_requested.emit)
         self.ui.pushButton_settings_open.clicked.connect(self.settings_requested.emit)
         self.ui.pushButton_reports_open.clicked.connect(self.reports_requested.emit)
+        self.ui.pushButton_machines_open.clicked.connect(self.machines_requested.emit)
 
     def apply_home_page_styles(self):
         """Применяет стили к главной странице"""

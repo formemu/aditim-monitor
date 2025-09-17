@@ -64,6 +64,7 @@
     <addaction name="action_products"/>
     <addaction name="action_blanks"/>
     <addaction name="action_tasks"/>
+    <addaction name="action_machines"/>
     <addaction name="separator"/>
     <addaction name="action_settings"/>
     <addaction name="action_reports"/>
@@ -104,6 +105,11 @@
   <action name="action_reports">
    <property name="text">
     <string>📊 Отчеты</string>
+   </property>
+  </action>
+  <action name="action_machines">
+   <property name="text">
+    <string>🏗️ Станки</string>
    </property>
   </action>
  </widget>

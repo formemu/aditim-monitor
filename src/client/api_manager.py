@@ -61,6 +61,7 @@ class ApiManager:
         self.machine = []
         self.task_type = []
         self.task_location = []
+        self.work_type = []
 
         #планы
         self.plan_task_component_stage_name = []
@@ -78,6 +79,7 @@ class ApiManager:
         self.task_status_loaded = False
         self.profile_dimension_loaded = False
         self.machine_loaded = False
+        self.work_type_loaded = False
         self.task_type_loaded = False
         self.task_location_loaded = False
 
@@ -96,6 +98,7 @@ class ApiManager:
         self.load_task_status()
         self.load_profile_tool_dimension()
         self.load_machine()
+        self.load_work_type()
         self.load_task_type()
         self.load_task_location()
 
@@ -108,6 +111,7 @@ class ApiManager:
         self.thread_pool.start(Worker(self.load_task_status))
         self.thread_pool.start(Worker(self.load_profile_tool_dimension))
         self.thread_pool.start(Worker(self.load_machine))
+        self.thread_pool.start(Worker(self.load_work_type))
         self.thread_pool.start(Worker(self.load_task_type))
         self.thread_pool.start(Worker(self.load_task_location))
 
@@ -199,7 +203,6 @@ class ApiManager:
             print("ошибка при загрузке очереди:", e)
 
     # Базовые методы загрузки справочников
-
     def load_department(self):
         """загрузка департаментов"""
         try:
@@ -270,6 +273,16 @@ class ApiManager:
             self.machine_loaded = False
             print("ошибка при загрузке станков:", e)
 
+    def load_work_type(self):
+        """загрузка типов работ"""
+        try:
+            self.work_type = self.api_directory.get_work_type()
+            self.work_type_loaded = True
+            print("данные о всех типах работ обновились")
+        except Exception as e:
+            self.work_type_loaded = False
+            print("ошибка при загрузке типов работ:", e)
+
     def load_task_type(self):
         """загрузка типов задач"""
         try:
@@ -339,6 +352,14 @@ class ApiManager:
             return self.machine
         run_async(refresh)
 
+    def refresh_work_type_async(self):
+        """Асинхронное обновление справочника типов работ"""
+        def refresh():
+            self.work_type_loaded = False
+            self.load_work_type()
+            return self.work_type
+        run_async(refresh)
+
     def refresh_task_type_async(self):
         """Асинхронное обновление справочника типов задач"""
         def refresh():
@@ -364,6 +385,9 @@ class ApiManager:
             self.task_status_loaded = False
             self.profile_dimension_loaded = False
             self.task_location_loaded = False
+            self.work_type_loaded = False
+            self.profile_tool_dimension_loaded = False
+            self.machine_loaded = False
             self.load_all_directory()
             return True
         

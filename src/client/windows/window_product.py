@@ -4,7 +4,7 @@
 from PySide6.QtWidgets import QWidget, QMessageBox, QTableWidgetItem, QAbstractItemView, QHeaderView
 from PySide6.QtCore import QFile, Qt, QTimer
 from PySide6.QtUiTools import QUiLoader
-from ..constant import UI_PATHS_ABS as UI_PATHS, get_style_path
+from ..constant import UI_PATHS_ABS, get_style_path
 from ..style_util import load_styles
 from ..api_manager import api_manager
 from ..widgets.profile_tool.dialog_create_profile_tool import DialogCreateProfileTool
@@ -30,7 +30,7 @@ class WindowProduct(QWidget):
     # =============================================================================
     def load_ui(self):
         """Загрузка UI из файла"""
-        ui_file = QFile(UI_PATHS["PRODUCT_CONTENT"])
+        ui_file = QFile(UI_PATHS_ABS["PRODUCT_CONTENT"])
         ui_file.open(QFile.ReadOnly)
         loader = QUiLoader()
         self.ui = loader.load(ui_file)
@@ -311,6 +311,9 @@ class WindowProduct(QWidget):
         if self.update_timer.isActive():
             self.update_timer.stop()
 
+    # =============================================================================
+    # ОКНО ПРЕДУПРЕЖДЕНИЯ
+    # =============================================================================
     def show_warning_dialog(self, message: str):
         """Показать окно предупреждения с заданным сообщением"""
         warning_box = QMessageBox(self)
