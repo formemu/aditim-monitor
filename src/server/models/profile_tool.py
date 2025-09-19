@@ -16,7 +16,8 @@ class ModelProfileTool(Base):
     profile = relationship("ModelProfile", back_populates="profile_tool")
     dimension = relationship("ModelDirProfileToolDimension", back_populates="profile_tool")
     component = relationship("ModelProfileToolComponent", back_populates="profile_tool", cascade="all, delete-orphan")
-    task = relationship("ModelTask", back_populates="profile_tool")
+    task = relationship("ModelTask", back_populates="profile_tool", cascade="all, delete-orphan")
+
 
 
 class ModelProfileToolComponent(Base):

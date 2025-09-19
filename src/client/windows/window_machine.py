@@ -33,9 +33,9 @@ class WindowMachine(QWidget):
     
     def setup_ui(self):
         """Настройка UI компонентов"""
-        # Таймер автообновления
-        self.update_timer = QTimer()
-        self.update_timer.timeout.connect(self.refresh_data)
+
+        self.refresh_data()
+        self.ui.treeView_machine.clicked.connect(self.on_machine_clicked)
 
     # =============================================================================
     # УПРАВЛЕНИЕ ДАННЫМИ: ЗАГРУЗКА И ОБНОВЛЕНИЕ
@@ -50,12 +50,8 @@ class WindowMachine(QWidget):
         model.setHorizontalHeaderLabels(["Станки"])
 
         # Получаем данные из api_manager
-        machines = api_manager.machine
-        work_types = api_manager.work_type
-        if not machines or not work_types:
-            print("Нет данных о станках или типах работ")
-            self.ui.treeView_machine.setModel(model)
-            return
+        machines = api_manager.directory['machine']
+        work_types = api_manager.directory['work_type']
 
         # Создаём словарь work_type_id → QStandardItem
         work_type_items = {}
@@ -72,29 +68,64 @@ class WindowMachine(QWidget):
             machine_item = QStandardItem(machine_name)
             machine_item.setData(machine, role=Qt.UserRole)  # Сохраняем весь объект
 
-            # Добавляем в нужную группу
             if work_type_id in work_type_items:
                 parent_item = work_type_items[work_type_id]
                 parent_item.appendRow(machine_item)
-            else:
-                # На всякий случай — если work_type не найден
-                unknown_item = QStandardItem("Без категории")
-                unknown_item.appendRow(machine_item)
-                model.appendRow(unknown_item)
+
 
         # Устанавливаем модель в treeView
         self.ui.treeView_machine.setModel(model)
 
-    # =============================================================================
-    # УПРАВЛЕНИЕ АВТООБНОВЛЕНИЕМ
-    # =============================================================================
-    def start_auto_refresh(self):
-        """Запуск автообновления"""
-        if not self.update_timer.isActive():
-            self.update_timer.start(5000)
-            self.refresh_data()
+    def on_machine_clicked(self, index):
+        """Обработка клика по станку — показываем задачи для этого станка"""
+        item = self.ui.treeView_machine.model().itemFromIndex(index)
+        machine = item.data(Qt.UserRole)
 
-    def stop_auto_refresh(self):
-        """Остановка автообновления"""
-        if self.update_timer.isActive():
-            self.update_timer.stop()
+        # Проверяем, что это лист (сам станок), а не группа
+        if not machine or "work_type_id" not in machine:
+            # Это группа (work_type), не станок
+            self.ui.listView_machine_task.setModel(None)
+            return
+
+        
+        print(api_manager.directory['machine'])
+
+        # Находим все этапы (task_component_stage), привязанные к этому станку
+        stages_for_machine = [
+            stage for stage in api_manager.directory['machine']
+            if stage["machine_id"] == machine["id"]
+        ]
+        print(stages_for_machine)
+        # Теперь получим все task_component, к которым относятся эти этапы
+        task_component_ids = {stage["task_component_id"] for stage in stages_for_machine if stage.get("task_component_id")}
+
+        # Найдём сами задачи через task_component → task
+        task_ids = set()
+        tasks = []
+        for tc_id in task_component_ids:
+            # Найдём task_component по id
+            task_component = next(
+                (tc for tc in api_manager.task_component if tc["id"] == tc_id),
+                None
+            )
+            if task_component and task_component["task_id"] not in task_ids:
+                task = api_manager.get_task_by_id(task_component["task_id"])
+                if task:
+                    tasks.append(task)
+                    task_ids.add(task["task_id"])
+
+        # Сортируем по позиции или дедлайну
+        tasks.sort(key=lambda x: (x.get("position") or 0))
+
+        # Создаём модель для listView
+        list_model = QStandardItemModel()
+        for task in tasks:
+            task_name = f"Задача #{task['id']} — {task.get('product_name', 'Без названия')}"
+            item = QStandardItem(task_name)
+            item.setData(task, Qt.UserRole)
+            list_model.appendRow(item)
+
+        self.ui.listView_machine_task.setModel(list_model)
+
+    
+

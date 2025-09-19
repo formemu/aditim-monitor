@@ -15,6 +15,7 @@ from ..schemas.task import (
     SchemaQueueReorderRequest,
     SchemaTaskComponentStageCreate
 )
+from ..events import notify_clients
 
 router = APIRouter(prefix="/api", tags=["task"])
 
@@ -22,37 +23,23 @@ router = APIRouter(prefix="/api", tags=["task"])
 # ROUTER.GET
 # =============================================================================
 @router.get("/task", response_model=List[SchemaTaskResponse])
-def get_task(
-    status: Optional[str] = Query(None, description="Фильтр по названию статуса"),
-    db: Session = Depends(get_db)
-):
+def get_task(db: Session = Depends(get_db)):
     """Получить список задач с необязательным фильтром по статусу"""
     query = db.query(ModelTask)
-    if status:
-        query = query.join(ModelDirTaskStatus).filter(ModelDirTaskStatus.name == status)
     return query.order_by(ModelTask.id).all()
 
 @router.get("/task/queue", response_model=List[SchemaTaskResponse])
 def get_queue(db: Session = Depends(get_db)):
     status = db.query(ModelDirTaskStatus).filter(ModelDirTaskStatus.name == "В работе").first()
-    if not status:
-        return []
-
-    tasks = (
-        db.query(ModelTask)
-        .filter(
-            ModelTask.status_id == status.id,
-            ModelTask.position.isnot(None)
-        )
-        .order_by(ModelTask.position)
-        .all()
-    )
+    tasks = db.query(ModelTask).filter(ModelTask.status_id == status.id, ModelTask.position.isnot(None)).order_by(ModelTask.position).all()
     return tasks
 
-@router.get("/task/{task_id}/component", response_model=List[SchemaTaskComponentResponse])
-def get_task_component_list(task_id: int, db: Session = Depends(get_db)):
-    """Получить компоненты задачи по ID задачи"""
-    return db.query(ModelTaskComponent).filter(ModelTaskComponent.task_id == task_id).all()
+
+
+# @router.get("/task/{task_id}/component", response_model=List[SchemaTaskComponentResponse])
+# def get_task_component_list(task_id: int, db: Session = Depends(get_db)):
+#     """Получить компоненты задачи по ID задачи"""
+#     return db.query(ModelTaskComponent).filter(ModelTaskComponent.task_id == task_id).all()
 
 # =============================================================================
 # ROUTER.POST
@@ -75,6 +62,7 @@ def create_task(task: SchemaTaskCreate, db: Session = Depends(get_db)):
         db.add(task)
         db.commit()
         db.refresh(task)
+        notify_clients("table", "task", "created")
         return task
     except Exception as e:
         db.rollback()
@@ -115,13 +103,12 @@ def create_task_component(
     db.add(db_component)
     db.commit()
     db.refresh(db_component)
+    notify_clients("table", "task_component", "created")
     return db_component
 
 @router.post("/task/component/{component_id}/stage", response_model=dict)
 def create_task_component_stage(component_id: int, stage_data: SchemaTaskComponentStageCreate, db: Session = Depends(get_db)):
-    """
-    Добавить этап к компоненту задачи
-    """
+    """    Добавить этап к компоненту задачи  """
     # Создаём запись
     stage = ModelTaskComponentStage(
         task_component_id=component_id,
@@ -134,6 +121,7 @@ def create_task_component_stage(component_id: int, stage_data: SchemaTaskCompone
     db.add(stage)
     db.commit()
     db.refresh(stage)
+    notify_clients("table", "task_component_stage", "created")
     return {"id": stage.id}
 
 @router.post("/task/queue/reorder", status_code=204)
@@ -156,6 +144,7 @@ def update_task_status( task_id: int, task: SchemaTaskUpdate, db: Session = Depe
     db_task.status_id = task.status_id
     db.commit()
     db.refresh(db_task)
+    notify_clients("table", "task", "updated")
     return db_task
 
 # Обновление местоположения задачи
@@ -166,6 +155,7 @@ def update_task_location(task_id: int, task: SchemaTaskUpdate, db: Session = Dep
     db_task.location_id = task.location_id
     db.commit()
     db.refresh(db_task)
+    notify_clients("table", "task", "updated")
     return db_task
 
 # =============================================================================
@@ -179,4 +169,6 @@ def delete_task(task_id: int, db: Session = Depends(get_db)):
         raise HTTPException(status_code=404, detail="Задача не найдена")
     db.delete(db_task)
     db.commit()
+    notify_clients("table", "task", "deleted")
+    notify_clients("table", "task_component", "deleted")
     return {"detail": "Задача удалена успешно"}

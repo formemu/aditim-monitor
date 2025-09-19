@@ -17,14 +17,14 @@ class PageProfileToolSelection(QWizardPage):
     def initializePage(self):
         self.tool_combo.clear()
         profile = self.wizard.profile
-        for pt in profile.get('profile_tool', []):
-            name = f"Инструмент {pt['dimension']['name']}"
-            self.tool_combo.addItem(name, pt)
+        for profile_tool in profile['profile_tool']:
+            name = f"Инструмент {profile_tool['dimension']['name']}"
+            self.tool_combo.addItem(name, profile_tool)
 
     def validatePage(self):
-        idx = self.tool_combo.currentIndex()
-        if idx >= 0:
-            self.wizard.profile_tool = self.tool_combo.itemData(idx)
+        index = self.tool_combo.currentIndex()
+        if index >= 0:
+            self.wizard.profile_tool = self.tool_combo.itemData(index)
             return True
         return False
 

@@ -18,7 +18,6 @@ class DialogCreateProfileTool(QDialog):
         self.setup_ui()
         self.setup_component_table()
 
-
     def load_ui(self):
         """Загружает UI из файла"""
         ui_file = QFile(UI_PATHS_ABS["DIALOG_CREATE_PROFILE_TOOL"])
@@ -31,7 +30,6 @@ class DialogCreateProfileTool(QDialog):
         self.setModal(True)
         self.setLayout(self.ui.layout())
         
-
     def setup_ui(self):
         """Настраивает UI компонентов после загрузки"""
         # Подключаем обработчики кнопок
@@ -56,7 +54,7 @@ class DialogCreateProfileTool(QDialog):
     def load_dimension(self):
         """Загружает размерности по умолчанию"""
         self.ui.comboBox_dimension.clear()
-        for dimension in api_manager.profile_tool_dimension:
+        for dimension in api_manager.directory['profile_tool_dimension']:
             name = dimension['name']
             dimension_id = dimension['id']
             self.ui.comboBox_dimension.addItem(name, dimension_id)
@@ -71,8 +69,8 @@ class DialogCreateProfileTool(QDialog):
         self.list_component_widget.clear()
 
         # Заполняем таблицу типами компонентов
-        self.ui.tableWidget_components.setRowCount(len(api_manager.component_type))
-        for row, type in enumerate(api_manager.component_type):
+        self.ui.tableWidget_components.setRowCount(len(api_manager.directory['component_type']))
+        for row, type in enumerate(api_manager.directory['component_type']):
             # Колонка 0: Checkbox "Использовать"
             checkbox = QCheckBox()
             checkbox.setChecked(False)  # По умолчанию не выбран
@@ -97,7 +95,7 @@ class DialogCreateProfileTool(QDialog):
         """Обработчик изменения поискового запроса"""
         self.ui.listWidget_profile_results.clear()
         # Ищем профили через api_manager
-        search_results = api_manager.get_search_profile(text)
+        search_results = api_manager.search_in('profile', 'article', text)
         for profile in search_results[:10]:  # Показываем максимум 10 результатов
             display_text = f"{profile['article']} - {profile.get('description', '')}"
             item = QListWidgetItem(display_text)

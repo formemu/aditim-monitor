@@ -13,6 +13,7 @@ from ..schemas.product import (
     SchemaProductComponentCreate,
     SchemaProductComponentResponse,
 )
+from ..events import notify_clients
 
 router = APIRouter(prefix="/api", tags=["product"])
 
@@ -39,6 +40,7 @@ def create_product(product: SchemaProductCreate, db: Session = Depends(get_db)):
     db.add(db_product)
     db.commit()
     db.refresh(db_product)
+    notify_clients("table", "product", "created")
     return db_product
 
 @router.post("/product/{product_id}/component", response_model=SchemaProductComponentResponse)
@@ -54,6 +56,7 @@ def create_product_component(product_id: int, component: SchemaProductComponentC
         db.add(db_component)
         db.commit()
         db.refresh(db_component)
+        notify_clients("table", "product_component", "created")
         return db_component
     except Exception as e:
         db.rollback()
@@ -73,6 +76,8 @@ def update_product(product_id: int, product: SchemaProductUpdate, db: Session = 
         setattr(db_product, field, value) 
     db.commit()
     db.refresh(db_product)
+    notify_clients("table", "product", "updated")
+    notify_clients("table", "product_component", "updated")
     return db_product
 
 # =============================================================================
@@ -85,10 +90,14 @@ def delete_product(product_id: int, db: Session = Depends(get_db)):
     if not db_product:
         raise HTTPException(status_code=404, detail="Product not found")
 
-    # Удаляем сначала компоненты (из-за внешнего ключа)
     db.query(ModelProductComponent).filter(ModelProductComponent.product_id == product_id).delete()
     db.delete(db_product)
     db.commit()
+    notify_clients("table", "product", "deleted")
+    notify_clients("table", "product_component", "deleted")
+    notify_clients("table", "task", "deleted")
+    notify_clients("table", "task_component", "deleted")
+    notify_clients("table", "queue", "deleted")
     return {"detail": "Продукт и его компоненты удалены успешно"}
 
 @router.delete("/product/{product_id}/component")
@@ -98,6 +107,9 @@ def delete_all_product_component(product_id: int, db: Session = Depends(get_db))
     if deleted_count == 0:
         raise HTTPException(status_code=404, detail="Компоненты не найдены")
     db.commit()
+    notify_clients("table", "product_component", "deleted")
+    notify_clients("table", "task_component", "deleted")
+
     return {"detail": f"Удалены все компоненты продукта {product_id}"}
 
 @router.delete("/product/component/{component_id}")
@@ -109,4 +121,7 @@ def delete_product_component_by_id(component_id: int, db: Session = Depends(get_
 
     db.delete(component)
     db.commit()
+    notify_clients("table", "product_component", "deleted")
+    notify_clients("table", "task_component", "deleted")
+
     return {"detail": "Компонент удален успешно"}

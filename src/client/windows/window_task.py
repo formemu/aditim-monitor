@@ -19,6 +19,7 @@ class WindowTask(QWidget):
         self.selected_row = None
         self.load_ui()
         self.setup_ui()
+        self.connect_signals()
 
     # =============================================================================
     # ИНИЦИАЛИЗАЦИЯ И ЗАГРУЗКА ИНТЕРФЕЙСА
@@ -30,6 +31,7 @@ class WindowTask(QWidget):
         loader = QUiLoader()
         self.ui = loader.load(ui_file)
         ui_file.close()
+        
 
     def setup_ui(self):
         """Настройка UI компонентов"""
@@ -54,21 +56,29 @@ class WindowTask(QWidget):
         table.setSelectionBehavior(QAbstractItemView.SelectRows)
         table.setSelectionMode(QAbstractItemView.SingleSelection)
         table.setFocusPolicy(Qt.NoFocus)
-        # Таймер автообновления
-        self.update_timer = QTimer()
-        self.update_timer.timeout.connect(self.refresh_data)
+        self.refresh_data()
+
     # =============================================================================
     # УПРАВЛЕНИЕ ДАННЫМИ: ЗАГРУЗКА И ОБНОВЛЕНИЕ
     # =============================================================================
     def refresh_data(self):
         """Принудительное обновление данных"""
         if self.tab_index == 0:
-            api_manager.load_task()
-            self.update_task_table()
+            self.update_table_task()
         elif self.tab_index == 1:
-            api_manager.load_queue()
-            self.update_queue_table()
-    
+            self.update_table_queue()
+
+    def connect_signals(self):
+        """Подключаемся к сигналам ApiManager"""
+        api_manager.data_updated.connect(self.on_data_updated)
+
+    def on_data_updated(self, group: str, key: str, success: bool):
+        """Реакция на обновление данных"""
+        if success and group == "table" and key == "task":
+            self.update_table_task()
+        elif success and group == "table" and key == "queue":
+            self.update_table_queue()
+
     def on_tab_changed(self):
         """Обработчик смены вкладки — обновляет данные для выбранной вкладки"""
         self.tab_index = self.ui.tabWidget_tasks.currentIndex()
@@ -79,10 +89,10 @@ class WindowTask(QWidget):
     # =============================================================================
     # ОТОБРАЖЕНИЕ ДАННЫХ: ТАБЛИЦЫ И ИНФОРМАЦИОННЫЕ ПАНЕЛИ
     # =============================================================================
-    def update_task_table(self):
+    def update_table_task(self):
         """Обновление таблицы задач с корректным отображением и заполнением по ширине"""
         table = self.ui.tableWidget_tasks
-        table.setRowCount(len(api_manager.task))
+        table.setRowCount(len(api_manager.table['task']))
         table.setColumnCount(9) 
         # Заголовки столбцов
         table.setHorizontalHeaderLabels(["id", "№ задачи", "Название","Тип работ", "Статус", "Местоположение", "Срок", "Создано", "Описание"])
@@ -90,8 +100,9 @@ class WindowTask(QWidget):
         for col in range(table.columnCount() - 1):
             header.setSectionResizeMode(col, QHeaderView.ResizeToContents)
         header.setSectionResizeMode(table.columnCount() - 1, QHeaderView.Stretch)
-        for row, task in enumerate(api_manager.task):
+        for row, task in enumerate(api_manager.table['task']):
             id = task['id']
+            
             table.setItem(row, 0, QTableWidgetItem(str(id)))
             table.setItem(row, 1, QTableWidgetItem(f"Задача № {id}"))
             name = self.get_task_name(task)
@@ -111,10 +122,10 @@ class WindowTask(QWidget):
         table.setColumnHidden(0, True)
 
 
-    def update_queue_table(self):
+    def update_table_queue(self):
         """Обновление таблицы очереди с корректным отображением и заполнением по ширине"""
         table = self.ui.tableWidget_queue
-        table.setRowCount(len(api_manager.queue))
+        table.setRowCount(len(api_manager.table['queue']))
         table.setColumnCount(8) 
         # Заголовки столбцов
         table.setHorizontalHeaderLabels(["id", "Позиция", "Название", "Тип работ", "Статус", "Срок", "Создано", "Описание"])
@@ -122,7 +133,7 @@ class WindowTask(QWidget):
         for col in range(table.columnCount() - 1):
             header.setSectionResizeMode(col, QHeaderView.ResizeToContents)
         header.setSectionResizeMode(table.columnCount() - 1, QHeaderView.Stretch)
-        for row, task in enumerate(api_manager.queue):
+        for row, task in enumerate(api_manager.table['queue']):
             id = task['id']
 
             table.setItem(row, 0, QTableWidgetItem(str(id)))
@@ -158,12 +169,11 @@ class WindowTask(QWidget):
     def get_task_name(self, task):
         """Возвращает название задачи: артикул профиля или имя изделия"""
         if task['profile_tool_id']:
-            profile_tool = api_manager.get_profile_tool_by_id(task['profile_tool_id'])
+            profile_tool = api_manager.get_by_id('profile_tool', task['profile_tool_id'])
             return f"Инструмент {profile_tool['profile']['article']}"
         elif task['product_id']:
-            product = api_manager.get_product_by_id(task['product_id'])
+            product = api_manager.get_by_id('product', task['product_id'])
             return f"Изделие {product['name']}" if product else "Изделие N/A"
-        return print("ошибка тут: WindowTask.get_task_name")
 
     def clear_task_info_panel(self):
         """Очистка панели задачи"""
@@ -236,7 +246,6 @@ class WindowTask(QWidget):
         # Выделяем перемещённую задачу
         self.select_row_by_task_id(current_task_id)
 
-
     def on_position_down_clicked(self):
         """Переместить задачу вниз"""
         selected_row = self.ui.tableWidget_queue.currentRow()
@@ -283,27 +292,12 @@ class WindowTask(QWidget):
         # if dialog.exec() == QDialog.Accepted:
         #     self.refresh_data()
         wizard = WizardTaskCreate(self)
-        if wizard.exec() == QWizard.Accepted:
-            self.refresh_data()
+        wizard.exec()
 
     def on_delete_clicked(self):
         """Удаление задачи с подтверждением"""
-        if self.task is None:
-            self.show_warning_dialog("Задача не выбрана")
-            return
         api_manager.api_task.delete_task(self.task['id'])
-        self.refresh_data()
 
-        if self.ui.tableWidget_tasks.rowCount() > 0:
-            item = self.ui.tableWidget_tasks.item(0, 0)
-            if item is not None:
-                self.ui.tableWidget_tasks.setCurrentItem(item)
-                self.task = api_manager.get_task_by_id(item.text())
-                self.selected_row = 0
-        else:
-            self.task = None
-            self.selected_row = None
-            self.clear_task_info_panel()
 
 
     def show_context_menu(self, pos):
@@ -318,7 +312,6 @@ class WindowTask(QWidget):
             action.triggered.connect(lambda _, status_id=status['id']: self.change_task_status(status_id))
             status_menu.addAction(action)
         menu.addMenu(status_menu)
-
         for location in api_manager.task_location:
             action = QAction(location['name'], location_menu)
             action.setCheckable(True)
@@ -331,12 +324,10 @@ class WindowTask(QWidget):
     def change_task_status(self, status_id):
         # 1. Обновить статус
         task = api_manager.api_task.update_task_status(self.task['id'], status_id)
-
         # 2. Получить ВСЕ задачи в статусе "В работе"
-        queue = api_manager.api_task.get_queue() or []
+        queue = api_manager.table['queue']
         # 3. Формируем новый список ВСЕХ task_ids в правильном порядке
         task_ids = [t['id'] for t in queue]
-        
         # 4. Добавляем или удаляем текущую задачу
         if task['status']['name'] == 'В работе':
             if task['id'] not in task_ids:
@@ -346,18 +337,10 @@ class WindowTask(QWidget):
                 task_ids.remove(task['id'])
         # 5. Сохраняем ВСЮ очередь
         api_manager.api_task.reorder_task_queue(task_ids)
-            
-
-        
-        self.refresh_data()
-
 
     def change_task_location(self, location_id):
-        # 1. Обновить местоположение
-        print(location_id, self.task['id'])
-        task = api_manager.api_task.update_task_location(self.task['id'], location_id)
+        api_manager.api_task.update_task_location(self.task['id'], location_id)
 
-        self.refresh_data()
 
     # =============================================================================
     # ОБРАБОТЧИКИ СОБЫТИЙ: ВЫДЕЛЕНИЕ И ПОИСК
@@ -367,40 +350,23 @@ class WindowTask(QWidget):
         if self.tab_index == 0:
             self.selected_row = self.ui.tableWidget_tasks.currentRow()
             item = self.ui.tableWidget_tasks.item(self.selected_row, 0)
-            if item is not None:
+            if item:
                 task_id = item.text()
-                self.task = api_manager.get_task_by_id(task_id)
+                self.task = api_manager.get_by_id('task', task_id)
             else:
                 self.task = None
                 self.selected_row = None
-            self.update_task_info_panel()
-
         elif self.tab_index == 1:
             self.selected_row = self.ui.tableWidget_queue.currentRow()
             item = self.ui.tableWidget_queue.item(self.selected_row, 0)
             if item:
                 task_id = item.text()
-                self.task = api_manager.get_task_by_id(task_id)
-            self.update_task_info_panel()
-
-        else:
-            self.selected_row = None
-            self.task = None
-            self.update_task_info_panel()
+                self.task = api_manager.get_by_id('task', task_id)
+        self.update_task_info_panel()
+   
     # =============================================================================
-    # УПРАВЛЕНИЕ АВТООБНОВЛЕНИЕМ
+    # ОКНО ПРЕДУПРЕЖДЕНИЯ
     # =============================================================================
-    def start_auto_refresh(self):
-        """Запуск автообновления"""
-        if not self.update_timer.isActive():
-            self.update_timer.start(5000)
-            self.refresh_data()
-
-    def stop_auto_refresh(self):
-        """Остановка автообновления"""
-        if self.update_timer.isActive():
-            self.update_timer.stop()
-
     def show_warning_dialog(self, message: str):
         """Показать окно предупреждения с заданным сообщением"""
         warning_box = QMessageBox(self)

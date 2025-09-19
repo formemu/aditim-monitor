@@ -31,7 +31,7 @@ class PageProfileSelection(QWizardPage):
         self.results_list.clear()
         if not text.strip():
             return
-        results = api_manager.get_search_profile(text)[:10]
+        results = api_manager.search_in('profile', 'article', text)[:10]
         for profile in results:
             item = QListWidgetItem(f"{profile['article']}")
             item.setData(Qt.UserRole, profile)
@@ -44,7 +44,7 @@ class PageProfileSelection(QWizardPage):
 
     def fill_type_combo(self):
         self.type_combo.clear()
-        types = api_manager.task_type
+        types = api_manager.directory['task_type']
         for task_type in types:
             self.type_combo.addItem(task_type['name'], task_type['id'])
 

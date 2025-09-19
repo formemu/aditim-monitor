@@ -13,7 +13,7 @@ class ModelProduct(Base):
     # Связи
     department = relationship("ModelDirDepartment", back_populates="product")
     component = relationship("ModelProductComponent", back_populates="product", cascade="all, delete-orphan")
-    task = relationship("ModelTask", back_populates="product")
+    task = relationship("ModelTask", back_populates="product", cascade="all, delete-orphan")
 
 
 class ModelProductComponent(Base):

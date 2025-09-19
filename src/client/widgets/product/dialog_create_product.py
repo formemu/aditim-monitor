@@ -1,15 +1,9 @@
 """Диалог для создания изделия"""
-
-from typing import Dict, Any, Optional, List
-from PySide6.QtWidgets import (QDialog, QMessageBox, QTableWidgetItem, 
-                               QCheckBox, QSpinBox, QAbstractItemView, QHeaderView)
-from PySide6.QtCore import Signal, QFile, Qt, Slot
+from PySide6.QtWidgets import (QDialog,  QTableWidgetItem,  QSpinBox, QAbstractItemView, QHeaderView)
+from PySide6.QtCore import  QFile, Qt, Slot
 from PySide6.QtUiTools import QUiLoader
-
 from ...constant import UI_PATHS_ABS
-from ...api.api_product import ApiProduct
 from ...api_manager import api_manager
-from ...style_util import load_styles
 import warnings
 
 
@@ -54,7 +48,7 @@ class DialogCreateProduct(QDialog):
     def load_department(self):
         """Загружает департаменты в combobox"""
         self.ui.comboBox_department.clear()
-        for department in api_manager.department:
+        for department in api_manager.directory['department']:
             name = department['name']
             department_id = department['id']
             self.ui.comboBox_department.addItem(name, department_id)

@@ -109,7 +109,7 @@ class WidgetGrid(QWidget):
             comboBox_machine.setProperty("stage", stage)
             comboBox_machine.setEnabled(False)
             list_machine = [
-                machine for machine in api_manager.machine
+                machine for machine in api_manager.directory['machine']
                 if machine['work_type_id'] == stage['work_type_id']
             ]
             for machine in list_machine:
@@ -132,7 +132,7 @@ class WidgetGrid(QWidget):
         profiletool_component_type_id = component['type']['id']
         list_stage = []
 
-        for item in api_manager.plan_task_component_stage_name:
+        for item in api_manager.plan['task_component_stage']:
             if item['profiletool_component_type']['id'] == profiletool_component_type_id:
                 stage_name_data = item['task_component_stage_name']
                 list_stage.append({

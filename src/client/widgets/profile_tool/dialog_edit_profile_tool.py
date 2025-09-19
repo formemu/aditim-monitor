@@ -91,8 +91,8 @@ class DialogEditProfileTool(QDialog):
         self.list_component_widget.clear()
         
         # Заполняем таблицу типами компонентов
-        self.ui.tableWidget_components.setRowCount(len(api_manager.component_type))
-        for row, type in enumerate(api_manager.component_type):
+        self.ui.tableWidget_components.setRowCount(len(api_manager.directory['component_type']))
+        for row, type in enumerate(api_manager.directory['component_type']):
             # Колонка 0: Checkbox "Использовать"
             checkbox = QCheckBox()
             checkbox.setChecked(False)  # По умолчанию не выбран

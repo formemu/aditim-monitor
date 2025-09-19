@@ -59,7 +59,6 @@ class DialogEditProduct(QDialog):
         department_id = self.product['department']['id']
         self.ui.lineEdit_name.setText(name)
         self.ui.textEdit_description.setPlainText(description)
-        
         # Устанавливаем департамент
         if department_id:
             for i in range(self.ui.comboBox_department.count()):
@@ -68,17 +67,14 @@ class DialogEditProduct(QDialog):
                     break
 
         # Загружаем существующие компоненты
-        
     def fill_component(self):
         """Загружает существующие компоненты изделия."""
         self.ui.tableWidget_components.setRowCount(len(self.product['component']) + 1)
-
         # Заполняем существующие компоненты
         for row, component in enumerate(self.product['component']):
             name = component['name']
             quantity = component['quantity']
             self.add_component_row_data(row, name, quantity)
-        
         # Добавляем пустую строку для новых компонентов
         self.add_component_row_data(len(self.product['component']), "", 1)
 
@@ -87,7 +83,7 @@ class DialogEditProduct(QDialog):
     # =============================================================================
     def load_department(self):
         """Загружает департаменты в combobox"""
-        department = api_manager.department
+        department = api_manager.directory['department']
         for dep in department:
             self.ui.comboBox_department.addItem(dep['name'], dep['id'])
 
@@ -180,13 +176,11 @@ class DialogEditProduct(QDialog):
         }
         # Обновляем изделие
         api_manager.api_product.update_product(self.product['id'], product)
-        
 
     def update_product_component(self):
         """Обновляет компоненты изделия"""
         if self.product['component']:
             api_manager.api_product.delete_product_component(self.product['id'])
-        
         for component in self.get_component_from_table():
             api_manager.api_product.create_product_component(self.product['id'], component)
     

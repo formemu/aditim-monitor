@@ -1,5 +1,4 @@
 """API routes for profile"""
-
 from typing import List
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
@@ -7,6 +6,7 @@ from sqlalchemy.orm import Session
 from ..database import get_db
 from ..models.profile import ModelProfile
 from ..schemas.profile import SchemaProfileCreate, SchemaProfileUpdate, SchemaProfileResponse
+from ..events import notify_clients
 
 router = APIRouter(prefix="/api", tags=["profile"])
 
@@ -23,7 +23,7 @@ def get_profile(db: Session = Depends(get_db)):
 @router.post("/profile", response_model=SchemaProfileResponse)
 def create_profile(profile: SchemaProfileCreate, db: Session = Depends(get_db)):
     profile_data = profile.model_dump()
-
+    print(profile_data)
     if profile_data.get("sketch"):
         sketch_str = profile_data["sketch"]
         if isinstance(sketch_str, str) and "," in sketch_str:
@@ -35,6 +35,8 @@ def create_profile(profile: SchemaProfileCreate, db: Session = Depends(get_db)):
     db.add(db_profile)
     db.commit()
     db.refresh(db_profile)
+    notify_clients("table", "profile", "created")
+
     return db_profile
 
 # =============================================================================
@@ -71,6 +73,7 @@ def update_profile(profile_id: int, profile: SchemaProfileUpdate, db: Session = 
 
     db.commit()
     db.refresh(db_profile)
+    notify_clients("table", "profile", "updated")
     return db_profile
 
 # =============================================================================
@@ -84,4 +87,11 @@ def delete_profile(profile_id: int, db: Session = Depends(get_db)):
 
     db.delete(db_profile)
     db.commit()
+    notify_clients("table", "profile", "deleted")
+    notify_clients("table", "profile_tool", "deleted")
+    notify_clients("table", "profile_tool_component", "deleted")
+    notify_clients("table", "task", "deleted")
+    notify_clients("table", "task_component", "deleted")
+    notify_clients("table", "queue", "deleted")
+    
     return {"detail": "Профиль и все связанные данные удалены"}

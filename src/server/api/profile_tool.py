@@ -12,6 +12,7 @@ from ..schemas.profile_tool import (
     SchemaProfileToolUpdate,
     SchemaProfileToolComponentResponse,
 )
+from ..events import notify_clients
 
 router = APIRouter(prefix="/api", tags=["profile-tool"])
 
@@ -46,6 +47,7 @@ def create_profile_tool(profile_tool: SchemaProfileToolCreate, db: Session = Dep
         db.add(tool)
         db.commit()
         db.refresh(tool)
+        notify_clients("table", "profile_tool", "created")
         return tool
     except Exception as e:
         db.rollback()
@@ -66,6 +68,7 @@ def create_profile_tool_component(profile_tool_id: int, component: SchemaProfile
         db.add(db_component)
         db.commit()
         db.refresh(db_component)
+        notify_clients("table", "profile_tool_component", "created")
         return db_component
     except Exception as e:
         db.rollback()
@@ -85,6 +88,8 @@ def update_profile_tool(profile_tool_id: int, tool: SchemaProfileToolUpdate, db:
         setattr(db_tool, field, value)
     db.commit()
     db.refresh(db_tool)
+    notify_clients("table", "profile_tool", "updated")
+    notify_clients("table", "profile_tool_component", "updated")
     return db_tool
 
 # =============================================================================
@@ -98,6 +103,13 @@ def delete_profile_tool(profile_tool_id: int, db: Session = Depends(get_db)):
         raise HTTPException(status_code=404, detail="Инструмент не найден")
     db.delete(tool)
     db.commit()
+
+    notify_clients("table", "profile_tool", "deleted")
+    notify_clients("table", "profile_tool_component", "deleted")
+    notify_clients("table", "task", "deleted")
+    notify_clients("table", "task_component", "deleted")
+    notify_clients("table", "queue", "deleted")
+
     return {"detail": "Инструмент и его компоненты удалены успешно"}
 
 @router.delete("/profile/{profile_id}/profile-tool")
@@ -107,6 +119,13 @@ def delete_profile_tool_by_profile(profile_id: int, db: Session = Depends(get_db
     if deleted_count == 0:
         raise HTTPException(status_code=404, detail="Инструменты не найдены")
     db.commit()
+
+    notify_clients("table", "profile_tool", "deleted")
+    notify_clients("table", "profile_tool_component", "deleted")
+    notify_clients("table", "task", "deleted")
+    notify_clients("table", "task_component", "deleted")
+    notify_clients("table", "queue", "deleted")
+
     return {"detail": f"Удалены все инструменты и компоненты профиля {profile_id}"}
 
 @router.delete("/profile-tool/{profile_tool_id}/component", response_model=dict)
@@ -116,6 +135,10 @@ def delete_all_profile_tool_components(profile_tool_id: int, db: Session = Depen
     if deleted_count == 0:
         raise HTTPException(status_code=404, detail="Компоненты не найдены")
     db.commit()
+
+    notify_clients("table", "profile_tool_component", "deleted")
+    notify_clients("table", "task_component", "deleted")
+
     return {"detail": f"Удалены все компоненты инструмента {profile_tool_id}"}
 
 @router.delete("/profile-tool/component/{component_id}", response_model=dict)
@@ -126,4 +149,8 @@ def delete_profile_tool_component_by_id(component_id: int, db: Session = Depends
         raise HTTPException(status_code=404, detail="Компонент не найден")
     db.delete(component)
     db.commit()
+
+    notify_clients("table", "profile_tool_component", "deleted")
+    notify_clients("table", "task_component", "deleted")
+
     return {"detail": "Компонент удален успешно"}
