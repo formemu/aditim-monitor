@@ -21,27 +21,14 @@ router = APIRouter(prefix="/api", tags=["plan"])
 def get_plan(
     db: Session = Depends(get_db)
 ):
-    """
-    Получает все записи из плана стадий обработки компонентов.
-    Включает связанные сущности:
-    - component_type (тип компонента)
-    - task_component_stage (стадия задачи)
-
-    Используется eager loading (joinedload), чтобы избежать N+1 проблем.
-    """
+    """ Получает все записи из плана стадий обработки компонентов. """
     try:
         # Загружаем основные данные + связи сразу (без lazy loading)
-        query = db.query(ModelPlanTaskComponentStage).options(
-            joinedload(ModelPlanTaskComponentStage.profiletool_component_type),
-            joinedload(ModelPlanTaskComponentStage.task_component_stage_name)
-        )
-        plans = query.all()
+        query = db.query(ModelPlanTaskComponentStage).all()
 
-        if not plans:
-            # Можно вернуть пустой список — это нормально
-            return []
 
-        return plans
+
+        return query
 
     except SQLAlchemyError as e:
         # Логируем ошибку базы данных

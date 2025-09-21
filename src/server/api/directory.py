@@ -6,11 +6,11 @@ from sqlalchemy.orm import Session
 from ..database import get_db
 from ..models.directory import ( ModelDirDepartment, ModelDirTaskStatus, ModelDirProfileToolComponentType,
                                  ModelDirProfileToolComponentStatus, ModelDirProfileToolDimension, ModelDirMachine,
-                                 ModelDirWorkType, ModelDirTaskComponentStageName, ModelDirTaskType, ModelDirTaskLocation)
+                                 ModelDirWorkType, ModelDirWorkSubtype, ModelDirTaskType, ModelDirTaskLocation)
 
 from ..schemas.directory import ( SchemaDirDepartment, SchemaDirTaskStatus, SchemaDirProfiletoolComponentType,
                                   SchemaDirComponentStatus, SchemaDirToolDimension, SchemaDirMachine,
-                                  SchemaDirWorkType, SchemaDirTaskComponentStageName, SchemaDirTaskType, SchemaDirTaskLocation)
+                                  SchemaDirWorkType, WorkSubtype, SchemaDirTaskType, SchemaDirTaskLocation)
 
 router = APIRouter(prefix="/api/directory", tags=["directory"], redirect_slashes=False)
 
@@ -54,10 +54,10 @@ def get_work_type(db: Session = Depends(get_db)):
     """Получить все типы работ"""
     return db.query(ModelDirWorkType).all()
 
-@router.get("/dir_task_component_stage", response_model=List[SchemaDirTaskComponentStageName])
+@router.get("/dir_work_subtype", response_model=List[WorkSubtype])
 def get_task_component_stage(db: Session = Depends(get_db)):
     """Получить все стадии задач компонентов"""
-    return db.query(ModelDirTaskComponentStageName).all()
+    return db.query(ModelDirWorkSubtype).all()
 
 @router.get("/dir_task_type", response_model=List[SchemaDirTaskType])
 def get_task_type(db: Session = Depends(get_db)):

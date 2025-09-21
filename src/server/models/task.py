@@ -45,7 +45,7 @@ class ModelTaskComponent(Base):
     task = relationship("ModelTask", back_populates="component")
     profile_tool_component = relationship("ModelProfileToolComponent", back_populates="task_component")
     product_component = relationship("ModelProductComponent", back_populates="task_component")
-    component_stage = relationship("ModelTaskComponentStage", back_populates="task_component", cascade="all, delete-orphan")
+    stage = relationship("ModelTaskComponentStage", back_populates="task_component", cascade="all, delete-orphan")
 
 class ModelTaskComponentStage(Base):
     __tablename__ = "task_component_stage"
@@ -57,13 +57,13 @@ class ModelTaskComponentStage(Base):
     finish = Column(Date, nullable=True)
 
     task_component_id = Column(Integer, ForeignKey("task_component.id"), nullable=True)
-    stage_name_id = Column(Integer, ForeignKey("dir_task_component_stage_name.id"), nullable=True)
+    work_subtype_id = Column(Integer, ForeignKey("dir_work_subtype.id"), nullable=True)
     machine_id = Column(Integer, ForeignKey("dir_machine.id"), nullable=True)
 
     description = Column(Text, nullable=True)
 
     # Relationships
-    task_component = relationship("ModelTaskComponent", back_populates="component_stage")
-    stage_name = relationship("ModelDirTaskComponentStageName", back_populates="component_stage")
+    task_component = relationship("ModelTaskComponent", back_populates="stage")
+    work_subtype = relationship("ModelDirWorkSubtype", back_populates="component_stage")
     machine = relationship("ModelDirMachine", back_populates="component_stage")
 

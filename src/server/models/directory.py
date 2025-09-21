@@ -49,17 +49,6 @@ class ModelDirProfileToolComponentStatus(Base): # +
     # Relationships
     component = relationship("ModelProfileToolComponent", back_populates="status")
 
-class ModelDirTaskComponentStageName(Base): # +
-    __tablename__= "dir_task_component_stage_name"
-    id = Column(Integer, primary_key=True, index=True)
-    name = Column(String(50), nullable=False)
-    description = Column(Text)
-    work_type_id = Column(Integer, ForeignKey("dir_work_type.id"), nullable=False)
-    # Relationships
-    component_stage = relationship("ModelTaskComponentStage", back_populates="stage_name")
-    plan_stage = relationship("ModelPlanTaskComponentStage", back_populates="task_component_stage_name")
-    work_type = relationship("ModelDirWorkType", back_populates="task_component_stage_name")
-
 class ModelDirMachine(Base): # +
     __tablename__= "dir_machine"
     id = Column(Integer, primary_key=True, index=True)
@@ -78,7 +67,7 @@ class ModelDirWorkType(Base): # +
     description = Column(Text)
     # Relationships
     machine = relationship("ModelDirMachine", back_populates="work_type")
-    task_component_stage_name = relationship("ModelDirTaskComponentStageName", back_populates="work_type")
+    work_subtype = relationship("ModelDirWorkSubtype", back_populates="work_type")
 
 class ModelDirTaskType(Base): # +
     __tablename__= "dir_task_type"
@@ -87,6 +76,18 @@ class ModelDirTaskType(Base): # +
     description = Column(Text)
     # Relationships
     task = relationship("ModelTask", back_populates="type")
+
+
+class ModelDirWorkSubtype(Base): # +
+    __tablename__= "dir_work_subtype"
+    id = Column(Integer, primary_key=True, index=True)
+    name = Column(String(50), nullable=False)
+    description = Column(Text)
+    work_type_id = Column(Integer, ForeignKey("dir_work_type.id"), nullable=False)
+    # Relationships
+    component_stage = relationship("ModelTaskComponentStage", back_populates="work_subtype")
+    plan_stage = relationship("ModelPlanTaskComponentStage", back_populates="work_subtype")
+    work_type = relationship("ModelDirWorkType", back_populates="work_subtype" )
 
 class ModelDirTaskLocation(Base): # +
     __tablename__= "dir_task_location"

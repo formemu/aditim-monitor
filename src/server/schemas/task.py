@@ -2,9 +2,9 @@
 from datetime import date
 from typing import Optional, List
 from pydantic import BaseModel, ConfigDict
-from .directory import SchemaDirTaskStatus, SchemaDirTaskComponentStageName, SchemaDirMachine, SchemaDirTaskType, SchemaDirTaskLocation
-from .profile_tool import SchemaProfileToolComponentResponse
-from .product import SchemaProductComponentResponse
+from .directory import SchemaDirTaskStatus, WorkSubtype, SchemaDirMachine, SchemaDirTaskType, SchemaDirTaskLocation
+from .profile_tool import SchemaProfileToolComponentResponse, SchemaProfileToolResponse
+from .product import SchemaProductComponentResponse, SchemaProductResponse
 
 # === TASK SCHEMAS ===
 
@@ -12,7 +12,6 @@ class TaskBase(BaseModel):
     """Базовые поля задачи (без id и created)"""
     product_id: Optional[int] = None
     profile_tool_id: Optional[int] = None
-    stage: Optional[str] = None
     deadline: Optional[date] = None
     created: Optional[date] = None
     position: Optional[int] = None
@@ -42,11 +41,13 @@ class SchemaTaskResponse(TaskBase):
     """Ответ API — включает id и created"""
     id: int
     created: date
-    status: Optional[SchemaDirTaskStatus] = None
-    type: Optional[SchemaDirTaskType] = None
-    component: Optional[list["SchemaTaskComponentResponse"]] = None
+    profile_tool: Optional['SchemaProfileToolResponse'] = None
+    product: Optional['SchemaProductResponse'] = None
+    status: Optional['SchemaDirTaskStatus'] = None
+    type: Optional['SchemaDirTaskType'] = None
+    component: Optional[list['SchemaTaskComponentResponse']] = None
     position: Optional[int] = None
-    location: Optional[SchemaDirTaskLocation] = None
+    location: Optional['SchemaDirTaskLocation'] = None
 
 # === TASK COMPONENT SCHEMAS ===
 
@@ -72,6 +73,7 @@ class SchemaTaskComponentResponse(TaskComponentBase):
     id: int
     profile_tool_component: Optional[SchemaProfileToolComponentResponse] = None
     product_component: Optional[SchemaProductComponentResponse] = None
+    stage: Optional[list["SchemaTaskComponentStageResponse"]] = None
 
 
 class SchemaQueueReorderRequest(BaseModel):
@@ -80,14 +82,14 @@ class SchemaQueueReorderRequest(BaseModel):
 
 # === TASK COMPONENT STAGE SCHEMAS ===
 
-
 class SchemaTaskComponentStageBase(BaseModel):
-    """Базовая модель компонента задачи"""
-    stage_num : Optional[int] = None
-    task_component_id : Optional[int] = None
-    stage_name_id : Optional[int] = None
-    machine_id : Optional[int] = None
+    stage_num: Optional[int] = None
+    task_component_id: Optional[int] = None
+    work_subtype_id: Optional[int] = None
+    machine_id: Optional[int] = None
     description: Optional[str] = None
+
+    model_config = ConfigDict(from_attributes=True)
 
 class SchemaTaskComponentStageCreate(SchemaTaskComponentStageBase):
     pass
@@ -95,15 +97,15 @@ class SchemaTaskComponentStageCreate(SchemaTaskComponentStageBase):
 class SchemaTaskComponentStageUpdate(SchemaTaskComponentStageBase):
     id: int
     task_component_id : Optional[int] = None
-    stage_name : Optional[SchemaDirTaskComponentStageName] = None
+    work_subtype : Optional[WorkSubtype] = None
     machine : Optional[SchemaDirMachine] = None
     start : Optional[date] = None
     finish : Optional[date] = None
 
 class SchemaTaskComponentStageResponse(SchemaTaskComponentStageBase):
     id: int
-    task_component : Optional[SchemaTaskComponentResponse] = None
-    stage_name : Optional[SchemaDirTaskComponentStageName] = None
-    machine : Optional[SchemaDirMachine] = None
-    start : Optional[date] = None
-    finish : Optional[date] = None
+    machine: Optional[SchemaDirMachine] = None
+    work_subtype: Optional[WorkSubtype] = None
+    start: Optional[date] = None
+    finish: Optional[date] = None
+

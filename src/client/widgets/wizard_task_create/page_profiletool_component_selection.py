@@ -134,13 +134,13 @@ class WidgetGrid(QWidget):
 
         for item in api_manager.plan['task_component_stage']:
             if item['profiletool_component_type']['id'] == profiletool_component_type_id:
-                stage_name_data = item['task_component_stage_name']
+                work_subtype = item['work_subtype']
                 list_stage.append({
-                    "name": stage_name_data['name'],
-                    "id": stage_name_data['id'],
+                    "name": work_subtype['name'],
+                    "id": work_subtype['id'],
                     "stage_num": item['stage_num'],
-                    "description": stage_name_data.get('description', ''),
-                    "work_type_id": stage_name_data.get('work_type_id')
+                    "description": work_subtype.get('description', ''),
+                    "work_type_id": work_subtype.get('work_type_id')
                 })
 
         list_stage.sort(key=lambda x: x['stage_num'])

@@ -4,7 +4,7 @@
 from PySide6.QtWidgets import QWidget
 from PySide6.QtGui import QStandardItemModel, QStandardItem
 from PySide6.QtUiTools import QUiLoader
-from PySide6.QtCore import QFile, QTimer, Qt
+from PySide6.QtCore import QFile, Qt
 
 from ..constant import UI_PATHS_ABS
 from ..api_manager import api_manager
@@ -77,55 +77,50 @@ class WindowMachine(QWidget):
         self.ui.treeView_machine.setModel(model)
 
     def on_machine_clicked(self, index):
-        """Обработка клика по станку — показываем задачи для этого станка"""
         item = self.ui.treeView_machine.model().itemFromIndex(index)
         machine = item.data(Qt.UserRole)
 
-        # Проверяем, что это лист (сам станок), а не группа
-        if not machine or "work_type_id" not in machine:
-            # Это группа (work_type), не станок
-            self.ui.listView_machine_task.setModel(None)
-            return
+        machine_id = machine["id"]
+        list_operation = []
+        for task in api_manager.table["queue"]:
+            for component in task.get("component", []):
+                for stage in component.get("stage", []) or []:
+                    if stage.get("machine") and stage["machine"]["id"] == machine_id:
+                        list_operation.append({
+                            "task": task,
+                            "component": component,
+                            "stage": stage
+                        })
 
-        
-        print(api_manager.directory['machine'])
-
-        # Находим все этапы (task_component_stage), привязанные к этому станку
-        stages_for_machine = [
-            stage for stage in api_manager.directory['machine']
-            if stage["machine_id"] == machine["id"]
-        ]
-        print(stages_for_machine)
-        # Теперь получим все task_component, к которым относятся эти этапы
-        task_component_ids = {stage["task_component_id"] for stage in stages_for_machine if stage.get("task_component_id")}
-
-        # Найдём сами задачи через task_component → task
-        task_ids = set()
-        tasks = []
-        for tc_id in task_component_ids:
-            # Найдём task_component по id
-            task_component = next(
-                (tc for tc in api_manager.task_component if tc["id"] == tc_id),
-                None
-            )
-            if task_component and task_component["task_id"] not in task_ids:
-                task = api_manager.get_task_by_id(task_component["task_id"])
-                if task:
-                    tasks.append(task)
-                    task_ids.add(task["task_id"])
-
-        # Сортируем по позиции или дедлайну
-        tasks.sort(key=lambda x: (x.get("position") or 0))
-
-        # Создаём модель для listView
+        # Отображение
         list_model = QStandardItemModel()
-        for task in tasks:
-            task_name = f"Задача #{task['id']} — {task.get('product_name', 'Без названия')}"
-            item = QStandardItem(task_name)
-            item.setData(task, Qt.UserRole)
+        for operation in list_operation:
+            name = self.get_operation_display_name(operation)
+            item = QStandardItem(name)
+            item.setData(operation, Qt.UserRole)
             list_model.appendRow(item)
 
         self.ui.listView_machine_task.setModel(list_model)
 
+    def get_operation_display_name(self, operation):
+        """Имя для строки в listView: основывается на стадии и её контексте"""
+        task = operation["task"]
+        component = operation["component"]
+        stage = operation["stage"]
+
+        # 1. Основное имя: профиль или продукт
+        if task["profile_tool_id"]: name = task["profile_tool"]['profile']['article']
+        elif task["product_id"]: name = task["product"]["name"]
+        else: name = "Без объекта"
+
+        # 2. Имя компонента
+        if component["profile_tool_component_id"]: component_name = component["profile_tool_component"]["type"]["name"]
+        elif component["product_component_id"]: component_name = component["product_component"]["name"]
+        else: component_name = "Без компонента"
+
+        # 3. Тип работ
+        work_subtype_name = stage["work_subtype"]["name"] if stage.get("work_subtype") else "Без этапа"
+
+        return f"{name} ({component_name}) / {work_subtype_name}"
     
 

@@ -5,7 +5,8 @@ from pydantic import BaseModel, ConfigDict
 # Базовая модель — общие поля для всех справочников
 class SchemaDirectoryBase(BaseModel):
     name: str
-
+    model_config = ConfigDict(from_attributes=True)
+    
 # Схема для создания — без id!
 class SchemaDirectoryCreate(SchemaDirectoryBase):
     description: Optional[str] = None
@@ -19,7 +20,7 @@ class SchemaDirectoryUpdate(BaseModel):
 class SchemaDirectoryResponse(SchemaDirectoryBase):
     id: int
     description: Optional[str] = None
-    model_config = ConfigDict(from_attributes=True)
+
 
 # Конкретные справочники — наследуются и расширяются
 class SchemaDirDepartment(SchemaDirectoryResponse):
@@ -48,7 +49,7 @@ class SchemaDirMachine(SchemaDirectoryResponse):
     work_type: Optional['SchemaDirWorkType']
 
 
-class SchemaDirTaskComponentStageName(SchemaDirectoryResponse):  
+class WorkSubtype(SchemaDirectoryResponse):  
     """Справочник:  стадии задач компонентов"""
     work_type_id: Optional[int]
     work_type: Optional['SchemaDirWorkType']

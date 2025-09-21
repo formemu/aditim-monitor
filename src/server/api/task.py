@@ -2,7 +2,7 @@
 import traceback
 from typing import List, Optional
 from fastapi import APIRouter, Depends, HTTPException, Query, Path, Body
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session , selectinload
 from ..database import get_db
 from ..models.task import ModelTask, ModelTaskComponent, ModelTaskComponentStage
 from ..models.directory import ModelDirTaskStatus
@@ -22,11 +22,12 @@ router = APIRouter(prefix="/api", tags=["task"])
 # =============================================================================
 # ROUTER.GET
 # =============================================================================
+
 @router.get("/task", response_model=List[SchemaTaskResponse])
 def get_task(db: Session = Depends(get_db)):
-    """Получить список задач с необязательным фильтром по статусу"""
     query = db.query(ModelTask)
-    return query.order_by(ModelTask.id).all()
+    tasks = query.order_by(ModelTask.id).all()
+    return tasks
 
 @router.get("/task/queue", response_model=List[SchemaTaskResponse])
 def get_queue(db: Session = Depends(get_db)):
@@ -112,7 +113,7 @@ def create_task_component_stage(component_id: int, stage_data: SchemaTaskCompone
     # Создаём запись
     stage = ModelTaskComponentStage(
         task_component_id=component_id,
-        stage_name_id=stage_data.stage_name_id,
+        work_subtype_id=stage_data.work_subtype_id,
         machine_id=stage_data.machine_id,
         stage_num=stage_data.stage_num,
         description=stage_data.description or ""
