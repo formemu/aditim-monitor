@@ -12,6 +12,7 @@ class ModelTask(Base):
     position = Column(Integer, nullable=True)
     deadline = Column(Date, nullable=True)
     created = Column(Date, nullable=True)
+    completed = Column(Date, nullable=True)
 
     product_id = Column(Integer, ForeignKey("product.id"), nullable=True)
     profile_tool_id = Column(Integer, ForeignKey("profile_tool.id"), nullable=True)

@@ -32,9 +32,9 @@ class ApiTask(ApiClient):
         """Отправить новый порядок очереди"""
         return self._request("POST", "api/task/queue/reorder", json={"task_ids": task_ids})
 
-    def update_task_status(self, task_id, status_id):
+    def update_task_status(self, task_id, status_id, date):
         """Обновление статуса задачи"""
-        return self._request("PATCH", f"api/task/{task_id}/status", json={"status_id": status_id})
+        return self._request("PATCH", f"api/task/{task_id}/status", json={"status_id": status_id, "completed": date})
 
     def update_task_location(self, task_id, location_id):
         """Обновление местоположения задачи"""

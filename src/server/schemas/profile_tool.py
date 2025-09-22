@@ -4,6 +4,7 @@ from pydantic import BaseModel, ConfigDict
 from ..schemas.directory import SchemaDirToolDimension, SchemaDirComponentStatus, SchemaDirProfiletoolComponentType
 
 
+
 # === PROFILE TOOL SCHEMAS ===
 class SchemaProfileToolBase(BaseModel):
     profile_id: int

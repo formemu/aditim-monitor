@@ -162,6 +162,11 @@ class ApiManager(QObject):
         return None
 
     def search_in(self, category: str, field: str, query: str) -> list:
+        """Поиск элементов в категории по полю и запросу
+        :param category: категория для поиска
+        :param field: поле, в котором выполняется поиск
+        :param query: строка запроса для поиска
+        """
         for key, group, _ in self.registry:
             if key == category:
                 data = getattr(self, group).get(key, [])
@@ -169,6 +174,67 @@ class ApiManager(QObject):
                 return [item for item in data if query_lower in str(item.get(field, "")).lower()]
         print(f"❌ Категория не найдена: '{category}'")
         return []
+    
+    def find_in(self, container, path: str, **kwargs) -> list:
+        """
+        Находит элементы в контейнере по пути и условиям.
+        Автоматически приводит типы для сравнения (например, '123' == 123).
+        
+        :param container: dict, list или ORM-объект
+        :param path: путь к вложенному списку, например "component.stage"
+        :param kwargs: условия поиска, например id=52, machine_id=1
+        :return: список найденных элементов
+        """
+
+        def is_equal(a, b):
+            """Гибкое сравнение двух значений"""
+            if a is None or b is None:
+                return a is b  # только если оба None
+
+            # Пробуем привести к одному типу
+            if isinstance(a, str) and isinstance(b, (int, float)):
+                try:
+                    return float(a) == float(b)
+                except ValueError:
+                    return False
+            elif isinstance(b, str) and isinstance(a, (int, float)):
+                try:
+                    return float(b) == float(a)
+                except ValueError:
+                    return False
+            else:
+                return a == b
+
+        # Разбиваем путь
+        keys = path.split('.')
+        items = [container] if isinstance(container, dict) else container
+        for key in keys:
+            next_items = []
+            for item in items:
+                if isinstance(item, dict):
+                    sub_items = item.get(key, [])
+                    if isinstance(sub_items, list):
+                        next_items.extend(sub_items)
+                    elif sub_items is not None:
+                        next_items.append(sub_items)
+            items = next_items
+            if not items:
+                return []
+
+        # Фильтруем по kwargs
+        result = []
+        for item in items:
+            if isinstance(item, dict):
+                match = True
+                for k, v in kwargs.items():
+                    value = item.get(k)
+                    if not is_equal(value, v):
+                        match = False
+                        break
+                if match:
+                    result.append(item)
+
+        return result
 
 # Глобальный экземпляр
 api_manager = ApiManager()

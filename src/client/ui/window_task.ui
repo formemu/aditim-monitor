@@ -255,55 +255,56 @@
       </widget>
      </item>
      <item>
-      <widget class="QLabel" name="label_components_title">
-       <property name="minimumSize">
-        <size>
-         <width>0</width>
-         <height>30</height>
-        </size>
-       </property>
-       <property name="maximumSize">
-        <size>
-         <width>16777215</width>
-         <height>30</height>
-        </size>
-       </property>
-       <property name="text">
+      <widget class="QGroupBox" name="groupBox_component">
+       <property name="title">
         <string>Компоненты</string>
        </property>
-       <property name="alignment">
-        <set>Qt::AlignmentFlag::AlignCenter</set>
-       </property>
+       <layout class="QVBoxLayout" name="verticalLayout_4">
+        <item>
+         <widget class="QTableWidget" name="tableWidget_components">
+          <property name="minimumSize">
+           <size>
+            <width>0</width>
+            <height>250</height>
+           </size>
+          </property>
+          <property name="maximumSize">
+           <size>
+            <width>16777215</width>
+            <height>300</height>
+           </size>
+          </property>
+          <property name="alternatingRowColors">
+           <bool>true</bool>
+          </property>
+          <property name="selectionMode">
+           <enum>QAbstractItemView::SelectionMode::SingleSelection</enum>
+          </property>
+          <property name="selectionBehavior">
+           <enum>QAbstractItemView::SelectionBehavior::SelectRows</enum>
+          </property>
+         </widget>
+        </item>
+       </layout>
       </widget>
      </item>
      <item>
-      <widget class="QTableWidget" name="tableWidget_components">
-       <property name="minimumSize">
-        <size>
-         <width>0</width>
-         <height>300</height>
-        </size>
+      <widget class="QGroupBox" name="groupBox_component_stage">
+       <property name="title">
+        <string>Этапы работ</string>
        </property>
-       <property name="maximumSize">
-        <size>
-         <width>16777215</width>
-         <height>300</height>
-        </size>
-       </property>
-       <property name="alternatingRowColors">
-        <bool>true</bool>
-       </property>
-       <property name="selectionMode">
-        <enum>QAbstractItemView::SelectionMode::SingleSelection</enum>
-       </property>
-       <property name="selectionBehavior">
-        <enum>QAbstractItemView::SelectionBehavior::SelectRows</enum>
-       </property>
-       <column>
-        <property name="text">
-         <string>Название</string>
-        </property>
-       </column>
+       <layout class="QVBoxLayout" name="verticalLayout_3">
+        <item>
+         <widget class="QTableWidget" name="tableWidget_component_stage">
+          <property name="minimumSize">
+           <size>
+            <width>0</width>
+            <height>250</height>
+           </size>
+          </property>
+         </widget>
+        </item>
+       </layout>
       </widget>
      </item>
      <item>

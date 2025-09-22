@@ -23,8 +23,7 @@ def get_profile(db: Session = Depends(get_db)):
 @router.post("/profile", response_model=SchemaProfileResponse)
 def create_profile(profile: SchemaProfileCreate, db: Session = Depends(get_db)):
     profile_data = profile.model_dump()
-    print(profile_data)
-    if profile_data.get("sketch"):
+    if profile_data["sketch"]:
         sketch_str = profile_data["sketch"]
         if isinstance(sketch_str, str) and "," in sketch_str:
             # Убираем data:image/png;base64,

@@ -32,6 +32,7 @@ class SchemaTaskUpdate(BaseModel):
     profile_tool_id: Optional[int] = None
     deadline: Optional[date] = None
     position: Optional[int] = None
+    completed: Optional[date] = None
     status_id: Optional[int] = None
     type_id: Optional[int] = None
     location_id: Optional[int] = None
@@ -41,6 +42,7 @@ class SchemaTaskResponse(TaskBase):
     """Ответ API — включает id и created"""
     id: int
     created: date
+    completed: Optional[date] = None
     profile_tool: Optional['SchemaProfileToolResponse'] = None
     product: Optional['SchemaProductResponse'] = None
     status: Optional['SchemaDirTaskStatus'] = None

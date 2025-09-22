@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>1400</width>
+    <width>1071</width>
     <height>800</height>
    </rect>
   </property>
@@ -65,7 +65,7 @@
          <item>
           <spacer name="horizontalSpacer_profile_tool">
            <property name="orientation">
-            <enum>Qt::Horizontal</enum>
+            <enum>Qt::Orientation::Horizontal</enum>
            </property>
            <property name="sizeHint" stdset="0">
             <size>
@@ -76,7 +76,7 @@
           </spacer>
          </item>
          <item>
-        <widget class="QLineEdit" name="lineEdit_search_profile_tool">
+          <widget class="QLineEdit" name="lineEdit_search_profile_tool">
            <property name="minimumSize">
             <size>
              <width>200</width>
@@ -161,7 +161,7 @@
          <item>
           <spacer name="horizontalSpacer_products">
            <property name="orientation">
-            <enum>Qt::Horizontal</enum>
+            <enum>Qt::Orientation::Horizontal</enum>
            </property>
            <property name="sizeHint" stdset="0">
             <size>
@@ -172,7 +172,7 @@
           </spacer>
          </item>
          <item>
-        <widget class="QLineEdit" name="lineEdit_search_product">
+          <widget class="QLineEdit" name="lineEdit_search_product">
            <property name="minimumSize">
             <size>
              <width>200</width>
@@ -230,7 +230,7 @@
       </size>
      </property>
      <property name="frameShape">
-      <enum>QFrame::StyledPanel</enum>
+      <enum>QFrame::Shape::StyledPanel</enum>
      </property>
      <layout class="QVBoxLayout" name="verticalLayout_components">
       <item>
@@ -239,7 +239,7 @@
          <string>Компоненты</string>
         </property>
         <property name="alignment">
-         <set>Qt::AlignCenter</set>
+         <set>Qt::AlignmentFlag::AlignCenter</set>
         </property>
        </widget>
       </item>
@@ -306,44 +306,32 @@
        </layout>
       </item>
       <item>
-        <widget class="QTableWidget" name="tableWidget_component">
-        <property name="alternatingRowColors">
-         <bool>true</bool>
+       <widget class="QGroupBox" name="groupBox_component">
+        <property name="title">
+         <string>Компоненты</string>
         </property>
-        <column>
-         <property name="text">
-          <string>Название</string>
-         </property>
-        </column>
-        <column>
-         <property name="text">
-          <string>Количество</string>
-         </property>
-        </column>
+        <layout class="QVBoxLayout" name="verticalLayout">
+         <item>
+          <widget class="QTableWidget" name="tableWidget_component">
+           <property name="alternatingRowColors">
+            <bool>true</bool>
+           </property>
+          </widget>
+         </item>
+        </layout>
        </widget>
       </item>
       <item>
-       <widget class="QLabel" name="label_component_description">
-        <property name="text">
-         <string>Описание: -</string>
+       <widget class="QGroupBox" name="groupBox_component_stage">
+        <property name="title">
+         <string>Этапы работ</string>
         </property>
-        <property name="wordWrap">
-         <bool>true</bool>
-        </property>
+        <layout class="QVBoxLayout" name="verticalLayout_2">
+         <item>
+          <widget class="QTableWidget" name="tableWidget_component_stage"/>
+         </item>
+        </layout>
        </widget>
-      </item>
-      <item>
-       <spacer name="verticalSpacer_components">
-        <property name="orientation">
-         <enum>Qt::Vertical</enum>
-        </property>
-        <property name="sizeHint" stdset="0">
-         <size>
-          <width>20</width>
-          <height>40</height>
-         </size>
-        </property>
-       </spacer>
       </item>
      </layout>
     </widget>

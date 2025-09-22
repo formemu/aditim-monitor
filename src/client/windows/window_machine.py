@@ -17,11 +17,11 @@ class WindowMachine(QWidget):
         self.load_ui()
         self.setup_ui()
         self.setup_tree()
+        self.connect_signals()
 
     # =============================================================================
     # ИНИЦИАЛИЗАЦИЯ И ЗАГРУЗКА ИНТЕРФЕЙСА
     # =============================================================================
-
     def load_ui(self):
         """Загрузка UI из файла"""
         ui_file = QFile(UI_PATHS_ABS["MACHINE_CONTENT"])
@@ -29,17 +29,24 @@ class WindowMachine(QWidget):
         loader = QUiLoader()
         self.ui = loader.load(ui_file)
         ui_file.close()
-    
-    
+        
     def setup_ui(self):
         """Настройка UI компонентов"""
-
         self.refresh_data()
         self.ui.treeView_machine.clicked.connect(self.on_machine_clicked)
 
     # =============================================================================
     # УПРАВЛЕНИЕ ДАННЫМИ: ЗАГРУЗКА И ОБНОВЛЕНИЕ
     # =============================================================================
+    def connect_signals(self):
+        """Подключаемся к сигналам ApiManager"""
+        api_manager.data_updated.connect(self.on_data_updated)
+
+    def on_data_updated(self, group: str, key: str, success: bool):
+        """Реакция на обновление данных"""
+        if success and group == "directory" and key == "machine":
+            self.setup_tree()
+
     def refresh_data(self):
         """Принудительное обновление данных"""
         pass
@@ -77,9 +84,11 @@ class WindowMachine(QWidget):
         self.ui.treeView_machine.setModel(model)
 
     def on_machine_clicked(self, index):
+
         item = self.ui.treeView_machine.model().itemFromIndex(index)
         machine = item.data(Qt.UserRole)
-
+        if machine is None:
+            return
         machine_id = machine["id"]
         list_operation = []
         for task in api_manager.table["queue"]:
@@ -113,6 +122,9 @@ class WindowMachine(QWidget):
         elif task["product_id"]: name = task["product"]["name"]
         else: name = "Без объекта"
 
+        # 1.1. тип задачи
+        if task["type"]: type_name = task["type"]["name"]
+
         # 2. Имя компонента
         if component["profile_tool_component_id"]: component_name = component["profile_tool_component"]["type"]["name"]
         elif component["product_component_id"]: component_name = component["product_component"]["name"]
@@ -121,6 +133,5 @@ class WindowMachine(QWidget):
         # 3. Тип работ
         work_subtype_name = stage["work_subtype"]["name"] if stage.get("work_subtype") else "Без этапа"
 
-        return f"{name} ({component_name}) / {work_subtype_name}"
-    
+        return f"{name} ({component_name}) / {work_subtype_name} - {type_name}"
 

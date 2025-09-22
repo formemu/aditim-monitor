@@ -31,8 +31,8 @@ def get_task(db: Session = Depends(get_db)):
 
 @router.get("/task/queue", response_model=List[SchemaTaskResponse])
 def get_queue(db: Session = Depends(get_db)):
-    status = db.query(ModelDirTaskStatus).filter(ModelDirTaskStatus.name == "В работе").first()
-    tasks = db.query(ModelTask).filter(ModelTask.status_id == status.id, ModelTask.position.isnot(None)).order_by(ModelTask.position).all()
+    status_in_progress = db.query(ModelDirTaskStatus).filter(ModelDirTaskStatus.name == "В работе").first()
+    tasks = db.query(ModelTask).filter(ModelTask.status_id == status_in_progress.id, ModelTask.position.isnot(None)).order_by(ModelTask.position).all()
     return tasks
 
 
@@ -141,11 +141,18 @@ def reorder_queue(request: SchemaQueueReorderRequest, db: Session = Depends(get_
 @router.patch("/task/{task_id}/status", response_model=SchemaTaskResponse)
 def update_task_status( task_id: int, task: SchemaTaskUpdate, db: Session = Depends(get_db)):
     """Обновить статус задачи"""
+    status_completed = db.query(ModelDirTaskStatus).filter(ModelDirTaskStatus.name == "Выполнена").first()
+    print(status_completed)
     db_task = db.get(ModelTask, task_id)
     db_task.status_id = task.status_id
+    if task.status_id == status_completed.id:
+        db_task.completed = task.completed
+    else:
+        db_task.completed = None
     db.commit()
     db.refresh(db_task)
     notify_clients("table", "task", "updated")
+    notify_clients("table", "queue", "updated")
     return db_task
 
 # Обновление местоположения задачи
@@ -158,6 +165,7 @@ def update_task_location(task_id: int, task: SchemaTaskUpdate, db: Session = Dep
     db.refresh(db_task)
     notify_clients("table", "task", "updated")
     return db_task
+
 
 # =============================================================================
 # ROUTER.DELETE
