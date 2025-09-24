@@ -26,3 +26,7 @@ pytest-asyncio>=0.21.1
 
 # Database migrations (optional)
 alembic>=1.13.1
+
+# Operator App
+flet>=0.28.3
+requests>=2.32.5

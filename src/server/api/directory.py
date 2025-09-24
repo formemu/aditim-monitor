@@ -1,6 +1,6 @@
 """API routes for directory"""
 from typing import List
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, Query
 from sqlalchemy.orm import Session
 
 from ..database import get_db
@@ -44,10 +44,15 @@ def get_tool_dimension(db: Session = Depends(get_db)):
     """Получить все размерности инструмента"""
     return db.query(ModelDirProfileToolDimension).all()
 
-@router.get("/dir_machine", response_model=List[SchemaDirMachine])
-def get_machine(db: Session = Depends(get_db)):
-    """Получить все станки"""
-    return db.query(ModelDirMachine).all()
+@router.get("/dir_machine")
+def get_machine(
+        db: Session = Depends(get_db),
+        work_type_id: int = Query(None, description="Фильтр по типу работ")
+    ):
+        query = db.query(ModelDirMachine)
+        if work_type_id is not None:
+            query = query.filter(ModelDirMachine.work_type_id == work_type_id)
+        return query.all()
 
 @router.get("/dir_work_type", response_model=List[SchemaDirWorkType])
 def get_work_type(db: Session = Depends(get_db)):
