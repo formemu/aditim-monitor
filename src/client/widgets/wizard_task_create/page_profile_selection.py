@@ -8,50 +8,52 @@ class PageProfileSelection(QWizardPage):
     def __init__(self, wizard):
         super().__init__()
         self.wizard = wizard
+        layout = QVBoxLayout()
+        self.lineEdit_search = QLineEdit()
+        self.listWidget_result = QListWidget()
+        self.comboBox_type = QComboBox()
+
+        self.registerField("type_id", self.comboBox_type , "currentData")
+        
         self.setTitle("Выбор профиля")
         self.setSubTitle("Введите артикул или описание")
-
-        layout = QVBoxLayout()
-        self.search_edit = QLineEdit()
-        self.search_edit.setPlaceholderText("Поиск профиля...")
-        self.results_list = QListWidget()
-        self.type_combo = QComboBox()
-
-
+        self.lineEdit_search.setPlaceholderText("Поиск профиля...")
         layout.addWidget(QLabel("Поиск:"))
-        layout.addWidget(self.search_edit)
-        layout.addWidget(self.results_list)
+        layout.addWidget(self.lineEdit_search)
+        layout.addWidget(self.listWidget_result)
         layout.addWidget(QLabel("Тип задачи:"))
-        layout.addWidget(self.type_combo)   
+        layout.addWidget(self.comboBox_type)   
         self.setLayout(layout)
 
-        self.search_edit.textChanged.connect(self.on_search)
+        self.lineEdit_search.textChanged.connect(self.on_search)
+
+        
 
     def on_search(self, text):
-        self.results_list.clear()
+        self.listWidget_result.clear()
         if not text.strip():
             return
         results = api_manager.search_in('profile', 'article', text)[:10]
         for profile in results:
             item = QListWidgetItem(f"{profile['article']}")
             item.setData(Qt.UserRole, profile)
-            self.results_list.addItem(item)
+            self.listWidget_result.addItem(item)
   
 
     def initializePage(self):
-        self.results_list.clear()
+        self.listWidget_result.clear()
         self.fill_type_combo()
 
     def fill_type_combo(self):
-        self.type_combo.clear()
+        self.comboBox_type.clear()
         types = api_manager.directory['task_type']
         for task_type in types:
-            self.type_combo.addItem(task_type['name'], task_type['id'])
+            self.comboBox_type.addItem(task_type['name'], task_type['id'])
 
-        self.registerField("type_id", self.type_combo , "currentData")
+        
 
     def validatePage(self):
-        current_item = self.results_list.currentItem()
+        current_item = self.listWidget_result.currentItem()
         if current_item:
             profile = current_item.data(Qt.UserRole)
             self.wizard.profile = profile

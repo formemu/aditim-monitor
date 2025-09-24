@@ -22,6 +22,7 @@ class PageProfileToolComponentSelection(QWizardPage):
 
         self.layout().addWidget(self.listWidget_component)
         self.layout().addWidget(self.container_component)
+        
 
     def initializePage(self):
         self.listWidget_component.clear()
@@ -36,12 +37,12 @@ class PageProfileToolComponentSelection(QWizardPage):
             self.listWidget_component.setItemWidget(item, checkbox)
 
     def on_component_toggled(self, checked, component, checkbox):
-        if checked:
-            widget = WidgetGrid(component)
-            self.list_widget.append(widget)
-            self.component_to_widget[component['id']] = widget
-            # Добавляем виджет в контейнер
-            self.container_component.layout().addWidget(widget)
+        if self.field("type_id") == 1 and checked:
+                widget = WidgetGrid(component)
+                self.list_widget.append(widget)
+                self.component_to_widget[component['id']] = widget
+                # Добавляем виджет в контейнер
+                self.container_component.layout().addWidget(widget)
         else:
             widget = self.component_to_widget.pop(component['id'], None)
             if widget and widget in self.list_widget:

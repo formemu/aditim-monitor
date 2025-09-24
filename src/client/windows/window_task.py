@@ -1,9 +1,9 @@
 """Содержимое задач для ADITIM Monitor Client"""
 from PySide6.QtWidgets import QWidget, QTableWidgetItem, QAbstractItemView,  QMenu, QHeaderView
 from PySide6.QtCore import QFile, Qt, QDate
-from PySide6.QtGui import QAction
+from PySide6.QtGui import QAction, QPixmap
 from PySide6.QtUiTools import QUiLoader
-from ..constant import UI_PATHS_ABS as UI_PATHS, get_style_path
+from ..constant import UI_PATHS_ABS, ICON_PATHS_ABS, get_style_path
 from ..widgets.wizard_task_create.wizard_task_create import WizardTaskCreate
 from ..style_util import load_styles
 from ..api_manager import api_manager
@@ -28,7 +28,7 @@ class WindowTask(QWidget):
     # =============================================================================
     def load_ui(self):
         """Загрузка UI из файла"""
-        ui_file = QFile(UI_PATHS["TASK_CONTENT"])
+        ui_file = QFile(UI_PATHS_ABS["TASK_CONTENT"])
         ui_file.open(QFile.ReadOnly)
         loader = QUiLoader()
         self.ui = loader.load(ui_file)
@@ -38,16 +38,17 @@ class WindowTask(QWidget):
     def setup_ui(self):
         """Настройка UI компонентов"""
         self.ui.setStyleSheet(load_styles(get_style_path("MAIN")))
+        self.load_logo()
         # Настройка контекстного меню для таблицы задач
-        self.ui.tableWidget_tasks.setContextMenuPolicy(Qt.CustomContextMenu)
-        self.ui.tableWidget_tasks.customContextMenuRequested.connect(self.show_context_menu)
+        self.ui.tableWidget_task.setContextMenuPolicy(Qt.CustomContextMenu)
+        self.ui.tableWidget_task.customContextMenuRequested.connect(self.show_context_menu)
 
         # Общие подключения
-        self.ui.tabWidget_tasks.currentChanged.connect(self.on_tab_changed)
+        self.ui.tabWidget_main.currentChanged.connect(self.on_tab_changed)
         # Подключение сигналов вкладки задач
         self.ui.pushButton_task_add.clicked.connect(self.on_create_task)
         self.ui.pushButton_task_delete.clicked.connect(self.on_delete_clicked)
-        self.ui.tableWidget_tasks.itemSelectionChanged.connect(self.on_selection_changed)
+        self.ui.tableWidget_task.itemSelectionChanged.connect(self.on_selection_changed)
 
         #подключение сигналов вкладки очереди
         self.ui.pushButton_position_up.clicked.connect(self.on_position_up_clicked)
@@ -55,14 +56,21 @@ class WindowTask(QWidget):
         self.ui.tableWidget_queue.itemSelectionChanged.connect(self.on_selection_changed)
 
         #подключение сигналов таблицы компонетов
-        self.ui.tableWidget_components.itemSelectionChanged.connect(self.on_selection_component_changed)
+        self.ui.tableWidget_component.itemSelectionChanged.connect(self.on_selection_component_changed)
         # Настройка таблицы задач
-        table = self.ui.tableWidget_tasks
+        table = self.ui.tableWidget_task
         table.setSelectionBehavior(QAbstractItemView.SelectRows)
         table.setSelectionMode(QAbstractItemView.SingleSelection)
         table.setFocusPolicy(Qt.NoFocus)
         self.refresh_data()
 
+    def load_logo(self):
+        """Загрузка логотипа ADITIM"""
+        logo_path = ICON_PATHS_ABS.get("ADITIM_LOGO_MAIN")
+        pixmap = QPixmap(logo_path)
+        scaled = pixmap.scaled(300, 100, Qt.KeepAspectRatio, Qt.SmoothTransformation)
+        self.ui.label_logo.setPixmap(scaled)
+        self.ui.label_logo.setText("")
     # =============================================================================
     # УПРАВЛЕНИЕ ДАННЫМИ: ЗАГРУЗКА И ОБНОВЛЕНИЕ
     # =============================================================================
@@ -86,7 +94,11 @@ class WindowTask(QWidget):
 
     def on_tab_changed(self):
         """Обработчик смены вкладки — обновляет данные для выбранной вкладки"""
-        self.tab_index = self.ui.tabWidget_tasks.currentIndex()
+        self.tab_index = self.ui.tabWidget_main.currentIndex()
+        if self.tab_index == 0:
+            self.ui.label_header.setText("ЗАДАЧИ")
+        elif self.tab_index == 1:
+            self.ui.label_header.setText("ОЧЕРЕДЬ")
         self.clear_component()
         self.selected_row = 0
         self.refresh_data()
@@ -96,7 +108,7 @@ class WindowTask(QWidget):
     # =============================================================================
     def update_table_task(self):
         """Обновление таблицы задач с корректным отображением и заполнением по ширине"""
-        table = self.ui.tableWidget_tasks
+        table = self.ui.tableWidget_task
         table.setRowCount(len(api_manager.table['task']))
         table.setColumnCount(9) 
         # Заголовки столбцов
@@ -189,7 +201,7 @@ class WindowTask(QWidget):
     def load_component(self):
         """Загрузка компонентов задачи по её идентификатору. """
         """Обновление таблицы компонентов"""
-        table = self.ui.tableWidget_components
+        table = self.ui.tableWidget_component
         table.setRowCount(len(self.task['component']))
 
         # Проверяем по первому элементу, какой тип компонента
@@ -222,7 +234,7 @@ class WindowTask(QWidget):
 
     def clear_component(self):
         """Очистка таблицы компонентов"""
-        self.ui.tableWidget_components.setRowCount(0)
+        self.ui.tableWidget_component.setRowCount(0)
     
     # =============================================================================
     # ОБРАБОТЧИКИ СОБЫТИЙ: УПРАВЛЕНИЕ
@@ -357,8 +369,8 @@ class WindowTask(QWidget):
     def on_selection_changed(self):
         """Обработка выбора задачи"""
         if self.tab_index == 0:
-            self.selected_row = self.ui.tableWidget_tasks.currentRow()
-            item = self.ui.tableWidget_tasks.item(self.selected_row, 0)
+            self.selected_row = self.ui.tableWidget_task.currentRow()
+            item = self.ui.tableWidget_task.item(self.selected_row, 0)
             if item:
                 task_id = item.text()
                 self.task = api_manager.get_by_id('task', task_id)
@@ -375,8 +387,8 @@ class WindowTask(QWidget):
 
     def on_selection_component_changed(self):
         """Обработка выбора компонента"""
-        self.selected_component_row = self.ui.tableWidget_components.currentRow()
-        item = self.ui.tableWidget_components.item(self.selected_component_row, 0)
+        self.selected_component_row = self.ui.tableWidget_component.currentRow()
+        item = self.ui.tableWidget_component.item(self.selected_component_row, 0)
         component_id = item.text()
         self.component = api_manager.find_in(self.task, "component", id=component_id)[0]
         self.update_table_component_stage()
@@ -428,9 +440,4 @@ class WindowTask(QWidget):
     # =============================================================================
     def show_warning_dialog(self, message: str):
         """Показать окно предупреждения с заданным сообщением"""
-        warning_box = QMessageBox(self)
-        warning_box.setIcon(QMessageBox.Warning)
-        warning_box.setWindowTitle("Внимание")
-        warning_box.setText(message)
-        warning_box.setStandardButtons(QMessageBox.Ok)
-        warning_box.exec()
+        QMessageBox.warning(self, "Внимание", message)

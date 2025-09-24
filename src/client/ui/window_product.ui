@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <ui version="4.0">
- <class>ProductsContent</class>
- <widget class="QWidget" name="ProductsContent">
+ <class>ProductContent</class>
+ <widget class="QWidget" name="ProductContent">
   <property name="geometry">
    <rect>
     <x>0</x>
@@ -10,9 +10,9 @@
     <height>800</height>
    </rect>
   </property>
-  <layout class="QHBoxLayout" name="horizontalLayout_main">
-   <item>
-    <widget class="QTabWidget" name="tabWidget_products">
+  <layout class="QGridLayout" name="gridLayout">
+   <item row="1" column="0">
+    <widget class="QTabWidget" name="tabWidget_main">
      <property name="currentIndex">
       <number>0</number>
      </property>
@@ -98,27 +98,17 @@
          <property name="sortingEnabled">
           <bool>true</bool>
          </property>
-         <column>
-          <property name="text">
-           <string>Профиль</string>
-          </property>
-         </column>
-         <column>
-          <property name="text">
-           <string>Описание</string>
-          </property>
-         </column>
         </widget>
        </item>
       </layout>
      </widget>
-     <widget class="QWidget" name="tab_products">
+     <widget class="QWidget" name="tab_product">
       <attribute name="title">
        <string>Другие изделия</string>
       </attribute>
       <layout class="QVBoxLayout" name="verticalLayout_products">
        <item>
-        <layout class="QHBoxLayout" name="horizontalLayout_toolbar_products">
+        <layout class="QHBoxLayout" name="horizontalLayout_toolbar_product">
          <item>
           <widget class="QPushButton" name="pushButton_product_add">
            <property name="minimumSize">
@@ -159,7 +149,7 @@
           </widget>
          </item>
          <item>
-          <spacer name="horizontalSpacer_products">
+          <spacer name="horizontalSpacer_product">
            <property name="orientation">
             <enum>Qt::Orientation::Horizontal</enum>
            </property>
@@ -215,8 +205,8 @@
      </widget>
     </widget>
    </item>
-   <item>
-    <widget class="QFrame" name="frame_components">
+   <item row="1" column="1">
+    <widget class="QFrame" name="frame_component">
      <property name="minimumSize">
       <size>
        <width>450</width>
@@ -234,23 +224,19 @@
      </property>
      <layout class="QVBoxLayout" name="verticalLayout_components">
       <item>
-       <widget class="QLabel" name="label_components_title">
-        <property name="text">
+       <widget class="QGroupBox" name="groupBox_component">
+        <property name="title">
          <string>Компоненты</string>
         </property>
-        <property name="alignment">
-         <set>Qt::AlignmentFlag::AlignCenter</set>
-        </property>
-       </widget>
-      </item>
-      <item>
-       <widget class="QLabel" name="label_selected_item">
-        <property name="text">
-         <string>Выберите изделие</string>
-        </property>
-        <property name="wordWrap">
-         <bool>true</bool>
-        </property>
+        <layout class="QVBoxLayout" name="verticalLayout">
+         <item>
+          <widget class="QTableWidget" name="tableWidget_component">
+           <property name="alternatingRowColors">
+            <bool>true</bool>
+           </property>
+          </widget>
+         </item>
+        </layout>
        </widget>
       </item>
       <item>
@@ -306,25 +292,9 @@
        </layout>
       </item>
       <item>
-       <widget class="QGroupBox" name="groupBox_component">
-        <property name="title">
-         <string>Компоненты</string>
-        </property>
-        <layout class="QVBoxLayout" name="verticalLayout">
-         <item>
-          <widget class="QTableWidget" name="tableWidget_component">
-           <property name="alternatingRowColors">
-            <bool>true</bool>
-           </property>
-          </widget>
-         </item>
-        </layout>
-       </widget>
-      </item>
-      <item>
        <widget class="QGroupBox" name="groupBox_component_stage">
         <property name="title">
-         <string>Этапы работ</string>
+         <string>История</string>
         </property>
         <layout class="QVBoxLayout" name="verticalLayout_2">
          <item>
@@ -335,6 +305,45 @@
       </item>
      </layout>
     </widget>
+   </item>
+   <item row="0" column="0" colspan="2">
+    <layout class="QHBoxLayout" name="horizontalLayout_header">
+     <item>
+      <widget class="QLabel" name="label_header">
+       <property name="styleSheet">
+        <string/>
+       </property>
+       <property name="text">
+        <string>ИНСТРУМЕНТЫ</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QLabel" name="label_logo">
+       <property name="minimumSize">
+        <size>
+         <width>300</width>
+         <height>100</height>
+        </size>
+       </property>
+       <property name="maximumSize">
+        <size>
+         <width>300</width>
+         <height>100</height>
+        </size>
+       </property>
+       <property name="styleSheet">
+        <string/>
+       </property>
+       <property name="text">
+        <string>ADITIM</string>
+       </property>
+       <property name="alignment">
+        <set>Qt::AlignmentFlag::AlignCenter</set>
+       </property>
+      </widget>
+     </item>
+    </layout>
    </item>
   </layout>
  </widget>

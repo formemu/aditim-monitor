@@ -35,6 +35,8 @@ class WizardTaskCreate(QWizard):
         self.list_selected_profile_tool_component = []
         self.list_selected_product_component = []
 
+
+
         # Добавляем страницы — ID присваиваются по порядку: 0, 1, 2...
         self.addPage(PageStart(self))                           # → ID = 0
         self.addPage(PageProfileSelection(self))                # → ID = 1
@@ -75,7 +77,7 @@ class WizardTaskCreate(QWizard):
             task_component_id = task_component['id']
 
             # 2. Создаём этапы (если есть)
-            selected_stages = component.get('list_selected_stage', [])
+            selected_stages = component['list_selected_stage']
             for item in selected_stages:
                 stage = item['stage']
                 machine = item['machine']

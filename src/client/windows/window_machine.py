@@ -2,12 +2,14 @@
 Станки ADITIM Monitor Client
 """
 from PySide6.QtWidgets import QWidget
-from PySide6.QtGui import QStandardItemModel, QStandardItem
+from PySide6.QtGui import QStandardItemModel, QStandardItem, QPixmap
 from PySide6.QtUiTools import QUiLoader
 from PySide6.QtCore import QFile, Qt
 
-from ..constant import UI_PATHS_ABS
+from ..constant import UI_PATHS_ABS, ICON_PATHS_ABS, get_style_path
 from ..api_manager import api_manager
+from ..style_util import load_styles
+from PySide6.QtWidgets import QMessageBox
 
 class WindowMachine(QWidget):
     """Виджет станков"""
@@ -32,8 +34,18 @@ class WindowMachine(QWidget):
         
     def setup_ui(self):
         """Настройка UI компонентов"""
+        self.ui.setStyleSheet(load_styles(get_style_path("MAIN")))
+        self.load_logo()
         self.refresh_data()
         self.ui.treeView_machine.clicked.connect(self.on_machine_clicked)
+
+    def load_logo(self):
+        """Загрузка логотипа ADITIM"""
+        logo_path = ICON_PATHS_ABS.get("ADITIM_LOGO_MAIN")
+        pixmap = QPixmap(logo_path)
+        scaled = pixmap.scaled(300, 100, Qt.KeepAspectRatio, Qt.SmoothTransformation)
+        self.ui.label_logo.setPixmap(scaled)
+        self.ui.label_logo.setText("")
 
     # =============================================================================
     # УПРАВЛЕНИЕ ДАННЫМИ: ЗАГРУЗКА И ОБНОВЛЕНИЕ
@@ -134,4 +146,9 @@ class WindowMachine(QWidget):
         work_subtype_name = stage["work_subtype"]["name"] if stage.get("work_subtype") else "Без этапа"
 
         return f"{name} ({component_name}) / {work_subtype_name} - {type_name}"
+    
+
+    def show_warning_dialog(self, message: str):
+        """Показать окно предупреждения с заданным сообщением"""
+        QMessageBox.warning(self, "Внимание", message)
 

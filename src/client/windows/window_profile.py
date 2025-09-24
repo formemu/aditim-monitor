@@ -4,7 +4,7 @@ from PySide6.QtWidgets import QWidget, QMessageBox, QTableWidgetItem, QAbstractI
 from PySide6.QtCore import QFile, Qt
 from PySide6.QtUiTools import QUiLoader
 from PySide6.QtGui import QPixmap
-from ..constant import UI_PATHS_ABS as UI_PATHS, ICON_PATHS_ABS as ICON_PATHS, get_style_path
+from ..constant import UI_PATHS_ABS, ICON_PATHS_ABS, get_style_path
 from ..widgets.profile.dialog_create_profile import DialogCreateProfile
 from ..widgets.profile.dialog_edit_profile import DialogEditProfile
 from ..api_manager import api_manager
@@ -27,7 +27,7 @@ class WindowProfile(QWidget):
 
     def load_ui(self):
         """Загрузка UI из файла"""
-        ui_file = QFile(UI_PATHS["PROFILE_CONTENT"])
+        ui_file = QFile(UI_PATHS_ABS["PROFILE_CONTENT"])
         ui_file.open(QFile.ReadOnly)
         loader = QUiLoader()
         self.ui = loader.load(ui_file)
@@ -42,11 +42,9 @@ class WindowProfile(QWidget):
         self.ui.pushButton_profile_add.clicked.connect(self.on_add_clicked)
         self.ui.pushButton_profile_edit.clicked.connect(self.on_edit_clicked)
         self.ui.pushButton_profile_delete.clicked.connect(self.on_delete_clicked)
-        self.ui.pushButton_sketch_open.clicked.connect(self.on_sketch_open_clicked)
-        self.ui.pushButton_autocad_open.clicked.connect(self.on_autocad_open_clicked)
 
         # Таблица
-        table = self.ui.tableWidget_profiles
+        table = self.ui.tableWidget_profile
         table.setSelectionBehavior(QAbstractItemView.SelectRows)
         table.setSelectionMode(QAbstractItemView.SingleSelection)
         table.setFocusPolicy(Qt.NoFocus)
@@ -73,7 +71,7 @@ class WindowProfile(QWidget):
 
     def load_logo(self):
         """Загрузка логотипа ADITIM"""
-        logo_path = ICON_PATHS.get("ADITIM_LOGO_MAIN")
+        logo_path = ICON_PATHS_ABS.get("ADITIM_LOGO_MAIN")
         pixmap = QPixmap(logo_path)
         scaled = pixmap.scaled(300, 100, Qt.KeepAspectRatio, Qt.SmoothTransformation)
         self.ui.label_logo.setPixmap(scaled)
@@ -85,34 +83,34 @@ class WindowProfile(QWidget):
 
     def update_profile_table(self):
         """Обновление таблицы профилей"""
-        profiles = api_manager.table.get("profile", [])
-        table = self.ui.tableWidget_profiles
-        table.setRowCount(len(profiles))
+        list_profile = api_manager.table["profile"]
+        table = self.ui.tableWidget_profile
+        table.setRowCount(len(list_profile))
         table.setColumnCount(3)
         table.setHorizontalHeaderLabels(["id", "Артикул", "Описание"])
 
         header = table.horizontalHeader()
-        header.setSectionResizeMode(0, QHeaderView.ResizeToContents)
-        header.setSectionResizeMode(1, QHeaderView.Stretch)
+        header.setSectionResizeMode(1, QHeaderView.ResizeToContents)
+        header.setSectionResizeMode(2, QHeaderView.Stretch)
 
-        for row, profile in enumerate(profiles):
-            table.setItem(row, 0, QTableWidgetItem(str(profile['id'])))
-            table.setItem(row, 1, QTableWidgetItem(profile['article']))
-            table.setItem(row, 2, QTableWidgetItem(profile.get('description', '')))
+        for row, list_profile in enumerate(list_profile):
+            table.setItem(row, 0, QTableWidgetItem(str(list_profile['id'])))
+            table.setItem(row, 1, QTableWidgetItem(list_profile['article']))
+            table.setItem(row, 2, QTableWidgetItem(list_profile['description']))
 
         table.setColumnHidden(0, True)
-        self.filter_table()  # применяем текущий фильтр
+        self.filter_table()
 
     def update_profile_info_panel(self):
         """Обновление панели информации о профиле"""
         if self.selected_row >= 0:
-            item = self.ui.tableWidget_profiles.item(self.selected_row, 0)
+            item = self.ui.tableWidget_profile.item(self.selected_row, 0)
             if item:
                 profile_id = int(item.text())
                 self.profile = api_manager.get_by_id("profile", profile_id)
                 if self.profile:
                     self.ui.label_profile_article.setText(f"Артикул: {self.profile['article']}")
-                    self.ui.label_profile_description.setText(f"Описание: {self.profile.get('description', '-')}")
+                    self.ui.label_profile_description.setText(f"Описание: {self.profile['description']}")
 
                     sketch_data = self.profile.get("sketch")
                     self.load_and_show_sketch(sketch_data)
@@ -171,7 +169,7 @@ class WindowProfile(QWidget):
     # =============================================================================
     def on_selection_changed(self):
         """Обработка выбора строки"""
-        row = self.ui.tableWidget_profiles.currentRow()
+        row = self.ui.tableWidget_profile.currentRow()
         if row >= 0:
             self.selected_row = row
             self.update_profile_info_panel()
@@ -182,7 +180,7 @@ class WindowProfile(QWidget):
     def filter_table(self):
         """Фильтрация по артикулу"""
         text = self.ui.lineEdit_search.text().strip().lower()
-        table = self.ui.tableWidget_profiles
+        table = self.ui.tableWidget_profile
         for row in range(table.rowCount()):
             item = table.item(row, 1)
             visible = not text or (item and text in item.text().lower())
@@ -191,14 +189,6 @@ class WindowProfile(QWidget):
     # =============================================================================
     # ОБРАБОТЧИКИ ДОПОЛНИТЕЛЬНЫХ ДЕЙСТВИЙ
     # =============================================================================
-
-    def on_sketch_open_clicked(self):
-        if self.profile:
-            QMessageBox.information(self, "Эскиз", f"Открытие эскиза: {self.profile['article']}")
-
-    def on_autocad_open_clicked(self):
-        if self.profile:
-            QMessageBox.information(self, "AutoCAD", f"Открытие в AutoCAD: {self.profile['article']}")
 
     def show_warning_dialog(self, message: str):
         QMessageBox.warning(self, "Внимание", message)

@@ -17,8 +17,10 @@ QTableWidget::item:selected {
     outline: none;
 }
 
-/* Заголовок "ПРОФИЛИ" */
-QLabel#label_profiles_title {
+
+
+/* Заголовоки */
+QLabel#label_header{
     font-size: {{FONT_SIZE_LOGO}};
     font-weight: bold;
     color: #d3cccce0;

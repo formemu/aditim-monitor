@@ -2,8 +2,8 @@
 from PySide6.QtWidgets import QWidget, QMessageBox, QTableWidgetItem, QAbstractItemView, QHeaderView, QTableWidgetItem, QTableWidget
 from PySide6.QtCore import QFile, Qt
 from PySide6.QtUiTools import QUiLoader
-from PySide6.QtGui import QColor
-from ..constant import UI_PATHS_ABS, get_style_path
+from PySide6.QtGui import QColor, QPixmap
+from ..constant import UI_PATHS_ABS, ICON_PATHS_ABS, get_style_path
 from ..style_util import load_styles
 from ..api_manager import api_manager
 from ..widgets.profile_tool.dialog_create_profile_tool import DialogCreateProfileTool
@@ -38,11 +38,12 @@ class WindowProduct(QWidget):
     def setup_ui(self):
         """Настройка UI компонентов"""
         self.ui.setStyleSheet(load_styles(get_style_path("MAIN")))
+        self.load_logo()
         # Общие подключения
         self.ui.pushButton_component_add.clicked.connect(self.on_component_add_clicked)
         self.ui.pushButton_component_edit.clicked.connect(self.on_component_edit_clicked)
         self.ui.pushButton_component_delete.clicked.connect(self.on_component_delete_clicked)
-        self.ui.tabWidget_products.currentChanged.connect(self.on_tab_changed)
+        self.ui.tabWidget_main.currentChanged.connect(self.on_tab_changed)
         # Подключения: профили
         self.ui.pushButton_profile_tool_add.clicked.connect(self.on_profile_tool_add_clicked)
         self.ui.pushButton_profile_tool_edit.clicked.connect(self.on_profile_tool_edit_clicked)
@@ -68,13 +69,8 @@ class WindowProduct(QWidget):
         self.ui.tableWidget_product.setColumnWidth(0, 200)
         self.ui.tableWidget_product.setColumnWidth(1, 150)
         self.ui.tableWidget_product.horizontalHeader().setStretchLastSection(True)
-        self.ui.tableWidget_component.setColumnWidth(0, 300)
-        self.ui.tableWidget_component.horizontalHeader().setStretchLastSection(True)
 
-        self.ui.tableWidget_component_stage.setColumnCount(7)
-        self.ui.tableWidget_component_stage.setHorizontalHeaderLabels([
-            "№", "Операция", "Станок", "Начало", "Окончание", "Описание", "ID"
-        ])
+
         # self.ui.tableWidget_component_stage.setColumnHidden(6, True)
         # self.ui.tableWidget_component_stage.setSortingEnabled(True)
         # self.ui.tableWidget_component_stage.setEditTriggers(QTableWidget.NoEditTriggers)
@@ -82,6 +78,15 @@ class WindowProduct(QWidget):
 
         # Инициализация таблицы
         self.refresh_data()
+
+    def load_logo(self):
+        """Загрузка логотипа ADITIM"""
+        logo_path = ICON_PATHS_ABS.get("ADITIM_LOGO_MAIN")
+        pixmap = QPixmap(logo_path)
+        scaled = pixmap.scaled(300, 100, Qt.KeepAspectRatio, Qt.SmoothTransformation)
+        self.ui.label_logo.setPixmap(scaled)
+        self.ui.label_logo.setText("")
+
 
     # =============================================================================
     # УПРАВЛЕНИЕ ДАННЫМИ: ЗАГРУЗКА И ОБНОВЛЕНИЕ
@@ -113,7 +118,12 @@ class WindowProduct(QWidget):
 
     def on_tab_changed(self):
         """Обработчик смены вкладки — обновляет данные для выбранной вкладки"""
-        self.tab_index = self.ui.tabWidget_products.currentIndex()
+
+        self.tab_index = self.ui.tabWidget_main.currentIndex()
+        if self.tab_index == 0:
+            self.ui.label_header.setText("ИНСТРУМЕНТЫ")
+        elif self.tab_index == 1:
+            self.ui.label_header.setText("ИЗДЕЛИЯ")
         self.clear_info_panel()
         self.selected_row = 0
         self.profile_tool = None
@@ -169,28 +179,29 @@ class WindowProduct(QWidget):
             table.setItem(row, 3, QTableWidgetItem(desc))
         table.setColumnHidden(0, True)
 
-    def load_profile_tool_component(self, item_id):
+    def load_profile_tool_component(self):
         """Загрузка компонентов инструмента профиля"""
         list_component = self.profile_tool['component']
 
-        self.ui.label_selected_item.setText(f"ID: {item_id}")
         self.ui.tableWidget_component.setRowCount(0)
         self.ui.tableWidget_component.setColumnCount(2)
         self.ui.tableWidget_component.setHorizontalHeaderLabels(["Название", "Статус"])
         self.ui.tableWidget_component.setRowCount(len(list_component))
         for row, component in enumerate(list_component):
+
             name = component["type"]["name"]
             status = component["status"]["name"]
+
             name_item = QTableWidgetItem(name)
             name_item.setData(Qt.UserRole, component["id"])
             status_item = QTableWidgetItem(status)
+            
             self.ui.tableWidget_component.setItem(row, 0, name_item)
             self.ui.tableWidget_component.setItem(row, 1, status_item)
 
-    def load_product_component(self, item_id):
+    def load_product_component(self):
         """Загрузка компонентов изделия"""
         list_component = self.product['component']
-        self.ui.label_selected_item.setText(f"ID: {item_id}")
         self.ui.tableWidget_component.setRowCount(0)
         self.ui.tableWidget_component.setRowCount(len(list_component))
         for row, component in enumerate(list_component):
@@ -205,8 +216,6 @@ class WindowProduct(QWidget):
     def clear_info_panel(self):
         """Очистка панели компонентов"""
         self.ui.tableWidget_component.setRowCount(0)
-        self.ui.label_selected_item.setText("Выберите изделие")
-        self.ui.label_component_description.setText("Описание: -")
 
     def filter_table(self):
         """Фильтрация строк таблицы"""
@@ -234,108 +243,49 @@ class WindowProduct(QWidget):
             if item:
                 profile_tool_id = item.text()
                 self.profile_tool = api_manager.get_by_id('profile_tool', profile_tool_id)
-                self.load_profile_tool_component(profile_tool_id)
+                self.load_profile_tool_component()
         elif self.tab_index == 1:
             self.selected_row = self.ui.tableWidget_product.currentRow()
             item = self.ui.tableWidget_product.item(self.selected_row, 0)
             if item:
                 product_id = item.text()
                 self.product = api_manager.get_by_id('product', product_id)
-                self.load_product_component(product_id)
+                self.load_product_component()
 
     def on_selection_component_changed(self):
         """Обработка выбора компонента"""
 
-        self.update_table_component_stage()
+        item = self.ui.tableWidget_component.item(self.ui.tableWidget_component.currentRow(), 0)
+        if item:
+             self.update_table_component_stage(item.data(Qt.UserRole))
 
-    def update_table_component_stage(self):
+    def update_table_component_stage(self, profiletool_component_id):
         """
         Заполняет tableWidget_component_stage для изделия:
         группировка по задачам (type.name), внутри — этапы
         """
-
-
-        # self.ui.tableWidget_component_stage.setRowCount(0)
-        stages_data = []
-
-        # 1. Собираем все задачи, где встречается любой компонент этого изделия
-        for task in api_manager.table["task"]:
-            if task["profile_tool_id"] != self.profile_tool["id"]:
-                continue  # только задачи на это изделие
-            task_type_name = task["type"]["name"]
-            print(task_type_name)
-            # Добавляем заголовок группы
-            stages_data.append({
-                "is_header": True,
-                "task_type": task_type_name,
-                "task_id": task["id"]
-            })
-
-            # 2. Проходим по компонентам задачи
+        self.ui.tableWidget_component_stage.setColumnCount(3)
+        self.ui.tableWidget_component_stage.setHorizontalHeaderLabels(["Тип работы", "Начата" , "Завершена"])
+        stage_data = []
+        for task in api_manager.table['task']:
             for component in task["component"]:
-                for stage in component["stage"]:
-                    stages_data.append({
-                        "is_header": False,
-                        "task_type": task_type_name,
-                        "task_id": task["id"],
-                        "component": component,
-                        "stage": stage
-                    })
-        # 3. Заполняем таблицу
-        self.ui.tableWidget_component_stage.setRowCount(len(stages_data))
+                if component['profile_tool_component_id'] == profiletool_component_id:
+                    stage_data.append({
+                        "is_header": True,
+                        "create" : task["created"],
+                        "completed" : task["completed"],
+                        "task_type": task["type"]["name"],
 
-        for row, data in enumerate(stages_data):
+                    })
+
+        self.ui.tableWidget_component_stage.setRowCount(len(stage_data))
+
+        for row, data in enumerate(stage_data):
             if data["is_header"]:
                 # Заголовок группы
-                item = QTableWidgetItem(data["task_type"])
-                item.setFlags(item.flags() & ~Qt.ItemIsEditable)  # Только чтение
-                item.setBackground(QColor("#f0f0f0"))  # Серый фон
-                font = item.font()
-                font.setBold(True)
-                item.setFont(font)
-                self.ui.tableWidget_component_stage.setItem(row, 1, item)  # В колонку "Этап / Задача"
-                # Остальные колонки пустые
-                for col in [0, 2, 3, 4, 5]:
-                    empty_item = QTableWidgetItem("")
-                    empty_item.setBackground(QColor("#f0f0f0"))
-                    empty_item.setFlags(empty_item.flags() & ~Qt.ItemIsEditable)
-                    self.ui.tableWidget_component_stage.setItem(row, col, empty_item)
-
-            else:
-                stage = data["stage"]
-                component = data["component"]
-
-                # Порядковый номер
-                self.ui.tableWidget_component_stage.setItem(row, 0, QTableWidgetItem(str(stage.get("stage_num", ""))))
-
-                # Название операции: компонент + операция
-                comp_name = (
-                    component["profile_tool_component"]["type"]["name"]
-                    if component.get("profile_tool_component")
-                    else (component["product_component"]["name"] if component.get("product_component") else "Без имени")
-                )
-                work_name = stage["work_subtype"]["name"] if stage.get("work_subtype") else "Без операции"
-                op_text = f"{comp_name} / {work_name}"
-                self.ui.tableWidget_component_stage.setItem(row, 1, QTableWidgetItem(op_text))
-
-                # Станок
-                machine = stage.get("machine")
-                machine_name = machine["name"] if machine else "Не назначен"
-                self.ui.tableWidget_component_stage.setItem(row, 2, QTableWidgetItem(machine_name))
-
-                # Даты
-                self.ui.tableWidget_component_stage.setItem(row, 3, QTableWidgetItem(stage.get("start") or ""))
-                self.ui.tableWidget_component_stage.setItem(row, 4, QTableWidgetItem(stage.get("finish") or ""))
-
-                # Описание
-                self.ui.tableWidget_component_stage.setItem(row, 5, QTableWidgetItem(stage.get("description", "")))
-
-                # Сохраняем данные в последней скрытой колонке (например, ID=6)
-                item_id = QTableWidgetItem(str(stage["id"]))
-                item_id.setData(Qt.UserRole, stage)
-                self.ui.tableWidget_component_stage.setItem(row, 6, item_id)
-
-
+                self.ui.tableWidget_component_stage.setItem(row, 0, QTableWidgetItem(data["task_type"]))
+                self.ui.tableWidget_component_stage.setItem(row, 1, QTableWidgetItem(data["create"]))
+                self.ui.tableWidget_component_stage.setItem(row, 2, QTableWidgetItem(data["completed"]))
 
     # =============================================================================
     # ОБРАБОТЧИКИ СОБЫТИЙ: УПРАВЛЕНИЕ
@@ -393,9 +343,4 @@ class WindowProduct(QWidget):
     # =============================================================================
     def show_warning_dialog(self, message: str):
         """Показать окно предупреждения с заданным сообщением"""
-        warning_box = QMessageBox(self)
-        warning_box.setIcon(QMessageBox.Warning)
-        warning_box.setWindowTitle("Внимание")
-        warning_box.setText(message)
-        warning_box.setStandardButtons(QMessageBox.Ok)
-        warning_box.exec()
+        QMessageBox.warning(self, "Внимание", message)
