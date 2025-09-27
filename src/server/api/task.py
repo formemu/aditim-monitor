@@ -134,6 +134,8 @@ def reorder_queue(request: SchemaQueueReorderRequest, db: Session = Depends(get_
     # 2. Установить новые позиции для переданных задач
     for position, task_id in enumerate(request.task_ids, start=1):
         db.query(ModelTask).filter(ModelTask.id == task_id).update({ModelTask.position: position}, synchronize_session='fetch')
+    notify_clients("table", "task", "updated")
+    notify_clients("table", "queue", "updated")   
     db.commit()
 
 # =============================================================================

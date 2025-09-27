@@ -15,10 +15,9 @@ class WindowProfile(QWidget):
     def __init__(self):
         super().__init__()
         self.profile = None
-        self.selected_row = None
         self.load_ui()
         self.setup_ui()
-        api_manager.data_updated.connect(self.on_data_updated)
+        api_manager.data_updated.connect(self.refresh_data)
 
     # =============================================================================
     # ИНИЦИАЛИЗАЦИЯ И ЗАГРУЗКА ИНТЕРФЕЙСА
@@ -40,7 +39,7 @@ class WindowProfile(QWidget):
         self.ui.pushButton_profile_edit.clicked.connect(self.on_profile_edit_clicked)
         self.ui.pushButton_profile_delete.clicked.connect(self.on_profile_delete_clicked)
         self.ui.lineEdit_search.textChanged.connect(self.filter_table)
-        self.ui.tableWidget_profile.itemSelectionChanged.connect(self.on_selection_main_changed)
+        self.ui.tableWidget_profile.itemClicked.connect(self.on_main_table_clicked)
 
         self.refresh_data()
 
@@ -57,18 +56,9 @@ class WindowProfile(QWidget):
     # =============================================================================
     def refresh_data(self):
         """Обновление данных в виджете"""
+        self.profile = None
+        self.clear_info_panel()
         self.update_profile_table()
-
-    def on_data_updated(self, group: str, key: str, success: bool):
-        """Реакция на обновление данных"""
-        if success and group == "table" and key == "profile":
-            self.update_profile_table()
-            if self.selected_row is not None:
-                self.update_profile_info_panel()
-            else:
-                self.selected_row = None
-                self.profile = None
-                self.clear_info_panel()
 
     def update_profile_table(self):
         """Обновление таблицы профилей"""
@@ -76,20 +66,19 @@ class WindowProfile(QWidget):
         table.setRowCount(len(api_manager.table["profile"]))
         table.setColumnCount(2)
         table.setHorizontalHeaderLabels(["Артикул", "Описание"])
-        header = table.horizontalHeader()
-        header.setSectionResizeMode(0, QHeaderView.ResizeToContents)
-        header.setSectionResizeMode(1, QHeaderView.Stretch)
 
         for row, profile in enumerate(api_manager.table["profile"]):
-            item_name = QTableWidgetItem(profile['article'])
-            item_name.setData(Qt.UserRole, profile['id'])
-            table.setItem(row, 0, item_name)
-            table.setItem(row, 1, QTableWidgetItem(profile['description']))
+            item_article = QTableWidgetItem(profile['article'])
+            item_description = QTableWidgetItem(profile['description'])
+
+            item_article.setData(Qt.UserRole, profile['id'])
+            item_description.setData(Qt.UserRole, profile['id'])
+
+            table.setItem(row, 0, item_article)
+            table.setItem(row, 1, item_description)
 
     def update_profile_info_panel(self):
         """Обновление панели профиля"""
-        id = self.ui.tableWidget_profile.item(self.selected_row, 0).data(Qt.UserRole)
-        self.profile = api_manager.get_by_id("profile", id)
         self.ui.label_profile_article.setText(f"Артикул: {self.profile['article']}")
         self.ui.label_profile_description.setText(f"Описание: {self.profile['description']}")
         sketch_data = self.profile.get("sketch")
@@ -143,15 +132,10 @@ class WindowProfile(QWidget):
     # =============================================================================
     # ОБРАБОТЧИКИ СОБЫТИЙ: ВЫДЕЛЕНИЕ
     # =============================================================================
-    def on_selection_main_changed(self):
+    def on_main_table_clicked(self):
         """Обработка выбора строки"""
-        row = self.ui.tableWidget_profile.currentRow()
-        if row >= 0:
-            self.selected_row = row
-            self.update_profile_info_panel()
-        else:
-            self.selected_row = None
-            self.clear_info_panel()
+        self.profile = api_manager.get_by_id("profile", self.ui.tableWidget_profile.currentItem().data(Qt.UserRole))
+        self.update_profile_info_panel()
 
     # =============================================================================
     # ОБРАБОТЧИКИ ДОПОЛНИТЕЛЬНЫХ ДЕЙСТВИЙ
