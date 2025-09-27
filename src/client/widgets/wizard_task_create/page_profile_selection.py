@@ -61,4 +61,4 @@ class PageProfileSelection(QWizardPage):
         return False
 
     def nextId(self):
-        return self.wizard.PAGE_PROFILE_TOOL_SELECTION
+        return self.wizard.PAGE_PROFILETOOL_SELECTION

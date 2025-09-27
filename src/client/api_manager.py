@@ -4,7 +4,7 @@ import asyncio
 import websockets
 from .async_util import run_async
 from .api.api_profile import ApiProfile
-from .api.api_profile_tool import ApiProfileTool
+from .api.api_profiletool import ApiProfileTool
 from .api.api_product import ApiProduct
 from .api.api_task import ApiTask
 from .api.api_directory import ApiDirectory
@@ -28,7 +28,7 @@ class ApiManager(QObject):
         
         # API клиенты (сохраняем оригинальную структуру для обратной совместимости)
         self.api_profile = ApiProfile()
-        self.api_profile_tool = ApiProfileTool()
+        self.api_profiletool = ApiProfileTool()
         self.api_product = ApiProduct()
         self.api_task = ApiTask()
         self.api_directory = ApiDirectory()
@@ -43,7 +43,7 @@ class ApiManager(QObject):
         self.registry = [
             # Таблицы
             ("profile", "table", self.api_profile.get_profile),
-            ("profile_tool", "table", self.api_profile_tool.get_profile_tool),
+            ("profiletool", "table", self.api_profiletool.get_profiletool),
             ("product", "table", self.api_product.get_product),
             ("task", "table", self.api_task.get_task),
             ("queue", "table", self.api_task.get_queue),
@@ -54,7 +54,7 @@ class ApiManager(QObject):
             ("component_type", "directory", self.api_directory.get_component_type),
             ("component_status", "directory", self.api_directory.get_component_status),
             ("task_status", "directory", self.api_directory.get_task_status),
-            ("profile_tool_dimension", "directory", self.api_directory.get_tool_dimension),
+            ("profiletool_dimension", "directory", self.api_directory.get_tool_dimension),
             ("machine", "directory", self.api_directory.get_machine),
             ("work_type", "directory", self.api_directory.get_work_type),
             ("task_type", "directory", self.api_directory.get_task_type),
@@ -120,7 +120,7 @@ class ApiManager(QObject):
     def parse_message(self, message):
         """Парсинг сообщения вебсокета"""
         try:
-            data = eval(message)  # Замените на json.loads(message)
+            data = eval(message) 
             return data if data.get("event") == "data_updated" else None
         except Exception as e:
             print(f"❌ [WebSocket] Ошибка парсинга: {e}")

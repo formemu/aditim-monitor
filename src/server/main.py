@@ -13,7 +13,7 @@ from .api.task import router as tasks_router
 from .api.directory import router as directory_router
 from .api.product import router as product_router
 from .api.profile import router as profile_router
-from .api.profile_tool import router as profile_tool_router
+from .api.profiletool import router as profiletool_router
 from .api.plan import router as plan_router
 from .api.task_component_stage import router as task_component_stage_router
 
@@ -40,7 +40,7 @@ app.include_router(tasks_router)
 app.include_router(directory_router)
 app.include_router(product_router)
 app.include_router(profile_router)
-app.include_router(profile_tool_router)
+app.include_router(profiletool_router)
 app.include_router(plan_router)
 app.include_router(task_component_stage_router)
 

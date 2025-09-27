@@ -6,34 +6,34 @@ from .api_client import ApiClient
 class ApiProfileTool(ApiClient):
     """API для инструментов профиля"""
     
-    def get_profile_tool(self):
+    def get_profiletool(self):
         """Получение всех инструментов профиля"""
         return self._request("GET", "/api/profile-tool")
 
-    def create_profile_tool(self, tool_data):
+    def create_profiletool(self, tool_data):
         """Создание нового инструмента профиля"""
         return self._request("POST", "/api/profile-tool", json=tool_data)
 
-    def update_profile_tool(self, profile_tool_id, tool_data):
+    def update_profiletool(self, profiletool_id, tool_data):
         """Обновление существующего инструмента профиля"""
-        return self._request("PATCH", f"/api/profile-tool/{profile_tool_id}", json=tool_data)
+        return self._request("PATCH", f"/api/profile-tool/{profiletool_id}", json=tool_data)
 
-    def delete_profile_tool(self, profile_tool_id):
+    def delete_profiletool(self, profiletool_id):
         """Удаление инструмента профиля"""
-        self._request("DELETE", f"/api/profile-tool/{profile_tool_id}")
+        self._request("DELETE", f"/api/profile-tool/{profiletool_id}")
 
-    def get_profile_tool_component(self, profile_tool_id):
+    def get_profiletool_component(self, profiletool_id):
         """Получение компонентов инструмента профиля"""
-        return self._request("GET", f"/api/profile-tool/{profile_tool_id}/component")
+        return self._request("GET", f"/api/profile-tool/{profiletool_id}/component")
 
-    def create_profile_tool_component(self, profile_tool_id, component_data):
+    def create_profiletool_component(self, profiletool_id, component_data):
         """Создание компонента инструмента профиля"""
-        return self._request("POST", f"/api/profile-tool/{profile_tool_id}/component", json=component_data)
+        return self._request("POST", f"/api/profile-tool/{profiletool_id}/component", json=component_data)
 
-    def delete_profile_tool_component(self, profile_tool_id):
+    def delete_profiletool_component(self, profiletool_id):
         """Удаление компонентов инструмента профиля"""
-        self._request("DELETE", f"/api/profile-tool/{profile_tool_id}/component")
+        self._request("DELETE", f"/api/profile-tool/{profiletool_id}/component")
 
-    def delete_profile_tool_component_by_id(self, component_id):
+    def delete_profiletool_component_by_id(self, component_id):
         """Удаление конкретного компонента по ID"""
         self._request("DELETE", f"/api/profile-tool-component/{component_id}")

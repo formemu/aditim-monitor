@@ -1,6 +1,6 @@
 from typing import Optional, List
 from pydantic import BaseModel, ConfigDict
-from .profile_tool import SchemaProfileToolResponse
+from .profiletool import SchemaProfileToolResponse
 
 class SchemaProfileBase(BaseModel):
     """Базовая модель профиля"""
@@ -22,7 +22,7 @@ class SchemaProfileUpdate(BaseModel):
 class SchemaProfileResponse(SchemaProfileBase):
     """Ответ API — включает id и поддержку ORM"""
     id: int
-    profile_tool: List[SchemaProfileToolResponse] = []
+    profiletool: List[SchemaProfileToolResponse] = []
 
 
 SchemaProfileToolResponse.model_rebuild()

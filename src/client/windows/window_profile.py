@@ -10,7 +10,6 @@ from ..widgets.profile.dialog_edit_profile import DialogEditProfile
 from ..api_manager import api_manager
 from ..style_util import load_styles
 
-
 class WindowProfile(QWidget):
     """Виджет содержимого профилей с таблицей, фильтрацией и просмотром эскизов"""
     def __init__(self):
@@ -19,12 +18,11 @@ class WindowProfile(QWidget):
         self.selected_row = None
         self.load_ui()
         self.setup_ui()
-        self.connect_signals()
+        api_manager.data_updated.connect(self.on_data_updated)
 
     # =============================================================================
     # ИНИЦИАЛИЗАЦИЯ И ЗАГРУЗКА ИНТЕРФЕЙСА
     # =============================================================================
-
     def load_ui(self):
         """Загрузка UI из файла"""
         ui_file = QFile(UI_PATHS_ABS["PROFILE_CONTENT"])
@@ -38,36 +36,13 @@ class WindowProfile(QWidget):
         self.ui.setStyleSheet(load_styles(get_style_path("MAIN")))
         self.load_logo()
 
-        # Кнопки
-        self.ui.pushButton_profile_add.clicked.connect(self.on_add_clicked)
-        self.ui.pushButton_profile_edit.clicked.connect(self.on_edit_clicked)
-        self.ui.pushButton_profile_delete.clicked.connect(self.on_delete_clicked)
-
-        # Таблица
-        table = self.ui.tableWidget_profile
-        table.setSelectionBehavior(QAbstractItemView.SelectRows)
-        table.setSelectionMode(QAbstractItemView.SingleSelection)
-        table.setFocusPolicy(Qt.NoFocus)
-
-        # Поиск
+        self.ui.pushButton_profile_add.clicked.connect(self.on_profile_add_clicked)
+        self.ui.pushButton_profile_edit.clicked.connect(self.on_profile_edit_clicked)
+        self.ui.pushButton_profile_delete.clicked.connect(self.on_profile_delete_clicked)
         self.ui.lineEdit_search.textChanged.connect(self.filter_table)
+        self.ui.tableWidget_profile.itemSelectionChanged.connect(self.on_selection_main_changed)
 
-        # Выбор строки
-        table.itemSelectionChanged.connect(self.on_selection_changed)
-
-        # Инициализация таблицы
-        self.update_profile_table()
-
-    def connect_signals(self):
-        """Подключаемся к сигналам ApiManager"""
-        api_manager.data_updated.connect(self.on_data_updated)
-
-    def on_data_updated(self, group: str, key: str, success: bool):
-        """Реакция на обновление данных"""
-        if success and group == "table" and key == "profile":
-            self.update_profile_table()
-            if self.selected_row:
-                self.update_profile_info_panel()
+        self.refresh_data()
 
     def load_logo(self):
         """Загрузка логотипа ADITIM"""
@@ -78,47 +53,49 @@ class WindowProfile(QWidget):
         self.ui.label_logo.setText("")
 
     # =============================================================================
-    # ОТОБРАЖЕНИЕ ДАННЫХ
+    # УПРАВЛЕНИЕ ДАННЫМИ: ЗАГРУЗКА И ОБНОВЛЕНИЕ
     # =============================================================================
+    def refresh_data(self):
+        """Обновление данных в виджете"""
+        self.update_profile_table()
+
+    def on_data_updated(self, group: str, key: str, success: bool):
+        """Реакция на обновление данных"""
+        if success and group == "table" and key == "profile":
+            self.update_profile_table()
+            if self.selected_row is not None:
+                self.update_profile_info_panel()
+            else:
+                self.selected_row = None
+                self.profile = None
+                self.clear_info_panel()
 
     def update_profile_table(self):
         """Обновление таблицы профилей"""
-        list_profile = api_manager.table["profile"]
         table = self.ui.tableWidget_profile
-        table.setRowCount(len(list_profile))
-        table.setColumnCount(3)
-        table.setHorizontalHeaderLabels(["id", "Артикул", "Описание"])
-
+        table.setRowCount(len(api_manager.table["profile"]))
+        table.setColumnCount(2)
+        table.setHorizontalHeaderLabels(["Артикул", "Описание"])
         header = table.horizontalHeader()
-        header.setSectionResizeMode(1, QHeaderView.ResizeToContents)
-        header.setSectionResizeMode(2, QHeaderView.Stretch)
+        header.setSectionResizeMode(0, QHeaderView.ResizeToContents)
+        header.setSectionResizeMode(1, QHeaderView.Stretch)
 
-        for row, list_profile in enumerate(list_profile):
-            table.setItem(row, 0, QTableWidgetItem(str(list_profile['id'])))
-            table.setItem(row, 1, QTableWidgetItem(list_profile['article']))
-            table.setItem(row, 2, QTableWidgetItem(list_profile['description']))
-
-        table.setColumnHidden(0, True)
-        self.filter_table()
+        for row, profile in enumerate(api_manager.table["profile"]):
+            item_name = QTableWidgetItem(profile['article'])
+            item_name.setData(Qt.UserRole, profile['id'])
+            table.setItem(row, 0, item_name)
+            table.setItem(row, 1, QTableWidgetItem(profile['description']))
 
     def update_profile_info_panel(self):
-        """Обновление панели информации о профиле"""
-        if self.selected_row >= 0:
-            item = self.ui.tableWidget_profile.item(self.selected_row, 0)
-            if item:
-                profile_id = int(item.text())
-                self.profile = api_manager.get_by_id("profile", profile_id)
-                if self.profile:
-                    self.ui.label_profile_article.setText(f"Артикул: {self.profile['article']}")
-                    self.ui.label_profile_description.setText(f"Описание: {self.profile['description']}")
+        """Обновление панели профиля"""
+        id = self.ui.tableWidget_profile.item(self.selected_row, 0).data(Qt.UserRole)
+        self.profile = api_manager.get_by_id("profile", id)
+        self.ui.label_profile_article.setText(f"Артикул: {self.profile['article']}")
+        self.ui.label_profile_description.setText(f"Описание: {self.profile['description']}")
+        sketch_data = self.profile.get("sketch")
+        self.load_and_show_sketch(sketch_data)
 
-                    sketch_data = self.profile.get("sketch")
-                    self.load_and_show_sketch(sketch_data)
-                    return
-
-        self.clear_profile_info_panel()
-
-    def clear_profile_info_panel(self):
+    def clear_info_panel(self):
         """Очистка панели информации о профиле"""
         self.ui.label_profile_article.setText("Артикул: -")
         self.ui.label_profile_description.setText("Описание: -")
@@ -126,11 +103,7 @@ class WindowProfile(QWidget):
 
     def load_and_show_sketch(self, sketch_data):
         """Отображение эскиза профиля"""
-        if not sketch_data:
-            self.ui.label_sketch.setText("Эскиз отсутствует")
-            return
-
-        try:
+        if sketch_data:
             base64_str = sketch_data.split(",", 1)[1] if "," in sketch_data else sketch_data
             image_data = base64.b64decode(base64_str)
             pixmap = QPixmap()
@@ -140,34 +113,37 @@ class WindowProfile(QWidget):
                 self.ui.label_sketch.setText("")
             else:
                 self.ui.label_sketch.setText("Ошибка изображения")
-        except Exception:
-            self.ui.label_sketch.setText("Ошибка загрузки")
+
+        else: self.ui.label_sketch.setText("Эскиз отсутствует")
 
     # =============================================================================
-    # ОБРАБОТЧИКИ СОБЫТИЙ: УПРАВЛЕНИЕ ПРОФИЛЯМИ
+    # ОБРАБОТЧИКИ СОБЫТИЙ: УПРАВЛЕНИЕ
     # =============================================================================
-    def on_add_clicked(self):
+    def on_profile_add_clicked(self):
         """Открытие диалога добавления профиля"""
         dialog = DialogCreateProfile(self)
         dialog.exec()
+        QMessageBox.warning(self, "Внимание", "Профиль добавлен")
 
-    def on_edit_clicked(self):
+    def on_profile_edit_clicked(self):
         """Редактирование профиля"""
-        if not self.profile:
-            self.show_warning_dialog("Выберите профиль для редактирования")
-            return
-        dialog = DialogEditProfile(self.profile, self)
-        dialog.exec()
+        if self.profile:
+            dialog = DialogEditProfile(self.profile, self)
+            dialog.exec()
+            QMessageBox.warning(self, "Внимание", "Данные о профиле обновлены")
+        else: QMessageBox.warning(self, "Внимание", "Выберите профиль для редактирования")
 
-    def on_delete_clicked(self):
+    def on_profile_delete_clicked(self):
         """Удаление профиля"""
         if self.profile:
             api_manager.api_profile.delete_profile(self.profile['id'])
+            QMessageBox.warning(self, "Внимание", "Профиль удален")
+        else: QMessageBox.warning(self, "Внимание", "Выберите профиль для удаления")
 
     # =============================================================================
-    # ОБРАБОТЧИКИ СОБЫТИЙ: ВЫДЕЛЕНИЕ И ПОИСК
+    # ОБРАБОТЧИКИ СОБЫТИЙ: ВЫДЕЛЕНИЕ
     # =============================================================================
-    def on_selection_changed(self):
+    def on_selection_main_changed(self):
         """Обработка выбора строки"""
         row = self.ui.tableWidget_profile.currentRow()
         if row >= 0:
@@ -175,8 +151,11 @@ class WindowProfile(QWidget):
             self.update_profile_info_panel()
         else:
             self.selected_row = None
-            self.clear_profile_info_panel()
+            self.clear_info_panel()
 
+    # =============================================================================
+    # ОБРАБОТЧИКИ ДОПОЛНИТЕЛЬНЫХ ДЕЙСТВИЙ
+    # =============================================================================
     def filter_table(self):
         """Фильтрация по артикулу"""
         text = self.ui.lineEdit_search.text().strip().lower()
@@ -185,10 +164,3 @@ class WindowProfile(QWidget):
             item = table.item(row, 1)
             visible = not text or (item and text in item.text().lower())
             table.setRowHidden(row, not visible)
-
-    # =============================================================================
-    # ОБРАБОТЧИКИ ДОПОЛНИТЕЛЬНЫХ ДЕЙСТВИЙ
-    # =============================================================================
-
-    def show_warning_dialog(self, message: str):
-        QMessageBox.warning(self, "Внимание", message)

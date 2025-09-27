@@ -22,13 +22,13 @@
      <property name="currentIndex">
       <number>1</number>
      </property>
-     <widget class="QWidget" name="tab_profile_tool">
+     <widget class="QWidget" name="tab_profiletool">
       <attribute name="title">
        <string>Инструмент для экструзии</string>
       </attribute>
       <layout class="QVBoxLayout" name="verticalLayout">
        <item>
-        <widget class="QGroupBox" name="groupBox_profile_tool_selected">
+        <widget class="QGroupBox" name="groupBox_profiletool_selected">
          <property name="title">
           <string>Выбор профиля</string>
          </property>
@@ -47,13 +47,13 @@
         </widget>
        </item>
        <item>
-        <widget class="QGroupBox" name="groupBox_profile_tool_instrument">
+        <widget class="QGroupBox" name="groupBox_profiletool_instrument">
          <property name="title">
           <string>Выбор инструмента</string>
          </property>
          <layout class="QVBoxLayout" name="verticalLayout_3">
           <item>
-           <widget class="QComboBox" name="comboBox_profile_tool_tool">
+           <widget class="QComboBox" name="comboBox_profiletool_tool">
             <property name="enabled">
              <bool>false</bool>
             </property>
@@ -66,17 +66,17 @@
         </widget>
        </item>
        <item>
-        <widget class="QGroupBox" name="groupBox_profile_tool_component">
+        <widget class="QGroupBox" name="groupBox_profiletool_component">
          <property name="title">
           <string>Компоненты требующие работы</string>
          </property>
          <layout class="QVBoxLayout" name="verticalLayout_components">
           <item>
-           <widget class="QScrollArea" name="scrollArea_profile_tool_component">
+           <widget class="QScrollArea" name="scrollArea_profiletool_component">
             <property name="widgetResizable">
              <bool>true</bool>
             </property>
-            <widget class="QWidget" name="widget_profile_tool_content">
+            <widget class="QWidget" name="widget_profiletool_content">
              <property name="geometry">
               <rect>
                <x>0</x>
@@ -93,20 +93,20 @@
         </widget>
        </item>
        <item>
-        <widget class="QGroupBox" name="groupBox_profile_tool_param">
+        <widget class="QGroupBox" name="groupBox_profiletool_param">
          <property name="title">
           <string>Параметры задачи</string>
          </property>
          <layout class="QFormLayout" name="formLayout_params">
           <item row="0" column="0">
-           <widget class="QLabel" name="label_profile_tool_deadline">
+           <widget class="QLabel" name="label_profiletool_deadline">
             <property name="text">
              <string>Срок:</string>
             </property>
            </widget>
           </item>
           <item row="0" column="1">
-           <widget class="QDateEdit" name="dateEdit_profile_tool_deadline">
+           <widget class="QDateEdit" name="dateEdit_profiletool_deadline">
             <property name="calendarPopup">
              <bool>true</bool>
             </property>
@@ -120,14 +120,14 @@
            </widget>
           </item>
           <item row="1" column="0">
-           <widget class="QLabel" name="label_profile_tool_description">
+           <widget class="QLabel" name="label_profiletool_description">
             <property name="text">
              <string>Описание:</string>
             </property>
            </widget>
           </item>
           <item row="1" column="1">
-           <widget class="QTextEdit" name="textEdit_profile_tool_description">
+           <widget class="QTextEdit" name="textEdit_profiletool_description">
             <property name="maximumSize">
              <size>
               <width>16777215</width>

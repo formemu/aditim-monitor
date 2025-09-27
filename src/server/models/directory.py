@@ -28,7 +28,7 @@ class ModelDirProfileToolDimension(Base): # +
     name = Column(String(100), nullable=False, unique=True)
     description = Column(Text)
     # Relationships
-    profile_tool = relationship("ModelProfileTool", back_populates="dimension")
+    profiletool = relationship("ModelProfileTool", back_populates="dimension")
 
 class ModelDirProfileToolComponentType(Base): # +
     """Справочник типов компонентов инструментов"""

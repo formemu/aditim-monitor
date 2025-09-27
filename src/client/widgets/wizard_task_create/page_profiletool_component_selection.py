@@ -29,7 +29,7 @@ class PageProfileToolComponentSelection(QWizardPage):
         self.clear_container()
         self.component_to_widget.clear()
         self.list_widget.clear()
-        for component in self.wizard.profile_tool['component']:
+        for component in self.wizard.profiletool['component']:
             checkbox = QCheckBox(f"{component['type']['name']}")
             checkbox.setProperty("component", component)
             checkbox.toggled.connect(lambda checked, c=component, cb=checkbox: self.on_component_toggled(checked, c, cb))
@@ -37,19 +37,12 @@ class PageProfileToolComponentSelection(QWizardPage):
             self.listWidget_component.setItemWidget(item, checkbox)
 
     def on_component_toggled(self, checked, component, checkbox):
+        widget = WidgetGrid(component)
+        self.list_widget.append(widget)
+        self.component_to_widget[component['id']] = widget
         if self.field("type_id") == 1 and checked:
-                widget = WidgetGrid(component)
-                self.list_widget.append(widget)
-                self.component_to_widget[component['id']] = widget
-                # Добавляем виджет в контейнер
-                self.container_component.layout().addWidget(widget)
-        else:
-            widget = self.component_to_widget.pop(component['id'], None)
-            if widget and widget in self.list_widget:
-                self.list_widget.remove(widget)
-                # Удаляем виджет из контейнера
-                widget.setParent(None)
-                widget.deleteLater()
+            # Добавляем виджет в контейнер
+            self.container_component.layout().addWidget(widget)
 
     def clear_container(self):
         """Очищает контейнер"""
@@ -57,35 +50,30 @@ class PageProfileToolComponentSelection(QWizardPage):
             child.deleteLater()
 
     def validatePage(self):
-        self.wizard.list_selected_profile_tool_component.clear()
+        self.wizard.list_selected_profiletool_component.clear()
         for i in range(self.listWidget_component.count()):
             item = self.listWidget_component.item(i)
             checkbox = self.listWidget_component.itemWidget(item)
             if isinstance(checkbox, QCheckBox) and checkbox.isChecked():
                 component = checkbox.property("component")
                 comp_id = component['id']
-
-                selected_stages = []
+                list_selected_stage = []
                 widget = self.component_to_widget.get(comp_id)
                 if widget:
                     layout = widget.layout()
                     for j in range(1, layout.count()):  # пропускаем заголовок
                         sublayout = layout.itemAt(j)
-                        if sublayout and sublayout.layout():
-                            cb = sublayout.layout().itemAt(0).widget()  # чекбокс
-                            combo = sublayout.layout().itemAt(1).widget()  # комбобокс
-                            if isinstance(cb, QCheckBox) and cb.isChecked():
-                                stage = cb.property("stage")
-                                machine = combo.currentData() if combo.isEnabled() else None
-                                selected_stages.append({
-                                    "stage": stage,
-                                    "machine": machine
-                                })
+                        checkBox_work_subtype = sublayout.layout().itemAt(0).widget()  # чекбокс
+                        comboBox_machine = sublayout.layout().itemAt(1).widget()  # комбобокс
+                        if checkBox_work_subtype.isChecked():
+                            stage = checkBox_work_subtype.property("stage")
+                            machine = comboBox_machine.currentData() if comboBox_machine.isEnabled() else None
+                            list_selected_stage.append({ "stage": stage, "machine": machine })
 
-                component['list_selected_stage'] = selected_stages
-                self.wizard.list_selected_profile_tool_component.append(component)
+                    component['list_selected_stage'] = list_selected_stage
+                    self.wizard.list_selected_profiletool_component.append(component)
 
-        return len(self.wizard.list_selected_profile_tool_component) > 0
+        return len(self.wizard.list_selected_profiletool_component)
 
     def nextId(self):
         return self.wizard.PAGE_TASK_DETAILS
@@ -102,16 +90,16 @@ class WidgetGrid(QWidget):
         for stage in list_stage:
             layout = QHBoxLayout()
             # Чекбокс операции
-            checkBox_stage = QCheckBox(f"{stage['stage_num']}. {stage['name']}")
+            checkBox_stage = QCheckBox(f"{stage['stage_num']}. {stage['work_subtype']['name']}")
             checkBox_stage.setProperty("stage", stage)
             layout.addWidget(checkBox_stage)
             # ComboBox со станками
             comboBox_machine = QComboBox()
-            comboBox_machine.setProperty("stage", stage)
+            # comboBox_machine.setProperty("stage", stage)
             comboBox_machine.setEnabled(False)
             list_machine = [
                 machine for machine in api_manager.directory['machine']
-                if machine['work_type_id'] == stage['work_type_id']
+                if machine['work_type_id'] == stage['work_subtype']['work_type_id']
             ]
             for machine in list_machine:
                 comboBox_machine.addItem(f"{machine['name']}", machine)
@@ -129,20 +117,10 @@ class WidgetGrid(QWidget):
             self.layout().addLayout(layout)
 
     def load_stage(self, component):
-
         profiletool_component_type_id = component['type']['id']
         list_stage = []
-
-        for item in api_manager.plan['task_component_stage']:
-            if item['profiletool_component_type']['id'] == profiletool_component_type_id:
-                work_subtype = item['work_subtype']
-                list_stage.append({
-                    "name": work_subtype['name'],
-                    "id": work_subtype['id'],
-                    "stage_num": item['stage_num'],
-                    "description": work_subtype.get('description', ''),
-                    "work_type_id": work_subtype.get('work_type_id')
-                })
-
+        for stage in api_manager.plan['task_component_stage']:
+            if stage['profiletool_component_type']['id'] == profiletool_component_type_id:
+                list_stage.append(stage)
         list_stage.sort(key=lambda x: x['stage_num'])
         return list_stage

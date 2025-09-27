@@ -16,15 +16,15 @@
      <property name="currentIndex">
       <number>0</number>
      </property>
-     <widget class="QWidget" name="tab_profile_tool">
+     <widget class="QWidget" name="tab_profiletool">
       <attribute name="title">
        <string>Инструменты для экструдеров</string>
       </attribute>
-      <layout class="QVBoxLayout" name="verticalLayout_profile_tool">
+      <layout class="QVBoxLayout" name="verticalLayout_profiletool">
        <item>
-        <layout class="QHBoxLayout" name="horizontalLayout_toolbar_profile_tool">
+        <layout class="QHBoxLayout" name="horizontalLayout_toolbar_profiletool">
          <item>
-          <widget class="QPushButton" name="pushButton_profile_tool_add">
+          <widget class="QPushButton" name="pushButton_profiletool_add">
            <property name="minimumSize">
             <size>
              <width>100</width>
@@ -37,7 +37,7 @@
           </widget>
          </item>
          <item>
-          <widget class="QPushButton" name="pushButton_profile_tool_edit">
+          <widget class="QPushButton" name="pushButton_profiletool_edit">
            <property name="minimumSize">
             <size>
              <width>100</width>
@@ -50,7 +50,7 @@
           </widget>
          </item>
          <item>
-          <widget class="QPushButton" name="pushButton_profile_tool_delete">
+          <widget class="QPushButton" name="pushButton_profiletool_delete">
            <property name="minimumSize">
             <size>
              <width>100</width>
@@ -63,7 +63,7 @@
           </widget>
          </item>
          <item>
-          <spacer name="horizontalSpacer_profile_tool">
+          <spacer name="horizontalSpacer_profiletool">
            <property name="orientation">
             <enum>Qt::Orientation::Horizontal</enum>
            </property>
@@ -76,7 +76,7 @@
           </spacer>
          </item>
          <item>
-          <widget class="QLineEdit" name="lineEdit_search_profile_tool">
+          <widget class="QLineEdit" name="lineEdit_search_profiletool">
            <property name="minimumSize">
             <size>
              <width>200</width>
@@ -91,7 +91,7 @@
         </layout>
        </item>
        <item>
-        <widget class="QTableWidget" name="tableWidget_profile_tool">
+        <widget class="QTableWidget" name="tableWidget_profiletool">
          <property name="alternatingRowColors">
           <bool>true</bool>
          </property>

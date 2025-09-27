@@ -10,14 +10,15 @@ from ...api_manager import api_manager
 
 class DialogEditProfile(QDialog):
     """Диалог для редактирования существующего профиля."""
-    def __init__(self, profile_data, parent):
+    def __init__(self, profile, parent):
         super().__init__(parent)
-        self.profile = profile_data
-        self.sketch_data = profile_data.get('sketch')
+        self.profile = profile
+        self.sketch_data = None
 
         self.load_ui()
-        self.setup_logic()
-        self.setup_form()
+        self.setup_ui()
+
+
 
     def load_ui(self):
         """Загружает UI из файла."""
@@ -28,34 +29,25 @@ class DialogEditProfile(QDialog):
         ui_file.close()
         self.setLayout(self.ui.layout())
 
-    def setup_logic(self):
+    def setup_ui(self):
         """Настраивает логику диалога."""
         # Подключаем обработчики кнопок
         self.ui.buttonBox.accepted.connect(self.accept)
         self.ui.buttonBox.rejected.connect(self.reject)
         # Подключаем обработчик кнопки вставки изображения
         self.ui.pushButton_paste_image.clicked.connect(self.paste_image)
-
-    def setup_form(self):
-        """Заполняет форму данными редактируемого профиля."""
-        # Заполняем текстовые поля
-        article = self.profile.get('article')
-        description = self.profile.get('description')
-        
-        self.ui.lineEdit_article.setText(article)
-        self.ui.textEdit_description.setPlainText(description)
-
-        # Загружаем изображение, если есть
-        if self.sketch_data:
-            self.load_sketch()
+        self.ui.lineEdit_article.setText(self.profile['article'])
+        self.ui.textEdit_description.setPlainText(self.profile['description'])
+        self.load_sketch()
 
     def load_sketch(self):
         """Загружает и отображает эскиз профиля"""
-        base64_data = self.sketch_data
-        image_data = base64.b64decode(base64_data, validate=True)
-        pixmap = QPixmap()
-        if pixmap.loadFromData(image_data) and not pixmap.isNull():
-            scaled = pixmap.scaled(200, 150, Qt.KeepAspectRatio, Qt.SmoothTransformation)
+        if self.profile['sketch']:
+            base64_data = self.profile['sketch']
+            image_data = base64.b64decode(base64_data, validate=True)
+            pixmap = QPixmap()
+            if pixmap.loadFromData(image_data) and not pixmap.isNull():
+                scaled = pixmap.scaled(200, 150, Qt.KeepAspectRatio, Qt.SmoothTransformation)
             self.ui.label_sketch.setPixmap(scaled)
             self.ui.label_sketch.setText("")
         else:
@@ -111,7 +103,7 @@ class DialogEditProfile(QDialog):
                 "description": self.ui.textEdit_description.toPlainText().strip(),
                 "sketch": self.sketch_data
             }
-            api_manager.api_profile.update_profile(self.profile.get('id'), data_profile)
+            api_manager.api_profile.update_profile(self.profile['id'], data_profile)
         else:
             QMessageBox.warning(self, "Ошибка", "Пожалуйста, исправьте ошибки в форме.")
     

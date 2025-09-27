@@ -3,7 +3,7 @@ from datetime import date
 from typing import Optional, List
 from pydantic import BaseModel, ConfigDict
 from .directory import SchemaDirTaskStatus, WorkSubtype, SchemaDirMachine, SchemaDirTaskType, SchemaDirTaskLocation
-from .profile_tool import SchemaProfileToolComponentResponse, SchemaProfileToolResponse
+from .profiletool import SchemaProfileToolComponentResponse, SchemaProfileToolResponse
 from .product import SchemaProductComponentResponse, SchemaProductResponse
 
 # === TASK SCHEMAS ===
@@ -11,7 +11,7 @@ from .product import SchemaProductComponentResponse, SchemaProductResponse
 class TaskBase(BaseModel):
     """Базовые поля задачи (без id и created)"""
     product_id: Optional[int] = None
-    profile_tool_id: Optional[int] = None
+    profiletool_id: Optional[int] = None
     deadline: Optional[date] = None
     created: Optional[date] = None
     position: Optional[int] = None
@@ -29,7 +29,7 @@ class SchemaTaskCreate(TaskBase):
 class SchemaTaskUpdate(BaseModel):
     """Частичное обновление задачи — все поля опциональны"""
     product_id: Optional[int] = None
-    profile_tool_id: Optional[int] = None
+    profiletool_id: Optional[int] = None
     deadline: Optional[date] = None
     position: Optional[int] = None
     completed: Optional[date] = None
@@ -43,7 +43,7 @@ class SchemaTaskResponse(TaskBase):
     id: int
     created: date
     completed: Optional[date] = None
-    profile_tool: Optional['SchemaProfileToolResponse'] = None
+    profiletool: Optional['SchemaProfileToolResponse'] = None
     product: Optional['SchemaProductResponse'] = None
     status: Optional['SchemaDirTaskStatus'] = None
     type: Optional['SchemaDirTaskType'] = None
@@ -55,7 +55,7 @@ class SchemaTaskResponse(TaskBase):
 
 class TaskComponentBase(BaseModel):
     """Базовая модель компонента задачи"""
-    profile_tool_component_id: Optional[int] = None
+    profiletool_component_id: Optional[int] = None
     product_component_id: Optional[int] = None
     description: Optional[str] = None
     model_config = ConfigDict(from_attributes=True)
@@ -66,14 +66,14 @@ class SchemaTaskComponentCreate(TaskComponentBase):
 
 class TaskComponentUpdate(BaseModel):
     """Частичное обновление компонента"""
-    profile_tool_component_id: Optional[int] = None
+    profiletool_component_id: Optional[int] = None
     product_component_id: Optional[int] = None
     description: Optional[str] = None
 
 class SchemaTaskComponentResponse(TaskComponentBase):
     """Ответ с компонентом"""
     id: int
-    profile_tool_component: Optional[SchemaProfileToolComponentResponse] = None
+    profiletool_component: Optional[SchemaProfileToolComponentResponse] = None
     product_component: Optional[SchemaProductComponentResponse] = None
     stage: Optional[list["SchemaTaskComponentStageResponse"]] = None
 

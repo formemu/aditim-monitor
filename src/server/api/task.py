@@ -32,7 +32,8 @@ def get_task(db: Session = Depends(get_db)):
 @router.get("/task/queue", response_model=List[SchemaTaskResponse])
 def get_queue(db: Session = Depends(get_db)):
     status_in_progress = db.query(ModelDirTaskStatus).filter(ModelDirTaskStatus.name == "В работе").first()
-    tasks = db.query(ModelTask).filter(ModelTask.status_id == status_in_progress.id, ModelTask.position.isnot(None)).order_by(ModelTask.position).all()
+    status_completed = db.query(ModelDirTaskStatus).filter(ModelDirTaskStatus.name == "Выполнена").first()
+    tasks = db.query(ModelTask).filter(ModelTask.status_id == status_in_progress.id, ModelTask.status_id != status_completed.id, ModelTask.position.isnot(None)).order_by(ModelTask.position).all()
     return tasks
 
 
@@ -51,7 +52,7 @@ def create_task(task: SchemaTaskCreate, db: Session = Depends(get_db)):
     try:
         task = ModelTask(
             product_id=task.product_id,
-            profile_tool_id=task.profile_tool_id,
+            profiletool_id=task.profiletool_id,
             deadline=task.deadline,
             position=task.position,
             status_id=task.status_id,
@@ -83,10 +84,10 @@ def create_task_component(
     """Создать новый компонент задачи"""
 
     # Создаём компонент
-    if component.profile_tool_component_id:
+    if component.profiletool_component_id:
         db_component = ModelTaskComponent(
             task_id=task_id,
-            profile_tool_component_id=component.profile_tool_component_id,
+            profiletool_component_id=component.profiletool_component_id,
             description=component.description
         )
     elif component.product_component_id:
@@ -98,7 +99,7 @@ def create_task_component(
     else:
         raise HTTPException(
             status_code=422,
-            detail="Требуется profile_tool_component_id или product_component_id"
+            detail="Требуется profiletool_component_id или product_component_id"
         )
 
     db.add(db_component)

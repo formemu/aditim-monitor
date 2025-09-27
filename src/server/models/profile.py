@@ -13,4 +13,4 @@ class ModelProfile(Base):
     description = Column(String, nullable=True)
     sketch = Column(Text)  # ← хранить как строку (Base64)
     # Связи
-    profile_tool = relationship("ModelProfileTool", back_populates="profile", cascade="all, delete")
+    profiletool = relationship("ModelProfileTool", back_populates="profile", cascade="all, delete")

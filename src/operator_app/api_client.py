@@ -74,8 +74,8 @@ def get_stages_for_machine(machine_id: int) -> List[Dict]:
                 # Добавляем контекст
                 next_stage["task_name"] = f"#{task['id']} — {task.get('product_name', 'Профиль')}"
                 comp_type = (
-                    component["profile_tool_component"]["type"]["name"]
-                    if component.get("profile_tool_component")
+                    component["profiletool_component"]["type"]["name"]
+                    if component.get("profiletool_component")
                     else (component["product_component"]["name"] if component.get("product_component") else "Без имени")
                 )
                 next_stage["component_name"] = comp_type

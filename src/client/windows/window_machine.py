@@ -104,9 +104,9 @@ class WindowMachine(QWidget):
         machine_id = machine["id"]
         list_operation = []
         for task in api_manager.table["queue"]:
-            for component in task.get("component", []):
-                for stage in component.get("stage", []) or []:
-                    if stage.get("machine") and stage["machine"]["id"] == machine_id:
+            for component in task["component"]:
+                for stage in component["stage"]:
+                    if stage["machine"] and stage["machine"]["id"] == machine_id:
                         list_operation.append({
                             "task": task,
                             "component": component,
@@ -114,6 +114,7 @@ class WindowMachine(QWidget):
                         })
 
         # Отображение
+        
         list_model = QStandardItemModel()
         for operation in list_operation:
             name = self.get_operation_display_name(operation)
@@ -130,7 +131,7 @@ class WindowMachine(QWidget):
         stage = operation["stage"]
 
         # 1. Основное имя: профиль или продукт
-        if task["profile_tool_id"]: name = task["profile_tool"]['profile']['article']
+        if task["profiletool_id"]: name = task["profiletool"]['profile']['article']
         elif task["product_id"]: name = task["product"]["name"]
         else: name = "Без объекта"
 
@@ -138,7 +139,7 @@ class WindowMachine(QWidget):
         if task["type"]: type_name = task["type"]["name"]
 
         # 2. Имя компонента
-        if component["profile_tool_component_id"]: component_name = component["profile_tool_component"]["type"]["name"]
+        if component["profiletool_component_id"]: component_name = component["profiletool_component"]["type"]["name"]
         elif component["product_component_id"]: component_name = component["product_component"]["name"]
         else: component_name = "Без компонента"
 

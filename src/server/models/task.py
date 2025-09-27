@@ -15,7 +15,7 @@ class ModelTask(Base):
     completed = Column(Date, nullable=True)
 
     product_id = Column(Integer, ForeignKey("product.id"), nullable=True)
-    profile_tool_id = Column(Integer, ForeignKey("profile_tool.id"), nullable=True)
+    profiletool_id = Column(Integer, ForeignKey("profiletool.id"), nullable=True)
     status_id = Column(Integer, ForeignKey("dir_task_status.id"), nullable=True, default=1)
     type_id = Column(Integer, ForeignKey("dir_task_type.id"), nullable=True, default=1)
     location_id = Column(Integer, ForeignKey("dir_task_location.id"), nullable=True, default=1)
@@ -24,7 +24,7 @@ class ModelTask(Base):
 
     # Relationships
     product = relationship("ModelProduct", back_populates="task")
-    profile_tool = relationship("ModelProfileTool", back_populates="task")
+    profiletool = relationship("ModelProfileTool", back_populates="task")
     status = relationship("ModelDirTaskStatus", back_populates="task")
     location = relationship("ModelDirTaskLocation", back_populates="task")
     type = relationship("ModelDirTaskType", back_populates="task")
@@ -37,14 +37,14 @@ class ModelTaskComponent(Base):
     id = Column(Integer, primary_key=True, index=True)
 
     task_id = Column(Integer, ForeignKey("task.id"), nullable=False)
-    profile_tool_component_id = Column(Integer, ForeignKey("profile_tool_component.id"), nullable=True)
+    profiletool_component_id = Column(Integer, ForeignKey("profiletool_component.id"), nullable=True)
     product_component_id = Column(Integer, ForeignKey("product_component.id"), nullable=True)
 
     description = Column(Text, nullable=True)
 
     # Relationships
     task = relationship("ModelTask", back_populates="component")
-    profile_tool_component = relationship("ModelProfileToolComponent", back_populates="task_component")
+    profiletool_component = relationship("ModelProfileToolComponent", back_populates="task_component")
     product_component = relationship("ModelProductComponent", back_populates="task_component")
     stage = relationship("ModelTaskComponentStage", back_populates="task_component", cascade="all, delete-orphan")
 

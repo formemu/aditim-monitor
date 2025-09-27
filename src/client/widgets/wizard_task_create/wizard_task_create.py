@@ -1,5 +1,5 @@
 from PySide6.QtCore import QDate
-from PySide6.QtWidgets import (QWizard)
+from PySide6.QtWidgets import QWizard
 
 from ...api_manager import api_manager
 
@@ -16,8 +16,8 @@ class WizardTaskCreate(QWizard):
         # Константы для ID страниц
     PAGE_START = 0
     PAGE_PROFILE_SELECTION = 1
-    PAGE_PROFILE_TOOL_SELECTION = 2
-    PAGE_PROFILE_TOOL_COMPONENT_SELECTION = 3
+    PAGE_PROFILETOOL_SELECTION = 2
+    PAGE_PROFILETOOL_COMPONENT_SELECTION = 3
     PAGE_PRODUCT_SELECTION = 4
     PAGE_PRODUCT_COMPONENT_SELECTION = 5
     PAGE_TASK_DETAILS = 6
@@ -30,9 +30,9 @@ class WizardTaskCreate(QWizard):
 
         # Общие данные
         self.profile = None
-        self.profile_tool = None
+        self.profiletool = None
         self.product = None
-        self.list_selected_profile_tool_component = []
+        self.list_selected_profiletool_component = []
         self.list_selected_product_component = []
 
 
@@ -48,19 +48,19 @@ class WizardTaskCreate(QWizard):
 
     def accept(self):
         """Вызывается при нажатии Finish"""
-        if self.profile_tool:
-            self.create_profile_tool_task()
+        if self.profiletool:
+            self.create_profiletool_task()
         elif self.product:
             self.create_product_task()
         super().accept()
 
-    def create_profile_tool_task(self):
+    def create_profiletool_task(self):
         deadline = self.field("deadline").toString("yyyy-MM-dd")
         description = self.field("description")
         type_id = self.field("type_id")
 
         task_data = {
-            "profile_tool_id": self.profile_tool['id'],
+            "profiletool_id": self.profiletool['id'],
             "deadline": deadline,
             "created": QDate.currentDate().toString("yyyy-MM-dd"),
             "description": description,
@@ -70,25 +70,20 @@ class WizardTaskCreate(QWizard):
         }
         task = api_manager.api_task.create_task(task_data)
         task_id = task['id']
-        for component in self.list_selected_profile_tool_component:
+        for component in self.list_selected_profiletool_component:
             # 1. Создаём компонент задачи
-            component_data = {"profile_tool_component_id": component['id'], "description": ""}
+            component_data = {"profiletool_component_id": component['id'], "description": ""}
             task_component = api_manager.api_task.create_task_component(task_id, component_data)
             task_component_id = task_component['id']
 
             # 2. Создаём этапы (если есть)
-            selected_stages = component['list_selected_stage']
-            for item in selected_stages:
-                stage = item['stage']
-                machine = item['machine']
-
+            list_selected_stage = component['list_selected_stage']
+            for selected_stage in list_selected_stage:
                 stage = {
-                    "stage_name_id": stage['id'],
-                    "machine_id": machine['id'] if machine else None,
-                    "stage_num": stage['stage_num'],
-                    "description": f"Этап {stage['stage_num']} — {stage['name']}"
+                    "work_subtype_id": selected_stage['stage']['work_subtype']['id'],
+                    "machine_id": selected_stage['machine']['id'] if selected_stage['machine'] else None,
+                    "stage_num": selected_stage['stage']['stage_num']
                 }
-
                 try:
                     api_manager.api_task.create_task_component_stage(task_component_id, stage)
                 except Exception as e:

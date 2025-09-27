@@ -3,7 +3,7 @@ from django.db import models
 
 class Task(models.Model):
     product = models.ForeignKey('Product', on_delete=models.CASCADE, null=True, blank=True)
-    profile_tool = models.ForeignKey('ProfileTool', on_delete=models.CASCADE, null=True, blank=True)
+    profiletool = models.ForeignKey('ProfileTool', on_delete=models.CASCADE, null=True, blank=True)
     status = models.ForeignKey('DirTaskStatus', on_delete=models.CASCADE, db_column='status_id')
     type = models.ForeignKey('DirTaskType', on_delete=models.CASCADE, db_column='type_id')
     location = models.ForeignKey('DirTaskLocation', on_delete=models.CASCADE, db_column='location_id', null=True, blank=True)
@@ -23,29 +23,29 @@ class Task(models.Model):
     def __str__(self):
         if self.product:
             return f"Задача: {self.product.name}"
-        elif self.profile_tool:
-            return f"Задача: {self.profile_tool.profile.article}"
+        elif self.profiletool:
+            return f"Задача: {self.profiletool.profile.article}"
         return f"Задача #{self.id}"
     
     def get_display_name(self):
         """Возвращает название задачи для отображения"""
-        if self.profile_tool:
-            return self.profile_tool.profile.article
+        if self.profiletool:
+            return self.profiletool.profile.article
         elif self.product:
             return self.product.name
         return f"Задача #{self.id}"
 
 class TaskComponent(models.Model):
     task = models.ForeignKey(Task, on_delete=models.CASCADE, related_name='component_list')
-    profile_tool_component_id = models.IntegerField(null=True, blank=True)
+    profiletool_component_id = models.IntegerField(null=True, blank=True)
     product_component_id = models.IntegerField(null=True, blank=True)
 
     # Добавляем связи для получения имени
     @property
     def component_name(self):
-        if self.profile_tool_component_id:
+        if self.profiletool_component_id:
             try:
-                comp = ProfileToolComponent.objects.get(id=self.profile_tool_component_id)
+                comp = ProfileToolComponent.objects.get(id=self.profiletool_component_id)
                 return comp.type.name
             except ProfileToolComponent.DoesNotExist:
                 return "—"
@@ -85,7 +85,7 @@ class ProfileTool(models.Model):
     description = models.TextField(blank=True)
     
     class Meta:
-        db_table = 'profile_tool'
+        db_table = 'profiletool'
         managed = False
         verbose_name = 'Инструмент профиля'
         verbose_name_plural = 'Инструменты профилей'
@@ -98,7 +98,7 @@ class ProfileToolComponent(models.Model):
     type = models.ForeignKey('DirProfileToolComponentType', on_delete=models.DO_NOTHING, db_column='type_id')
 
     class Meta:
-        db_table = 'profile_tool_component'
+        db_table = 'profiletool_component'
         managed = False
 
 class Product(models.Model):
