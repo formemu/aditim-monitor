@@ -5,6 +5,7 @@ from ..database import get_db
 from ..models.task import ModelTaskComponentStage
 from pydantic import BaseModel
 from datetime import date
+from ..events import notify_clients
 
 router = APIRouter(prefix="/api/task/component/stage", tags=["task-component-stage"])
 
@@ -37,7 +38,7 @@ def update_stage(
         stage.start = data.start
     if data.finish is not None:
         stage.finish = data.finish
-
+    notify_clients("table", "task", "updated")
     db.commit()
     db.refresh(stage)
     return stage
