@@ -1,0 +1,211 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>Wizard</class>
+ <widget class="QWizard" name="Wizard">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>419</width>
+    <height>396</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>Wizard</string>
+  </property>
+  <property name="styleSheet">
+   <string notr="true">background-color: rgb(31, 31, 31);</string>
+  </property>
+  <property name="subTitleFormat">
+   <enum>Qt::TextFormat::AutoText</enum>
+  </property>
+  <widget class="QWizardPage" name="wizardPage_start">
+   <property name="title">
+    <string>Тип задачи</string>
+   </property>
+   <property name="subTitle">
+    <string>Выберите, для чего создается задача</string>
+   </property>
+   <layout class="QFormLayout" name="formLayout">
+    <item row="0" column="0">
+     <widget class="QLabel" name="label_product_type">
+      <property name="text">
+       <string>Вид изделия</string>
+      </property>
+     </widget>
+    </item>
+    <item row="0" column="1">
+     <widget class="QComboBox" name="comboBox_product_type">
+      <item>
+       <property name="text">
+        <string>Инструмент профиля</string>
+       </property>
+      </item>
+      <item>
+       <property name="text">
+        <string>Другое изделие</string>
+       </property>
+      </item>
+     </widget>
+    </item>
+    <item row="1" column="0">
+     <widget class="QLabel" name="label_work_type">
+      <property name="text">
+       <string>вид работ</string>
+      </property>
+     </widget>
+    </item>
+    <item row="1" column="1">
+     <widget class="QComboBox" name="comboBox_work_type"/>
+    </item>
+   </layout>
+  </widget>
+  <widget class="QWizardPage" name="wizardPage_profiletool_selection">
+   <property name="title">
+    <string>Выбор инструмента</string>
+   </property>
+   <property name="subTitle">
+    <string>Введите артикул профиля типоразмер инструмента</string>
+   </property>
+   <attribute name="pageId">
+    <string notr="true">1</string>
+   </attribute>
+   <layout class="QFormLayout" name="formLayout_2">
+    <item row="0" column="0">
+     <widget class="QLabel" name="label_profile_search">
+      <property name="text">
+       <string>Поиск:</string>
+      </property>
+     </widget>
+    </item>
+    <item row="0" column="1">
+     <widget class="QLineEdit" name="lineEdit_profile_search">
+      <property name="placeholderText">
+       <string>Поиск профиля...</string>
+      </property>
+     </widget>
+    </item>
+    <item row="1" column="0" colspan="2">
+     <widget class="QListWidget" name="listWidget_profile_search"/>
+    </item>
+    <item row="2" column="1">
+     <widget class="QComboBox" name="comboBox_dimension"/>
+    </item>
+    <item row="2" column="0">
+     <widget class="QLabel" name="label_dimension">
+      <property name="text">
+       <string>Типоразмер:</string>
+      </property>
+     </widget>
+    </item>
+   </layout>
+  </widget>
+  <widget class="QWizardPage" name="wizardPage_profiletool_component_selection">
+   <property name="title">
+    <string>Выбор компонентов</string>
+   </property>
+   <property name="subTitle">
+    <string>Отметьте компоненты, которые нужно изготовить. Отметьте виды работ.</string>
+   </property>
+   <attribute name="pageId">
+    <string notr="true">2</string>
+   </attribute>
+   <layout class="QHBoxLayout" name="horizontalLayout">
+    <item>
+     <widget class="QListWidget" name="listWidget_profiletool_component">
+      <property name="maximumSize">
+       <size>
+        <width>100</width>
+        <height>16777215</height>
+       </size>
+      </property>
+     </widget>
+    </item>
+    <item>
+     <widget class="QWidget" name="widget_profiletool_component_container" native="true"/>
+    </item>
+   </layout>
+  </widget>
+  <widget class="QWizardPage" name="wizardPage_product_selection">
+   <property name="title">
+    <string>Выбор изделия</string>
+   </property>
+   <property name="subTitle">
+    <string>Введите название</string>
+   </property>
+   <attribute name="pageId">
+    <string notr="true">3</string>
+   </attribute>
+   <layout class="QFormLayout" name="formLayout_3">
+    <item row="0" column="0">
+     <widget class="QLabel" name="label_product_search">
+      <property name="text">
+       <string>Поиск:</string>
+      </property>
+     </widget>
+    </item>
+    <item row="0" column="1">
+     <widget class="QLineEdit" name="lineEdit_product_search">
+      <property name="placeholderText">
+       <string>Поиск изделия...</string>
+      </property>
+     </widget>
+    </item>
+    <item row="1" column="0" colspan="2">
+     <widget class="QListWidget" name="listWidget_product_search"/>
+    </item>
+   </layout>
+  </widget>
+  <widget class="QWizardPage" name="wizardPage_product_component_selection">
+   <property name="title">
+    <string>Выбор компонентов изделия</string>
+   </property>
+   <property name="subTitle">
+    <string>Отметьте компоненты для задачи</string>
+   </property>
+   <attribute name="pageId">
+    <string notr="true">4</string>
+   </attribute>
+   <layout class="QHBoxLayout" name="horizontalLayout_2">
+    <item>
+     <widget class="QListWidget" name="listWidget_product_component"/>
+    </item>
+   </layout>
+  </widget>
+  <widget class="QWizardPage" name="wizardPage_task_detail">
+   <property name="title">
+    <string>Детали задачи</string>
+   </property>
+   <property name="subTitle">
+    <string>Укажите срок и описание</string>
+   </property>
+   <attribute name="pageId">
+    <string notr="true">5</string>
+   </attribute>
+   <layout class="QFormLayout" name="formLayout_4">
+    <item row="0" column="0">
+     <widget class="QLabel" name="label_date">
+      <property name="text">
+       <string>Дата срока исполнения</string>
+      </property>
+     </widget>
+    </item>
+    <item row="0" column="1">
+     <widget class="QDateEdit" name="dateEdit_date"/>
+    </item>
+    <item row="1" column="0">
+     <widget class="QLabel" name="label_description">
+      <property name="text">
+       <string>Описание задачи</string>
+      </property>
+     </widget>
+    </item>
+    <item row="1" column="1">
+     <widget class="QTextEdit" name="textEdit_desctiption"/>
+    </item>
+   </layout>
+  </widget>
+ </widget>
+ <resources/>
+ <connections/>
+</ui>

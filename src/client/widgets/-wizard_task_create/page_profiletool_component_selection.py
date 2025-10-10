@@ -1,6 +1,6 @@
 from PySide6.QtCore import Qt
-from PySide6.QtWidgets import (QWizardPage, QVBoxLayout,  QListWidget, QListWidgetItem,
-                               QCheckBox, QWidget, QComboBox, QHBoxLayout, QLabel)
+from PySide6.QtWidgets import (QMessageBox, QWizardPage, QVBoxLayout,  QListWidget, QListWidgetItem,
+                               QCheckBox, QWidget, QHBoxLayout, QLabel)
 from ...api_manager import api_manager
 
 
@@ -8,7 +8,6 @@ class PageProfileToolComponentSelection(QWizardPage):
     def __init__(self, wizard):
         super().__init__()
         self.wizard = wizard
-
         self.component_to_widget = {}  # component[id]:widget
         self.list_widget = []  # Список виджетов компонентов
 
@@ -37,52 +36,84 @@ class PageProfileToolComponentSelection(QWizardPage):
             self.listWidget_component.setItemWidget(item, checkbox)
 
     def on_component_toggled(self, checked, component, checkbox):
-        widget = WidgetGrid(component)
-        self.list_widget.append(widget)
-        self.component_to_widget[component['id']] = widget
-        if self.field("type_id") == 1 and checked:
-            # Добавляем виджет в контейнер
+        if checked:
+            widget = WidgetComponent(component)
+            self.list_widget.append(widget)
+            self.component_to_widget[component['id']] = widget
             self.container_component.layout().addWidget(widget)
+        else:
+            widget = self.component_to_widget.pop(component['id'], None)
+            if widget:
+                self.container_component.layout().removeWidget(widget)
+                widget.deleteLater()
+                if widget in self.list_widget:
+                    self.list_widget.remove(widget)
+
+        """Сортирует виджеты по type_id через перестановку в layout"""
+        layout = self.container_component.layout()
+        dict_widget = []
+
+        # Собираем все виджеты
+        for i in range(layout.count()):
+            widget = layout.itemAt(i).widget()
+            if widget:
+                type_id = widget.component.get("type_id")
+                dict_widget.append((type_id, widget))
+
+        dict_widget.sort(key=lambda type_id: type_id[0])
+
+        # Переставляем: удаляем все — добавляем заново
+        for _, widget in dict_widget:
+            layout.removeWidget(widget)
+            layout.addWidget(widget)
 
     def clear_container(self):
         """Очищает контейнер"""
         for child in self.container_component.findChildren(QWidget):
             child.deleteLater()
 
-    def validatePage(self):
-        self.wizard.list_selected_profiletool_component.clear()
+    def nextId(self):
+        return self.wizard.PAGE_TASK_DETAILS
+
+    def get_dict_selected_component(self):
+        """Собирает все выбранные компоненты с выбранными этапами и станками"""
+        dict_selected_component = []
         for i in range(self.listWidget_component.count()):
             item = self.listWidget_component.item(i)
             checkbox = self.listWidget_component.itemWidget(item)
             if isinstance(checkbox, QCheckBox) and checkbox.isChecked():
-                component = checkbox.property("component")
-                comp_id = component['id']
+                component = checkbox.property("component").copy()
                 list_selected_stage = []
-                widget = self.component_to_widget.get(comp_id)
+                widget = self.component_to_widget.get(component["id"])
                 if widget:
                     layout = widget.layout()
                     for j in range(1, layout.count()):  # пропускаем заголовок
                         sublayout = layout.itemAt(j)
-                        checkBox_work_subtype = sublayout.layout().itemAt(0).widget()  # чекбокс
-                        comboBox_machine = sublayout.layout().itemAt(1).widget()  # комбобокс
-                        if checkBox_work_subtype.isChecked():
-                            stage = checkBox_work_subtype.property("stage")
-                            machine = comboBox_machine.currentData() if comboBox_machine.isEnabled() else None
-                            list_selected_stage.append({ "stage": stage, "machine": machine })
+                        if not sublayout or not sublayout.layout():
+                            continue
+                        cb_widget = sublayout.layout().itemAt(0).widget()
+                        if isinstance(cb_widget, QCheckBox) and cb_widget.isChecked():
+                            stage = cb_widget.property("stage")
+                            # Пока без machine — если нет комбобокса
+                            list_selected_stage.append({"stage": stage})
+                component["list_selected_stage"] = list_selected_stage
+                dict_selected_component.append(component)
+        return dict_selected_component
 
-                    component['list_selected_stage'] = list_selected_stage
-                    self.wizard.list_selected_profiletool_component.append(component)
+    
+    def validatePage(self):
+        """Проверяет и сохраняет выбранные компоненты в поле wizard'а"""
+        self.wizard.dict_selected_profiletool_component = self.get_dict_selected_component()
+        if not self.wizard.dict_selected_profiletool_component:
+            QMessageBox.warning(self, "Внимание", "Выберите хотя бы один компонент")
+            return False
+        return True
 
-        return len(self.wizard.list_selected_profiletool_component)
-
-    def nextId(self):
-        return self.wizard.PAGE_TASK_DETAILS
-
-class WidgetGrid(QWidget):
+class WidgetComponent(QWidget):
     def __init__(self, component, parent=None):
         super().__init__(parent)
-
         self.setLayout(QVBoxLayout())
+        self.component = component
         title = QLabel(f"{component['type']['name']}")
         self.layout().addWidget(title)
         # Загружаем этапы
@@ -93,27 +124,6 @@ class WidgetGrid(QWidget):
             checkBox_stage = QCheckBox(f"{stage['stage_num']}. {stage['work_subtype']['name']}")
             checkBox_stage.setProperty("stage", stage)
             layout.addWidget(checkBox_stage)
-            # ComboBox со станками
-            comboBox_machine = QComboBox()
-            # comboBox_machine.setProperty("stage", stage)
-            comboBox_machine.setEnabled(False)
-            list_machine = [
-                machine for machine in api_manager.directory['machine']
-                if machine['work_type_id'] == stage['work_subtype']['work_type_id']
-            ]
-            for machine in list_machine:
-                comboBox_machine.addItem(f"{machine['name']}", machine)
-
-            if list_machine:
-                comboBox_machine.setCurrentIndex(0)
-                comboBox_machine.setEnabled(True)
-            else:
-                comboBox_machine.setVisible(False)
-
-            layout.addWidget(comboBox_machine)
-            # Активация комбобокса при чеке
-            checkBox_stage.toggled.connect(lambda checked, c=comboBox_machine: c.setEnabled(checked))
-            # Добавляем строку в основной layout
             self.layout().addLayout(layout)
 
     def load_stage(self, component):

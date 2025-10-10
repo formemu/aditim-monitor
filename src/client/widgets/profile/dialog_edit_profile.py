@@ -13,7 +13,7 @@ class DialogEditProfile(QDialog):
     def __init__(self, profile, parent):
         super().__init__(parent)
         self.profile = profile
-        self.sketch_data = None
+        self.sketch_data = profile['sketch']
 
         self.load_ui()
         self.setup_ui()

@@ -42,6 +42,7 @@ PATHS = {
 UI_PATHS = {
     "MAIN_WINDOW": "ui/main_window.ui",
     "HOME_PAGE": "ui/home_page.ui", 
+    "WIZARD_TASK_CREATE": "ui/wizard_task_create.ui",
     "PROFILE_CONTENT": "ui/window_profile.ui",
     "PRODUCT_CONTENT": "ui/window_product.ui",
     "TASK_CONTENT": "ui/window_task.ui",

@@ -1,4 +1,5 @@
 """Содержимое изделий для ADITIM Monitor Client с вкладками и компонентами"""
+from ast import Pass
 from PySide6.QtWidgets import QWidget, QMessageBox, QTableWidgetItem,  QTableWidgetItem, QDialog
 from PySide6.QtCore import QFile, Qt
 from PySide6.QtUiTools import QUiLoader
@@ -245,6 +246,8 @@ class WindowProduct(QWidget):
 
     def on_profiletool_edit_clicked(self):
         """Редактирование инструмента профиля"""
+        QMessageBox.warning(self, "Внимание", "Функция будет реализована позже")
+        return
         if self.profiletool:
             dialog = DialogEditProfileTool(self.profiletool, self)
             if dialog.exec() == QDialog.Accepted:

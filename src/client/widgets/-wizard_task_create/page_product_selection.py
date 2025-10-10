@@ -26,7 +26,7 @@ class PageProductSelection(QWizardPage):
         self.results_list.clear()
         if not text.strip():
             return
-        results = api_manager.get_search_product(text)[:10]
+        results = api_manager.search_in('product', 'name', text)[:10]
         for product in results:
             item = QListWidgetItem(f"{product['name']} - {product['description']}")
             item.setData(Qt.UserRole, product)
