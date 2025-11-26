@@ -43,6 +43,7 @@ UI_PATHS = {
     "MAIN_WINDOW": "ui/main_window.ui",
     "HOME_PAGE": "ui/home_page.ui", 
     "WIZARD_TASK_CREATE": "ui/wizard_task_create.ui",
+    "WIDGET_TASK_CREATE_PROFILETOOL_COMPONENT": "ui/wizard_task_create_profiletool_component.ui",
     "PROFILE_CONTENT": "ui/window_profile.ui",
     "PRODUCT_CONTENT": "ui/window_product.ui",
     "TASK_CONTENT": "ui/window_task.ui",
@@ -72,6 +73,7 @@ ICON_PATHS = {
 STYLE_PATHS = {
     "MAIN": "resources/styles/main_template.qss",
     "DIALOGS": "resources/styles/dialogs_template.qss",
+    "WIZARDS": "resources/styles/wizards_template.qss",
     "HOME_PAGE": "resources/styles/home_page_template.qss"
 }
 

@@ -1,0 +1,9 @@
+
+/* Основные настройки */
+
+QWizard, QWizardPage, QDialog {
+    background-color: {{COLOR_PRIMARY_DARK}};
+    color: #d3cccce0;
+
+}
+
