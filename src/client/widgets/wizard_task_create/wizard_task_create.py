@@ -1,112 +1,168 @@
-from PySide6.QtCore import QDate
-from PySide6.QtWidgets import QWizard
-
+"""Мастер создания задачи"""
+from PySide6.QtWidgets import QWizard, QListWidgetItem, QWidget, QHBoxLayout, QVBoxLayout, QCheckBox, QLabel
+from PySide6.QtCore import QFile, Qt, QDate
+from PySide6.QtUiTools import QUiLoader
+from ...constant import UI_PATHS_ABS, get_style_path
 from ...api_manager import api_manager
-
-from .page_start import PageStart
-from .page_profile_selection import PageProfileSelection
-from .page_profiletool_selection import PageProfileToolSelection
-from .page_profiletool_component_selection import PageProfileToolComponentSelection
-from .page_product_component_selection import PageProductComponentSelection
-from .page_product_selection import PageProductSelection
-from .page_task_detail import PageTaskDetails
+from ...style_util import load_styles
+from .widget_task_creare_profiletool_component import WidgetTaskCreateProfiletoolComponent
 
 
 class WizardTaskCreate(QWizard):
-        # Константы для ID страниц
-    PAGE_START = 0
-    PAGE_PROFILE_SELECTION = 1
-    PAGE_PROFILETOOL_SELECTION = 2
-    PAGE_PROFILETOOL_COMPONENT_SELECTION = 3
-    PAGE_PRODUCT_SELECTION = 4
-    PAGE_PRODUCT_COMPONENT_SELECTION = 5
-    PAGE_TASK_DETAILS = 6
-
+    """Мастер создания задачи"""
     def __init__(self, parent=None):
         super().__init__(parent)
-        self.setWindowTitle("Создание задачи")
-        self.setWizardStyle(QWizard.ModernStyle)
-        self.setMinimumSize(400, 300)
+        # Состояние
+        self.task_data = {
+            "status_id": 1,
+            "location_id": 1,
+            "created": QDate.currentDate().toString("yyyy-MM-dd"),
+            "component": list()
+        }
+        self.load_ui()
+        self.setup_ui()
+        self.setWizardStyle(QWizard.WizardStyle.ClassicStyle)
+    
+    def load_ui(self):
+        """Загрузка UI из файла"""
+        ui_file = QFile(UI_PATHS_ABS["WIZARD_TASK_CREATE"])
+        ui_file.open(QFile.ReadOnly)
+        loader = QUiLoader()
+        self.ui = loader.load(ui_file)
+        ui_file.close()
 
-        # Общие данные
-        self.profile = None
-        self.profiletool = None
-        self.product = None
-        self.dict_selected_profiletool_component = []
-        self.dict_selected_product_component = []
+    def setup_ui(self):
+        """Настраивает логику визарда."""
+        self.setStyleSheet(load_styles(get_style_path("WIZARDS")))
+        self.addPage(self.ui.wizardPage_start)
+        self.addPage(self.ui.wizardPage_profiletool_selection)
+        self.addPage(self.ui.wizardPage_profiletool_component_selection)
+        self.addPage(self.ui.wizardPage_product_selection)
+        self.addPage(self.ui.wizardPage_product_component_selection)
+        self.addPage(self.ui.wizardPage_task_detail)
+        self.currentIdChanged.connect(self.on_id_changed)
+        self.setStartId(0)
+        
+        # Сигналы поиска
+        self.ui.lineEdit_profile_search.textChanged.connect(self.on_search_profile)
+        self.ui.lineEdit_profile_search.returnPressed.connect(self.on_profile_selected)
+
+        # Выбор из результатов
+        self.ui.listWidget_profile_search.itemSelectionChanged.connect(self.on_profile_selected)
+        self.ui.listWidget_profile_search.itemClicked.connect(lambda _: self.on_profile_selected())
+        self.ui.comboBox_dimension.currentIndexChanged.connect(self.on_dimension_selected)
+
+        self.load_comboBox_task_type()
+
+    def on_id_changed(self, pid: int):
+        if pid == 0:
+            self.task_data["type_id"] = self.ui.comboBox_work_type.currentData()
+        elif pid == 2:
+            self.load_profiletool_component()
+        elif pid == 5:
+            self.create_list_profiletool_component_selected()
+
+    def nextId(self):
+        """Переопределяем маршрут переходов между страницами."""
+        if self.currentId() == 0:
+            if self.ui.comboBox_product_type.currentIndex() == 0:
+                return 1
+            else:
+                return 3
+        elif self.currentId() == 1:
+            return 2
+        elif self.currentId() == 2:
+            return 5
+        elif self.currentId() == 3:
+            return 4
+        elif self.currentId() == 4:
+            return 5
+        elif self.currentId() == 5:
+            return -1
 
 
+    def load_comboBox_task_type(self):
+        """запонляет выбор типа работ"""
+        for type in api_manager.directory['task_type']:
+            self.ui.comboBox_work_type.addItem(type['name'], type['id'])
 
-        # Добавляем страницы — ID присваиваются по порядку: 0, 1, 2...
-        self.addPage(PageStart(self))                           # → ID = 0
-        self.addPage(PageProfileSelection(self))                # → ID = 1
-        self.addPage(PageProfileToolSelection(self))            # → ID = 2
-        self.addPage(PageProfileToolComponentSelection(self))   # → ID = 3
-        self.addPage(PageProductSelection(self))                # → ID = 4
-        self.addPage(PageProductComponentSelection(self))       # → ID = 5
-        self.addPage(PageTaskDetails(self))                     # → ID = 6
+    def on_search_profile(self, text: str):
+        """поиск профиля по артиклу"""
+        self.ui.listWidget_profile_search.clear()
+        for profile in api_manager.search_in('profile', 'article', text)[:10]:
+            item = QListWidgetItem(f"{profile['article']}")
+            item.setData(Qt.UserRole, profile)
+            self.ui.listWidget_profile_search.addItem(item)
 
+    def on_profile_selected(self):
+        item = self.ui.listWidget_profile_search.currentItem()
+        self.task_data["profile"] = item.data(Qt.UserRole)
+        self.ui.lineEdit_profile_search.setText(f"{self.task_data['profile']['article']}")
+        self.ui.comboBox_dimension.clear()
+        for profiletool in self.task_data["profile"]['profiletool']:
+            name = profiletool['dimension']['name']
+            self.ui.comboBox_dimension.addItem(name, profiletool)
+    
+    def on_dimension_selected(self):
+        self.task_data["profiletool"] = self.ui.comboBox_dimension.currentData()
+
+    # --- Страница выбора компонентов инструментов и работ ---
+    def load_profiletool_component(self):
+        self.ui.listWidget_profiletool_component.clear()    
+        for child in self.ui.widget_profiletool_component_container.findChildren(QWidget):
+            child.deleteLater()
+        for component in self.task_data["profiletool"]['component']:
+            component.setdefault('stage', [])
+            item = QListWidgetItem(f"{component['type']['name']}")
+            item.setData(Qt.UserRole, component)
+            self.ui.listWidget_profiletool_component.addItem(item)
+            checkbox = QCheckBox(f"{component['type']['name']}")
+            checkbox.setProperty("component_id", component['id'])
+            checkbox.toggled.connect(lambda checked, comp=component, checkBox=checkbox: 
+                                     self.activate_profiletool_component(checked, comp))
+            self.ui.listWidget_profiletool_component.setItemWidget(item, checkbox)
+
+    def activate_profiletool_component(self, checked, component):
+        layout = self.ui.widget_profiletool_component_container.layout()
+        if checked:
+            widget_component = WidgetTaskCreateProfiletoolComponent(component)
+            layout.addWidget(widget_component)
+        else:
+            layout.removeWidget(widget_component)
+            widget_component.deleteLater()
+
+
+    def create_list_profiletool_component_selected(self):
+        for i in range(self.ui.listWidget_profiletool_component.count()):
+            item = self.ui.listWidget_profiletool_component.item(i)
+            checkBox = self.ui.listWidget_profiletool_component.itemWidget(item)
+            if checkBox.isChecked():
+                component_id = checkBox.property("component_id")
+                component = None
+                for comp in self.task_data["profiletool"]['component']:
+                    if comp.get('id') == component_id:
+                        component = comp
+                        break
+                self.task_data["component"].append(component)
+
+    # --- Создание задач ---
     def accept(self):
-        """Вызывается при нажатии Finish"""
-        if self.profiletool:
+        if self.task_data["profiletool"]:
             self.create_profiletool_task()
-        elif self.product:
+        elif self.task_data["product"]:
             self.create_product_task()
         super().accept()
 
     def create_profiletool_task(self):
-        deadline = self.field("deadline").toString("yyyy-MM-dd")
-        description = self.field("description")
-        type_id = self.field("type_id")
-
-        task_data = {
-            "profiletool_id": self.profiletool['id'],
-            "deadline": deadline,
-            "created": QDate.currentDate().toString("yyyy-MM-dd"),
-            "description": description,
-            "status_id": 1,
-            "type_id": type_id,
-            "location_id": 1
-        }
-        task = api_manager.api_task.create_task(task_data)
-        task_id = task['id']
-        for component in self.dict_selected_profiletool_component:
-            # 1. Создаём компонент задачи
-            component_data = {"profiletool_component_id": component['id'], "description": ""}
-            task_component = api_manager.api_task.create_task_component(task_id, component_data)
+        task = api_manager.api_task.create_task(self.task_data)
+        for component in self.task_data["component"]:
+            component_data = {"profiletool_component_id": component['id']}
+            task_component = api_manager.api_task.create_task_component(task['id'], component_data)
             task_component_id = task_component['id']
-
-            # 2. Создаём этапы (если есть)
-            list_selected_stage = component['list_selected_stage']
-            for selected_stage in list_selected_stage:
+            for selected_stage in component['stage']:
                 stage = {
-                    "work_subtype_id": selected_stage['stage']['work_subtype']['id'],
-                    # "machine_id": selected_stage['machine']['id'] if selected_stage['machine'] else None,
-                    "stage_num": selected_stage['stage']['stage_num']
+                    "work_subtype_id": selected_stage['work_subtype']['id'],
+                    "stage_num": selected_stage['stage_num']
                 }
-                try:
-                    api_manager.api_task.create_task_component_stage(task_component_id, stage)
-                except Exception as e:
-                    print(f"Ошибка при создании этапа: {e}")
-
-    def create_product_task(self):
-        deadline = self.field("deadline").toString("yyyy-MM-dd")
-        description = self.field("description")
-        type_id = self.field("type_id")
-        task_data = {
-            "product_id": self.product['id'],
-            "deadline": deadline,
-            "created": QDate.currentDate().toString("yyyy-MM-dd"),
-            "description": description,
-            "status_id": 1,
-            "type_id": type_id,
-            "location_id": 1
-        }
-        task = api_manager.api_task.create_task(task_data)
-        task_id = task['id']
-        for component in self.dict_selected_product_component:
-            component_data = {"product_component_id": component['id'], "description": ""}
-            api_manager.api_task.create_task_component(task_id, component_data)
-
-    
-
+                api_manager.api_task.create_task_component_stage(task_component_id, stage)
+ 
