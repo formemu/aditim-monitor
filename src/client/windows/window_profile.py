@@ -1,6 +1,6 @@
 """Содержимое профилей для ADITIM Monitor Client"""
 import base64
-from PySide6.QtWidgets import QWidget, QMessageBox, QTableWidgetItem, QAbstractItemView, QHeaderView
+from PySide6.QtWidgets import QWidget, QMessageBox, QTableWidgetItem
 from PySide6.QtCore import QFile, Qt
 from PySide6.QtUiTools import QUiLoader
 from PySide6.QtGui import QPixmap
@@ -81,7 +81,7 @@ class WindowProfile(QWidget):
         """Обновление панели профиля"""
         self.ui.label_profile_article.setText(f"Артикул: {self.profile['article']}")
         self.ui.label_profile_description.setText(f"Описание: {self.profile['description']}")
-        sketch_data = self.profile.get("sketch")
+        sketch_data = self.profile["sketch"]
         self.load_and_show_sketch(sketch_data)
 
     def clear_info_panel(self):

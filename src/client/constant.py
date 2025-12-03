@@ -45,6 +45,7 @@ UI_PATHS = {
     "WIZARD_TASK_CREATE": "ui/wizard_task_create.ui",
     "WIDGET_TASK_CREATE_PROFILETOOL_COMPONENT": "ui/wizard_task_create_profiletool_component.ui",
     "PROFILE_CONTENT": "ui/window_profile.ui",
+    "DEVELOPMENT_CONTENT": "ui/window_development.ui",
     "PRODUCT_CONTENT": "ui/window_product.ui",
     "TASK_CONTENT": "ui/window_task.ui",
     "MACHINE_CONTENT": "ui/window_machine.ui",

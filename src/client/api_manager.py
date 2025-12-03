@@ -46,6 +46,7 @@ class ApiManager(QObject):
             ("profiletool", "table", self.api_profiletool.get_profiletool),
             ("product", "table", self.api_product.get_product),
             ("task", "table", self.api_task.get_task),
+            ("taskdev", "table", self.api_task.get_taskdev),
             ("queue", "table", self.api_task.get_queue),
             
             

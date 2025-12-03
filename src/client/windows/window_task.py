@@ -33,6 +33,8 @@ class WindowTask(QWidget):
         """Настройка UI компонентов"""
         self.ui.setStyleSheet(load_styles(get_style_path("MAIN")))
         self.load_logo()
+        # По умолчанию скрыть группу этапов работ
+        self.ui.groupBox_component_stage.setVisible(False)
         # Настройка контекстного меню для таблицы задач
         self.ui.tableWidget_task.setContextMenuPolicy(Qt.CustomContextMenu)
         self.ui.tableWidget_task.customContextMenuRequested.connect(self.show_context_menu)
@@ -150,7 +152,9 @@ class WindowTask(QWidget):
 
     def update_task_info_panel(self):
         """Обновление панели информации о задаче"""
+        self.ui.label_task_name.setText(self.task['type']['name'] + " - " + self.get_task_name(self.task))
         self.update_task_component_table()
+
 
     def update_queue_info_panel(self):
         """Обновление панели информации о задаче"""
@@ -233,6 +237,33 @@ class WindowTask(QWidget):
             item_finish = QTableWidgetItem(finish)
             self.ui.tableWidget_component_stage.setItem(row, 4, item_finish)
 
+    def update_component_history(self, list_component):
+        """Обновление истории компонентов задачи"""
+        for component in list_component:
+            if not isinstance(component, dict):
+                print(f"⚠️ Ошибка: component не словарь, а {type(component)}")
+                continue
+            
+            # Используем ID из profiletool_component, а не из task_component
+            profiletool_component_id = component.get('profiletool_component_id')
+            
+            if profiletool_component_id is None:
+                print(f"⚠️ Пропуск: component не содержит profiletool_component_id")
+                continue
+            
+            try:
+                api_manager.api_profiletool.create_profiletool_component_history(
+                    profiletool_component_id,  # ID из profiletool_component!
+                    {
+                        "date": QDate.currentDate().toString("yyyy-MM-dd"),
+                        "status_id": 1,
+                        "description": ""
+                    }
+                )
+            except Exception as e:
+                print(f"Ошибка при создании истории для компонента {profiletool_component_id}: {e}")
+
+
     def get_task_name(self, task):
         """Возвращает название задачи: артикул профиля или имя изделия"""
         if task['profiletool_id']:
@@ -261,7 +292,11 @@ class WindowTask(QWidget):
 
     def on_component_clicked(self):
         """Обработка выбора компонента"""
-        self.update_table_component_stage(self.ui.tableWidget_component.currentItem().data(Qt.UserRole))
+        if self.task['type']['name'] == 'Разработка':
+            self.ui.groupBox_component_stage.setVisible(False)
+        else:
+            self.ui.groupBox_component_stage.setVisible(True)
+            self.update_table_component_stage(self.ui.tableWidget_component.currentItem().data(Qt.UserRole))
 
     # =============================================================================
     # ОБРАБОТЧИКИ СОБЫТИЙ: УПРАВЛЕНИЕ
@@ -365,6 +400,8 @@ class WindowTask(QWidget):
                 task_ids.remove(task['id'])
         # 5. Сохраняем ВСЮ очередь
         api_manager.api_task.reorder_task_queue(task_ids)
+        if task['type']['name'] == 'Разработка' and task['status']['name'] == 'В работе':
+            self.update_component_history(task['component'])
 
     def change_task_location(self, location_id):
         api_manager.api_task.update_task_location(self.task['id'], location_id)

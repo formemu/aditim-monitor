@@ -6,7 +6,11 @@ class ApiTask(ApiClient):
     def get_task(self):
         """Получение всех задач"""
         return self._request("GET", "api/task")
-    
+
+    def get_taskdev(self):
+        """Получение всех задач разработки"""
+        return self._request("GET", "api/taskdev")
+
     def get_queue(self):
         """Получить текущую очередь (в статусе 'в работе', с position)"""
         return self._request("GET", "api/task/queue")

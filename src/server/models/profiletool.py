@@ -1,5 +1,5 @@
 """Модели для инструментов профилей"""
-from sqlalchemy import Column, Integer, Text, ForeignKey
+from sqlalchemy import Column, Integer, Text, ForeignKey, Date
 from sqlalchemy.orm import relationship
 from ..database import Base
 
@@ -29,10 +29,23 @@ class ModelProfileToolComponent(Base):
     type_id = Column(Integer, ForeignKey("dir_profiletool_component_type.id"), nullable=False)
     variant = Column(Integer, nullable=True)
     description = Column(Text)
-    status_id = Column(Integer, ForeignKey("dir_profiletool_component_status.id"), nullable=False)
     
     # Связи
     profiletool = relationship("ModelProfileTool", back_populates="component")
     type = relationship("ModelDirProfileToolComponentType", back_populates="component")
-    status = relationship("ModelDirProfileToolComponentStatus", back_populates="component")
     task_component = relationship("ModelTaskComponent", back_populates="profiletool_component")
+    history = relationship("ModelProfileToolComponentHistory", back_populates="component")
+
+class ModelProfileToolComponentHistory(Base):
+    """История изменений компонента инструмента для профиля"""
+    __tablename__ = "profiletool_component_history"
+
+    id = Column(Integer, primary_key=True, index=True)
+    profiletool_component_id = Column(Integer, ForeignKey("profiletool_component.id", ondelete="CASCADE"), nullable=False)
+    date = Column(Date, nullable=True)
+    status_id = Column(Integer, ForeignKey("dir_profiletool_component_status.id"), nullable=True, default=1)
+    description = Column(Text, nullable=True)
+
+    # Связи
+    component = relationship("ModelProfileToolComponent", back_populates="history")
+    status = relationship("ModelDirProfileToolComponentStatus", back_populates="history")

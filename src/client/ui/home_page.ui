@@ -92,109 +92,110 @@
       </spacer>
      </item>
      <item>
-      <layout class="QVBoxLayout" name="verticalLayout_buttons">
-       <item>
-        <widget class="QPushButton" name="pushButton_profiles_open">
+      <layout class="QGridLayout" name="gridLayout">
+       <item row="2" column="0" colspan="2">
+        <widget class="QPushButton" name="pushButton_development">
          <property name="minimumSize">
           <size>
-           <width>360</width>
-           <height>96</height>
+           <width>0</width>
+           <height>50</height>
           </size>
          </property>
          <property name="text">
-          <string>ПРОФИЛИ</string>
+          <string>Разработка</string>
          </property>
         </widget>
        </item>
-       <item>
-        <layout class="QHBoxLayout" name="horizontalLayout_secondary">
-         <item>
-          <widget class="QPushButton" name="pushButton_products_open">
-           <property name="minimumSize">
-            <size>
-             <width>168</width>
-             <height>60</height>
-            </size>
-           </property>
-           <property name="text">
-            <string>Изделия</string>
-           </property>
-          </widget>
-         </item>
-         <item>
-          <widget class="QPushButton" name="pushButton_blanks_open">
-           <property name="minimumSize">
-            <size>
-             <width>168</width>
-             <height>60</height>
-            </size>
-           </property>
-           <property name="text">
-            <string>Заготовки</string>
-           </property>
-          </widget>
-         </item>
-        </layout>
+       <item row="5" column="0" colspan="2">
+        <widget class="QPushButton" name="pushButton_task">
+         <property name="minimumSize">
+          <size>
+           <width>168</width>
+           <height>50</height>
+          </size>
+         </property>
+         <property name="text">
+          <string>Задачи</string>
+         </property>
+        </widget>
        </item>
-       <item>
-        <layout class="QHBoxLayout" name="horizontalLayout_third">
-         <item>
-          <widget class="QPushButton" name="pushButton_tasks_open">
-           <property name="minimumSize">
-            <size>
-             <width>168</width>
-             <height>60</height>
-            </size>
-           </property>
-           <property name="text">
-            <string>Задачи</string>
-           </property>
-          </widget>
-         </item>
-         <item>
-          <widget class="QPushButton" name="pushButton_machines_open">
-           <property name="minimumSize">
-            <size>
-             <width>168</width>
-             <height>60</height>
-            </size>
-           </property>
-           <property name="text">
-            <string>Станки</string>
-           </property>
-          </widget>
-         </item>
-        </layout>
+       <item row="0" column="0" colspan="2">
+        <widget class="QPushButton" name="pushButton_profile">
+         <property name="minimumSize">
+          <size>
+           <width>360</width>
+           <height>50</height>
+          </size>
+         </property>
+         <property name="text">
+          <string>Профили</string>
+         </property>
+        </widget>
        </item>
-       <item>
-        <layout class="QHBoxLayout" name="horizontalLayout_additional">
-         <item>
-          <widget class="QPushButton" name="pushButton_settings_open">
-           <property name="minimumSize">
-            <size>
-             <width>168</width>
-             <height>48</height>
-            </size>
-           </property>
-           <property name="text">
-            <string>Настройки</string>
-           </property>
-          </widget>
-         </item>
-         <item>
-          <widget class="QPushButton" name="pushButton_reports_open">
-           <property name="minimumSize">
-            <size>
-             <width>168</width>
-             <height>48</height>
-            </size>
-           </property>
-           <property name="text">
-            <string>Отчеты</string>
-           </property>
-          </widget>
-         </item>
-        </layout>
+       <item row="8" column="1">
+        <widget class="QPushButton" name="pushButton_report">
+         <property name="minimumSize">
+          <size>
+           <width>168</width>
+           <height>0</height>
+          </size>
+         </property>
+         <property name="text">
+          <string>Отчеты</string>
+         </property>
+        </widget>
+       </item>
+       <item row="8" column="0">
+        <widget class="QPushButton" name="pushButton_setting">
+         <property name="minimumSize">
+          <size>
+           <width>168</width>
+           <height>0</height>
+          </size>
+         </property>
+         <property name="text">
+          <string>Настройки</string>
+         </property>
+        </widget>
+       </item>
+       <item row="4" column="0">
+        <widget class="QPushButton" name="pushButton_blank">
+         <property name="minimumSize">
+          <size>
+           <width>168</width>
+           <height>50</height>
+          </size>
+         </property>
+         <property name="text">
+          <string>Заготовки</string>
+         </property>
+        </widget>
+       </item>
+       <item row="4" column="1">
+        <widget class="QPushButton" name="pushButton_product">
+         <property name="minimumSize">
+          <size>
+           <width>168</width>
+           <height>50</height>
+          </size>
+         </property>
+         <property name="text">
+          <string>Изделия</string>
+         </property>
+        </widget>
+       </item>
+       <item row="6" column="0" colspan="2">
+        <widget class="QPushButton" name="pushButton_machine">
+         <property name="minimumSize">
+          <size>
+           <width>168</width>
+           <height>50</height>
+          </size>
+         </property>
+         <property name="text">
+          <string>Станки</string>
+         </property>
+        </widget>
        </item>
       </layout>
      </item>

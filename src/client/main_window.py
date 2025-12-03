@@ -7,9 +7,11 @@ from .constant import UI_PATHS_ABS as UI_PATHS, STYLE_PATHS_ABS as STYLE_PATHS
 from .style_util import load_styles
 from .widgets.home_page import HomePage
 from .windows.window_profile import WindowProfile
+from .windows.window_development import WindowDevelopment
 from .windows.window_product import WindowProduct
 from .windows.window_task import WindowTask
 from .windows.window_machine import WindowMachine
+
 
 
 class MainWindow(QMainWindow):
@@ -46,6 +48,7 @@ class MainWindow(QMainWindow):
         self.ui.stackedWidget_content.setCurrentWidget(self.home_page.ui)
         # Ленивая инициализация: окна создаются при первом вызове
         self.window_profile = None
+        self.window_development = None
         self.window_product = None
         self.window_task = None
         self.window_machine = None
@@ -58,22 +61,24 @@ class MainWindow(QMainWindow):
 
         # Подключаем действия меню навигации
         self.ui.action_home.triggered.connect(self.show_home)
-        self.ui.action_profiles.triggered.connect(self.show_profiles)
-        self.ui.action_products.triggered.connect(self.show_products)
-        self.ui.action_blanks.triggered.connect(self.show_blanks)
-        self.ui.action_tasks.triggered.connect(self.show_tasks)
-        self.ui.action_settings.triggered.connect(self.show_settings)
-        self.ui.action_reports.triggered.connect(self.show_reports)
-        self.ui.action_machines.triggered.connect(self.show_machines)
+        self.ui.action_profile.triggered.connect(self.show_profile)
+        self.ui.action_development.triggered.connect(self.show_development)
+        self.ui.action_product.triggered.connect(self.show_product)
+        self.ui.action_blank.triggered.connect(self.show_blank)
+        self.ui.action_task.triggered.connect(self.show_task)
+        self.ui.action_setting.triggered.connect(self.show_setting)
+        self.ui.action_report.triggered.connect(self.show_report)
+        self.ui.action_machine.triggered.connect(self.show_machine)
 
         # Подключаем сигналы домашней страницы
-        self.home_page.profiles_requested.connect(self.show_profiles)
-        self.home_page.products_requested.connect(self.show_products)
-        self.home_page.blanks_requested.connect(self.show_blanks)
-        self.home_page.tasks_requested.connect(self.show_tasks)
-        self.home_page.settings_requested.connect(self.show_settings)
-        self.home_page.reports_requested.connect(self.show_reports)
-        self.home_page.machines_requested.connect(self.show_machines)
+        self.home_page.profile_requested.connect(self.show_profile)
+        self.home_page.product_requested.connect(self.show_product)
+        self.home_page.development_requested.connect(self.show_development)
+        self.home_page.blank_requested.connect(self.show_blank)
+        self.home_page.task_requested.connect(self.show_task)
+        self.home_page.setting_requested.connect(self.show_setting)
+        self.home_page.report_requested.connect(self.show_report)
+        self.home_page.machine_requested.connect(self.show_machine)
 
     def ensure_window_created(self, attr_name, window_class):
         """Создаёт окно, если ещё не создано, и добавляет в стек"""
@@ -90,38 +95,45 @@ class MainWindow(QMainWindow):
         self.ui.stackedWidget_content.setCurrentWidget(self.home_page.ui)
         self.setWindowTitle("ADITIM Monitor")
 
-    def show_profiles(self):
+
+    def show_profile(self):
         """Показать профили"""
         window = self.ensure_window_created("window_profile", WindowProfile)
         self.ui.stackedWidget_content.setCurrentWidget(window.ui)
         self.setWindowTitle("ADITIM Monitor - Профили")
 
-    def show_products(self):
+    def show_development(self):
+        """Показать разработки"""
+        window = self.ensure_window_created("window_development", WindowDevelopment)
+        self.ui.stackedWidget_content.setCurrentWidget(window.ui)
+        self.setWindowTitle("ADITIM Monitor - Разработки")
+
+    def show_product(self):
         """Показать изделия"""
         window = self.ensure_window_created("window_product", WindowProduct)
         self.ui.stackedWidget_content.setCurrentWidget(window.ui)
         self.setWindowTitle("ADITIM Monitor - Изделия")
 
-    def show_tasks(self):
+    def show_task(self):
         """Показать задачи"""
         window = self.ensure_window_created("window_task", WindowTask)
         self.ui.stackedWidget_content.setCurrentWidget(window.ui)
         self.setWindowTitle("ADITIM Monitor - Задачи")
 
-    def show_machines(self):
+    def show_machine(self):
         """Показать станки"""
         window = self.ensure_window_created("window_machine", WindowMachine)
         self.ui.stackedWidget_content.setCurrentWidget(window.ui)
         self.setWindowTitle("ADITIM Monitor - Станки")
 
-    def show_blanks(self):
+    def show_blank(self):
         """Показать заготовки"""
         QMessageBox.information(self, "Заготовки", "Окно заготовок (в разработке)")
 
-    def show_settings(self):
+    def show_setting(self):
         """Показать настройки"""
         QMessageBox.information(self, "Настройки", "Настройки (в разработке)")
 
-    def show_reports(self):
+    def show_report(self):
         """Показать отчеты"""
         QMessageBox.information(self, "Отчеты", "Отчеты (в разработке)")

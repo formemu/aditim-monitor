@@ -16,13 +16,14 @@ class HomePage(QWidget):
     """Домашняя страница с навигационными кнопками"""
     
     # Сигналы для навигации
-    profiles_requested = Signal()
-    products_requested = Signal()
-    blanks_requested = Signal()
-    tasks_requested = Signal()
-    settings_requested = Signal()
-    reports_requested = Signal()
-    machines_requested = Signal()
+    profile_requested = Signal()
+    development_requested = Signal()
+    product_requested = Signal()
+    blank_requested = Signal()
+    task_requested = Signal()
+    setting_requested = Signal()
+    report_requested = Signal()
+    machine_requested = Signal()
 
     def __init__(self):
         super().__init__()
@@ -47,13 +48,14 @@ class HomePage(QWidget):
         self.apply_home_page_styles()
         
         # Подключение кнопок
-        self.ui.pushButton_profiles_open.clicked.connect(self.profiles_requested.emit)
-        self.ui.pushButton_products_open.clicked.connect(self.products_requested.emit)
-        self.ui.pushButton_blanks_open.clicked.connect(self.blanks_requested.emit)
-        self.ui.pushButton_tasks_open.clicked.connect(self.tasks_requested.emit)
-        self.ui.pushButton_settings_open.clicked.connect(self.settings_requested.emit)
-        self.ui.pushButton_reports_open.clicked.connect(self.reports_requested.emit)
-        self.ui.pushButton_machines_open.clicked.connect(self.machines_requested.emit)
+        self.ui.pushButton_profile.clicked.connect(self.profile_requested.emit)
+        self.ui.pushButton_product.clicked.connect(self.product_requested.emit)
+        self.ui.pushButton_blank.clicked.connect(self.blank_requested.emit)
+        self.ui.pushButton_task.clicked.connect(self.task_requested.emit)
+        self.ui.pushButton_setting.clicked.connect(self.setting_requested.emit)
+        self.ui.pushButton_report.clicked.connect(self.report_requested.emit)
+        self.ui.pushButton_machine.clicked.connect(self.machine_requested.emit)
+        self.ui.pushButton_development.clicked.connect(self.development_requested.emit)
 
     def apply_home_page_styles(self):
         """Применяет стили к главной странице"""

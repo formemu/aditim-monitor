@@ -33,7 +33,7 @@
     <item>
      <widget class="QStackedWidget" name="stackedWidget_content">
       <property name="currentIndex">
-       <number>0</number>
+       <number>1</number>
       </property>
       <widget class="QWidget" name="page_home">
        <layout class="QVBoxLayout" name="verticalLayout_home"/>
@@ -59,15 +59,16 @@
      <string>Навигация</string>
     </property>
     <addaction name="action_home"/>
-    <addaction name="action_profiles"/>
+    <addaction name="action_profile"/>
+    <addaction name="action_development"/>
     <addaction name="separator"/>
-    <addaction name="action_products"/>
-    <addaction name="action_blanks"/>
-    <addaction name="action_tasks"/>
-    <addaction name="action_machines"/>
+    <addaction name="action_product"/>
+    <addaction name="action_blank"/>
+    <addaction name="action_task"/>
+    <addaction name="action_machine"/>
     <addaction name="separator"/>
-    <addaction name="action_settings"/>
-    <addaction name="action_reports"/>
+    <addaction name="action_setting"/>
+    <addaction name="action_report"/>
    </widget>
    <addaction name="menu_navigation"/>
   </widget>
@@ -77,39 +78,47 @@
     <string>🏠 Главная</string>
    </property>
   </action>
-  <action name="action_profiles">
+  <action name="action_profile">
    <property name="text">
     <string>🏗️ Профили</string>
    </property>
   </action>
-  <action name="action_products">
+  <action name="action_product">
    <property name="text">
     <string>📦 Изделия</string>
    </property>
   </action>
-  <action name="action_blanks">
+  <action name="action_blank">
    <property name="text">
     <string>🔧 Заготовки</string>
    </property>
   </action>
-  <action name="action_tasks">
+  <action name="action_task">
    <property name="text">
     <string>📝 Задачи</string>
    </property>
   </action>
-  <action name="action_settings">
+  <action name="action_setting">
    <property name="text">
     <string>⚙️ Настройки</string>
    </property>
   </action>
-  <action name="action_reports">
+  <action name="action_report">
    <property name="text">
     <string>📊 Отчеты</string>
    </property>
   </action>
-  <action name="action_machines">
+  <action name="action_machine">
    <property name="text">
     <string>🏗️ Станки</string>
+   </property>
+  </action>
+  <action name="action_development">
+   <property name="text">
+    <string>📝 Разработка</string>
+   </property>
+   <property name="toolTip">
+    <string>📝 Разработка</string>
    </property>
   </action>
  </widget>

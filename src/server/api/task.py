@@ -5,7 +5,7 @@ from fastapi import APIRouter, Depends, HTTPException, Query, Path, Body
 from sqlalchemy.orm import Session , selectinload
 from ..database import get_db
 from ..models.task import ModelTask, ModelTaskComponent, ModelTaskComponentStage
-from ..models.directory import ModelDirTaskStatus
+from ..models.directory import ModelDirTaskStatus, ModelDirTaskType
 from ..schemas.task import (
     SchemaTaskCreate,
     SchemaTaskUpdate,
@@ -29,18 +29,23 @@ def get_task(db: Session = Depends(get_db)):
     tasks = query.order_by(ModelTask.id).all()
     return tasks
 
+@router.get("/taskdev", response_model=List[SchemaTaskResponse])
+def get_taskdev(db: Session = Depends(get_db)):
+    type_dev = db.query(ModelDirTaskType).filter(ModelDirTaskType.name == "Разработка").first()
+    task = db.query(ModelTask).filter(ModelTask.type_id == type_dev.id).order_by(ModelTask.position).all()
+    return task
+
 @router.get("/task/queue", response_model=List[SchemaTaskResponse])
 def get_queue(db: Session = Depends(get_db)):
     status_in_progress = db.query(ModelDirTaskStatus).filter(ModelDirTaskStatus.name == "В работе").first()
-    status_completed = db.query(ModelDirTaskStatus).filter(ModelDirTaskStatus.name == "Выполнена").first()
-    tasks = db.query(ModelTask).filter(ModelTask.status_id == status_in_progress.id, ModelTask.status_id != status_completed.id, ModelTask.position.isnot(None)).order_by(ModelTask.position).all()
-    return tasks
+    task = db.query(ModelTask).filter(ModelTask.status_id == status_in_progress.id, ModelTask.position.isnot(None)).order_by(ModelTask.position).all()
+    return task
 
 
 
 # @router.get("/task/{task_id}/component", response_model=List[SchemaTaskComponentResponse])
 # def get_task_component_list(task_id: int, db: Session = Depends(get_db)):
-#     """Получить компоненты задачи по ID задачи"""
+#     """Получить компоненты задачи по ID задачи"""``
 #     return db.query(ModelTaskComponent).filter(ModelTaskComponent.task_id == task_id).all()
 
 # =============================================================================

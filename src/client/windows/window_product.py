@@ -141,13 +141,10 @@ class WindowProduct(QWidget):
 
         for row, component in enumerate(self.profiletool['component']):
             name_item = QTableWidgetItem(component["type"]["name"])
-            status_item = QTableWidgetItem(component["status"]["name"])
             
             name_item.setData(Qt.UserRole, component["id"])
-            status_item.setData(Qt.UserRole, component["id"])
 
             self.ui.tableWidget_component.setItem(row, 0, name_item)
-            self.ui.tableWidget_component.setItem(row, 1, status_item)
 
     def update_product_component_table(self):
         """Обновление таблицы компонентов изделия"""

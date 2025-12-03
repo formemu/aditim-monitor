@@ -47,7 +47,7 @@ class ModelDirProfileToolComponentStatus(Base): # +
     name = Column(String(50), nullable=False, unique=True)
     description = Column(Text)
     # Relationships
-    component = relationship("ModelProfileToolComponent", back_populates="status")
+    history = relationship("ModelProfileToolComponentHistory", back_populates="status")
 
 class ModelDirMachine(Base): # +
     __tablename__= "dir_machine"

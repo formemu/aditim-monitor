@@ -9,7 +9,7 @@ from ..models.directory import ( ModelDirDepartment, ModelDirTaskStatus, ModelDi
                                  ModelDirWorkType, ModelDirWorkSubtype, ModelDirTaskType, ModelDirTaskLocation)
 
 from ..schemas.directory import ( SchemaDirDepartment, SchemaDirTaskStatus, SchemaDirProfiletoolComponentType,
-                                  SchemaDirComponentStatus, SchemaDirToolDimension, SchemaDirMachine,
+                                  SchemaDirComponentStatus, SchemaDirToolDimension,
                                   SchemaDirWorkType, WorkSubtype, SchemaDirTaskType, SchemaDirTaskLocation)
 
 router = APIRouter(prefix="/api/directory", tags=["directory"], redirect_slashes=False)

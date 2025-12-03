@@ -107,6 +107,12 @@
    </layout>
   </widget>
   <widget class="QWizardPage" name="wizardPage_profiletool_component_selection">
+   <property name="maximumSize">
+    <size>
+     <width>16777215</width>
+     <height>16777208</height>
+    </size>
+   </property>
    <property name="title">
     <string>Выбор компонентов</string>
    </property>
@@ -114,11 +120,11 @@
     <string>Отметьте компоненты, которые нужно изготовить. Отметьте виды работ.</string>
    </property>
    <attribute name="pageId">
-    <string notr="true">2</string>
+    <string notr="true">3</string>
    </attribute>
    <layout class="QHBoxLayout" name="horizontalLayout">
     <item>
-     <widget class="QListWidget" name="listWidget_profiletool_component">
+     <widget class="QListWidget" name="listWidget_profiletool_component_prod">
       <property name="maximumSize">
        <size>
         <width>100</width>
@@ -140,6 +146,38 @@
     </item>
    </layout>
   </widget>
+  <widget class="QWizardPage" name="wizardPage_profiletool_component_dev">
+   <property name="title">
+    <string>Разработка инструмент</string>
+   </property>
+   <property name="subTitle">
+    <string>Укажите элементы инструмента, которые нужно разработать</string>
+   </property>
+   <attribute name="pageId">
+    <string notr="true">2</string>
+   </attribute>
+   <layout class="QVBoxLayout" name="verticalLayout_2">
+    <item>
+     <widget class="QListWidget" name="listWidget_profiletool_component_dev"/>
+    </item>
+   </layout>
+  </widget>
+  <widget class="QWizardPage" name="wizardPage_profiletool_component_rev">
+   <property name="title">
+    <string>Изменение инструмента</string>
+   </property>
+   <property name="subTitle">
+    <string>Укажите какие элементы инсрумента нужно изменить</string>
+   </property>
+   <attribute name="pageId">
+    <string notr="true">4</string>
+   </attribute>
+   <layout class="QVBoxLayout" name="verticalLayout">
+    <item>
+     <widget class="QListWidget" name="listWidget_profiletool_component_rev"/>
+    </item>
+   </layout>
+  </widget>
   <widget class="QWizardPage" name="wizardPage_product_selection">
    <property name="title">
     <string>Выбор изделия</string>
@@ -148,7 +186,7 @@
     <string>Введите название</string>
    </property>
    <attribute name="pageId">
-    <string notr="true">3</string>
+    <string notr="true">5</string>
    </attribute>
    <layout class="QFormLayout" name="formLayout_3">
     <item row="0" column="0">
@@ -178,7 +216,7 @@
     <string>Отметьте компоненты для задачи</string>
    </property>
    <attribute name="pageId">
-    <string notr="true">4</string>
+    <string notr="true">6</string>
    </attribute>
    <layout class="QHBoxLayout" name="horizontalLayout_2">
     <item>
@@ -194,7 +232,7 @@
     <string>Укажите срок и описание</string>
    </property>
    <attribute name="pageId">
-    <string notr="true">5</string>
+    <string notr="true">7</string>
    </attribute>
    <layout class="QFormLayout" name="formLayout_4">
     <item row="0" column="0">

@@ -4,13 +4,15 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 
 from ..database import get_db
-from ..models.profiletool import ModelProfileTool , ModelProfileToolComponent
+from ..models.profiletool import ModelProfileTool , ModelProfileToolComponent, ModelProfileToolComponentHistory
 from ..schemas.profiletool import (
     SchemaProfileToolCreate,
     SchemaProfileToolResponse,
     SchemaProfileToolComponentCreate,
     SchemaProfileToolUpdate,
     SchemaProfileToolComponentResponse,
+    SchemaProfileToolComponentHistoryCreate,
+    SchemaProfileToolComponentHistoryResponse
 )
 from ..events import notify_clients
 
@@ -53,7 +55,6 @@ def create_profiletool(profiletool: SchemaProfileToolCreate, db: Session = Depen
         db.rollback()
         raise HTTPException(status_code=400, detail="Не удалось создать инструмент: " + str(e))
 
-
 @router.post("/profile-tool/{profiletool_id}/component", response_model=SchemaProfileToolComponentResponse)
 def create_profiletool_component(profiletool_id: int, component: SchemaProfileToolComponentCreate, db: Session = Depends(get_db)):
     """Создать новый компонент инструмента профиля"""
@@ -61,7 +62,6 @@ def create_profiletool_component(profiletool_id: int, component: SchemaProfileTo
         db_component = ModelProfileToolComponent(
             profiletool_id=profiletool_id,
             type_id=component.type_id,
-            status_id=component.status_id,
             variant=component.variant,
             description=component.description
         )
@@ -73,6 +73,25 @@ def create_profiletool_component(profiletool_id: int, component: SchemaProfileTo
     except Exception as e:
         db.rollback()
         raise HTTPException(status_code=400, detail="Не удалось создать компонент: " + str(e))
+
+@router.post("/profile-tool-component/{profiletool_component_id}/history", response_model=SchemaProfileToolComponentHistoryResponse)
+def create_profiletool_component_history(profiletool_component_id: int, history_data: SchemaProfileToolComponentHistoryCreate, db: Session = Depends(get_db)):
+    """Создание истории изменений компонента инструмента профиля"""
+    try:
+        db_history = ModelProfileToolComponentHistory(
+            profiletool_component_id=profiletool_component_id,
+            date=history_data.date,
+            status_id=history_data.status_id,
+            description=history_data.description
+        )
+        db.add(db_history)
+        db.commit()
+        db.refresh(db_history)
+        notify_clients("table", "profiletool_component_history", "created")
+        return db_history
+    except Exception as e:
+        db.rollback()
+        raise HTTPException(status_code=400, detail="Не удалось создать историю изменений: " + str(e))
 
 # =============================================================================
 # ROUTER.PATCH
