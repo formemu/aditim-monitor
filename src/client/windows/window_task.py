@@ -237,32 +237,18 @@ class WindowTask(QWidget):
             item_finish = QTableWidgetItem(finish)
             self.ui.tableWidget_component_stage.setItem(row, 4, item_finish)
 
-    def update_component_history(self, list_component):
+    def update_component_history(self, status, list_component):
         """Обновление истории компонентов задачи"""
         for component in list_component:
-            if not isinstance(component, dict):
-                print(f"⚠️ Ошибка: component не словарь, а {type(component)}")
-                continue
-            
-            # Используем ID из profiletool_component, а не из task_component
-            profiletool_component_id = component.get('profiletool_component_id')
-            
-            if profiletool_component_id is None:
-                print(f"⚠️ Пропуск: component не содержит profiletool_component_id")
-                continue
-            
-            try:
-                api_manager.api_profiletool.create_profiletool_component_history(
-                    profiletool_component_id,  # ID из profiletool_component!
-                    {
-                        "date": QDate.currentDate().toString("yyyy-MM-dd"),
-                        "status_id": 1,
-                        "description": ""
-                    }
-                )
-            except Exception as e:
-                print(f"Ошибка при создании истории для компонента {profiletool_component_id}: {e}")
-
+            profiletool_component_id = component['profiletool_component_id']
+            api_manager.api_profiletool.create_profiletool_component_history(
+                profiletool_component_id,  # ID из profiletool_component!
+                {
+                    "date": QDate.currentDate().toString("yyyy-MM-dd"),
+                    "status_id": status,
+                    "description": ""
+                }
+            )
 
     def get_task_name(self, task):
         """Возвращает название задачи: артикул профиля или имя изделия"""
@@ -401,7 +387,12 @@ class WindowTask(QWidget):
         # 5. Сохраняем ВСЮ очередь
         api_manager.api_task.reorder_task_queue(task_ids)
         if task['type']['name'] == 'Разработка' and task['status']['name'] == 'В работе':
-            self.update_component_history(task['component'])
+            status = 2 # В разработке
+            self.update_component_history(status, task['component'])
+        elif task['type']['name'] == 'Изготовление' and task['status']['name'] == 'В работе':
+            status = 4 # Изготовление
+            self.update_component_history(status, task['component'])
+        
 
     def change_task_location(self, location_id):
         api_manager.api_task.update_task_location(self.task['id'], location_id)

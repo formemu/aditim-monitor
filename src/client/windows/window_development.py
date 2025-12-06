@@ -13,7 +13,7 @@ class WindowDevelopment:
     def __init__(self):
         super().__init__()
         self.task = None
-        
+        self.component_id = None
         self.load_ui()
         self.table = self.ui.tableWidget_taskdev
         self.setup_ui()
@@ -37,7 +37,6 @@ class WindowDevelopment:
         self.table.itemClicked.connect(self.on_main_table_clicked)
         # Настройка контекстного меню для таблицы задач
         self.table.setContextMenuPolicy(Qt.CustomContextMenu)
-        self.table.customContextMenuRequested.connect(self.show_context_menu_main_table)
         self.table.setSelectionBehavior(QAbstractItemView.SelectRows)
         self.table.setSelectionMode(QAbstractItemView.SingleSelection)
         self.table.setFocusPolicy(Qt.NoFocus)
@@ -71,36 +70,10 @@ class WindowDevelopment:
     # =============================================================================
     def refresh_data(self):
         """Обновление данных в окне разработок"""
+        self.task = None
+        self.component_id = None
+        self.clear_info_panel()
         self.update_table_task_dev()
-
-    def update_task_info_panel(self):
-        """Обновление панели информации о задаче"""
-        if self.task:
-            self.ui.label_name.setText(self.get_task_name(self.task))
-            self.ui.label_description.setText(self.task['description'])
-            if self.task['profiletool']:
-                sketch_data = self.task['profiletool']['profile']["sketch"]
-                self.load_and_show_sketch(sketch_data)
-            else: self.ui.label_sketch.setText("Эскиз отсутствует")
-            self.update_task_component_table()
-            self.ui.tableWidget_component.setContextMenuPolicy(Qt.CustomContextMenu)
-            self.ui.tableWidget_component.customContextMenuRequested.connect(self.show_context_menu_component_table)
-
-    def update_task_component_table(self):
-        """Обновление таблицы компонентов задачи"""
-        self.ui.tableWidget_component.setRowCount(0)
-        self.ui.tableWidget_component.setColumnCount(1)
-        self.ui.tableWidget_component.setHorizontalHeaderLabels(["Название"])
-        self.ui.tableWidget_component.setRowCount(len(self.task['profiletool']['component']))
-        for row, component in enumerate(self.task['profiletool']['component']):
-            name_item = QTableWidgetItem(component["type"]["name"])
-
-            
-            name_item.setData(Qt.UserRole, component["id"])
-
-
-            self.ui.tableWidget_component.setItem(row, 0, name_item)
-
 
     def update_table_task_dev(self):
         """Обновление таблицы задач разработки"""
@@ -116,6 +89,47 @@ class WindowDevelopment:
 
             self.table.setItem(row, 0, item_name)
             self.table.setItem(row, 1, item_deadline)
+            self.table.setContextMenuPolicy(Qt.CustomContextMenu)
+            self.table.customContextMenuRequested.connect(self.show_context_menu_main_table)
+
+    def update_task_info_panel(self):
+        """Обновление панели информации о задаче"""
+        if self.task:
+            self.ui.label_name.setText(self.get_task_name(self.task))
+            self.ui.label_description.setText(self.task['description'])
+            if self.task['profiletool']:
+                sketch_data = self.task['profiletool']['profile']["sketch"]
+                self.load_and_show_sketch(sketch_data)
+            else: self.ui.label_sketch.setText("Эскиз отсутствует")
+            self.update_table_task_component()
+            self.ui.tableWidget_component.setContextMenuPolicy(Qt.CustomContextMenu)
+            self.ui.tableWidget_component.customContextMenuRequested.connect(self.show_context_menu_component_table)
+
+
+
+
+
+
+    def update_table_task_component(self):
+        """Обновление таблицы компонентов задачи"""
+        self.ui.tableWidget_component.setRowCount(0)
+        self.ui.tableWidget_component.setColumnCount(2)
+        self.ui.tableWidget_component.setHorizontalHeaderLabels(["Название", "Статус"])
+        self.ui.tableWidget_component.setRowCount(len(self.task['profiletool']['component']))
+        
+        for row, component in enumerate(self.task['profiletool']['component']):
+            # Название компонента
+            name_item = QTableWidgetItem(component["type"]["name"])
+            name_item.setData(Qt.UserRole, component["id"])
+            # Последний статус из истории
+            last_history = component['history'][-1]
+            status_name = last_history["status"]["name"]
+            status_item = QTableWidgetItem(status_name)
+            status_item.setData(Qt.UserRole, component["id"])
+            self.ui.tableWidget_component.setItem(row, 0, name_item)
+            self.ui.tableWidget_component.setItem(row, 1, status_item)  
+        
+        self.ui.tableWidget_component.itemClicked.connect(self.on_component_clicked)
 
     def get_task_name(self, task):
         """Возвращает название задачи: артикул профиля или имя изделия"""
@@ -126,6 +140,13 @@ class WindowDevelopment:
             product = api_manager.get_by_id('product', task['product_id'])
             return f"Изделие {product['name']}" if product else "Изделие N/A"
 
+    def clear_info_panel(self):
+        """Очистка панели информации о задаче"""
+        self.ui.label_name.clear()
+        self.ui.label_description.clear()
+        self.ui.label_sketch.clear()
+        self.ui.tableWidget_component.setRowCount(0)
+
     # =============================================================================
     # ОБРАБОТЧИКИ СОБЫТИЙ
     # =============================================================================
@@ -133,17 +154,22 @@ class WindowDevelopment:
         """Обработка клика по элементу таблицы"""
         self.task = api_manager.get_by_id('task', item.data(Qt.UserRole))
         self.update_task_info_panel()
-    
+
+    def on_component_clicked(self, item):
+        """Обработка клика по элементу таблицы компонентов"""
+        self.component_id = item.data(Qt.UserRole)
+
     def show_context_menu_main_table(self, pos):
         """Показать контекстное меню для изменения статуса задачи"""
         table = self.ui.tableWidget_taskdev
         menu = QMenu(table)
         status_menu = QMenu("Изменить статус", menu)
         for status in api_manager.directory['task_status']:
-            action = QAction(status['name'], status_menu)
-            action.setCheckable(True)
-            action.triggered.connect(lambda _, status_id=status['id']: self.change_task_status(status_id))
-            status_menu.addAction(action)
+            if status['name'] == "Выполнена":
+                action = QAction(status['name'], status_menu)
+                action.setCheckable(True)
+                action.triggered.connect(lambda _, status_id=status['id']: self.change_task_status(status_id))
+                status_menu.addAction(action)
         menu.addMenu(status_menu)
         menu.exec(table.viewport().mapToGlobal(pos))
 
@@ -153,13 +179,29 @@ class WindowDevelopment:
         menu = QMenu(table)
         status_menu = QMenu("Изменить статус", menu)
         for status in api_manager.directory['component_status']:
-            action = QAction(status['name'], status_menu)
-            action.setCheckable(True)
-            action.triggered.connect(lambda _, status_id=status['id']: self.change_component_status(status_id))
-            status_menu.addAction(action)
+            if status['name'] == 'Разработан':
+                action = QAction(status['name'], status_menu)
+                action.setCheckable(True)
+                action.triggered.connect(lambda _, status_id=status['id']: self.change_component_history(status_id))
+                status_menu.addAction(action)
         menu.addMenu(status_menu)
         menu.exec(table.viewport().mapToGlobal(pos))
+    
+    def change_component_history(self, status):
+        """Обновление истории компонентов задачи"""
+        
+        api_manager.api_profiletool.create_profiletool_component_history(
+            self.component_id,
+            {
+                "date": QDate.currentDate().toString("yyyy-MM-dd"),
+                "status_id": status,
+                "description": ""
+            }
+        )
 
+        self.update_table_task_component()
+
+    
     def change_task_status(self, status_id):
         # 1. Обновить статус
         task = api_manager.api_task.update_task_status(self.task['id'], status_id, QDate.currentDate().toString("yyyy-MM-dd"))
@@ -176,3 +218,9 @@ class WindowDevelopment:
                 task_ids.remove(task['id'])
         # 5. Сохраняем ВСЮ очередь
         api_manager.api_task.reorder_task_queue(task_ids)
+        if task['type']['name'] == 'Разработка' and task['status']['name'] == 'В работе':
+            status = 2 # Передан в разработку
+            self.change_component_history(status, task['component'])
+
+        self.update_table_task_dev()
+        self.update_table_task_component()

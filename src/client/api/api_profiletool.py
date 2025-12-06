@@ -25,6 +25,7 @@ class ApiProfileTool(ApiClient):
     def get_profiletool_component(self, profiletool_id):
         """Получение компонентов инструмента профиля"""
         return self._request("GET", f"/api/profile-tool/{profiletool_id}/component")
+        
 
     def create_profiletool_component(self, profiletool_id, component_data):
         """Создание компонента инструмента профиля"""
@@ -40,5 +41,4 @@ class ApiProfileTool(ApiClient):
 
     def create_profiletool_component_history(self, profiletool_component_id, history_data):
         """Создание истории изменений компонента инструмента профиля"""
-        print(history_data)
         return self._request("POST", f"/api/profile-tool-component/{profiletool_component_id}/history", json=history_data)

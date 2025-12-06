@@ -140,11 +140,20 @@ class WindowProduct(QWidget):
         self.ui.tableWidget_component.setRowCount(len(self.profiletool['component']))
 
         for row, component in enumerate(self.profiletool['component']):
+         # Название компонента
             name_item = QTableWidgetItem(component["type"]["name"])
-            
             name_item.setData(Qt.UserRole, component["id"])
-
+            # Последний статус из истории
+            if component['history']:
+                last_history = component['history'][-1]
+                status_name = last_history["status"]["name"]
+                status_item = QTableWidgetItem(status_name)
+                status_item.setData(Qt.UserRole, component["id"])
+            else:
+                status_item = QTableWidgetItem("Новая")
+                status_item.setData(Qt.UserRole, component["id"])
             self.ui.tableWidget_component.setItem(row, 0, name_item)
+            self.ui.tableWidget_component.setItem(row, 1, status_item)  
 
     def update_product_component_table(self):
         """Обновление таблицы компонентов изделия"""
@@ -163,29 +172,29 @@ class WindowProduct(QWidget):
             self.ui.tableWidget_component.setItem(row, 0, name_item)
             self.ui.tableWidget_component.setItem(row, 1, quantity_item)
 
-    def update_table_component_stage(self, profiletool_component_id):
+    def update_table_component_history(self, profiletool_component_id):
         """
         Заполняет tableWidget_component_stage для изделия:
         группировка по задачам (type.name), внутри — этапы
         """
-        self.ui.tableWidget_component_stage.setColumnCount(3)
-        self.ui.tableWidget_component_stage.setHorizontalHeaderLabels(["Тип работы", "Начата" , "Завершена"])
-        stage_data = []
-        for task in api_manager.table['task']:
-            for component in task["component"]:
-                if component['profiletool_component_id'] == profiletool_component_id:
-                    stage_data.append({
-                        "create" : task["created"],
-                        "completed" : task["completed"],
-                        "task_type": task["type"]["name"],
-                    })
+        self.ui.tableWidget_component_stage.setColumnCount(2)
+        self.ui.tableWidget_component_stage.setHorizontalHeaderLabels(["Тип работы", "Дата"])
+        history_data = []
+        for profiletool in api_manager.table['profiletool']:
+            for component in profiletool["component"]:
+                if component['id'] == profiletool_component_id:
+                    for history in component["history"]:
+                        history_data.append({
+                            "type_name": history['status']['name'],
+                            "date" : history["date"],
+                        })
 
-        self.ui.tableWidget_component_stage.setRowCount(len(stage_data))
+        self.ui.tableWidget_component_stage.setRowCount(len(history_data))
 
-        for row, data in enumerate(stage_data):
-                self.ui.tableWidget_component_stage.setItem(row, 0, QTableWidgetItem(data["task_type"]))
-                self.ui.tableWidget_component_stage.setItem(row, 1, QTableWidgetItem(data["create"]))
-                self.ui.tableWidget_component_stage.setItem(row, 2, QTableWidgetItem(data["completed"]))
+        for row, data in enumerate(history_data):
+                self.ui.tableWidget_component_stage.setItem(row, 0, QTableWidgetItem(data["type_name"]))
+                self.ui.tableWidget_component_stage.setItem(row, 1, QTableWidgetItem(data["date"]))
+
 
     def clear_info_panel(self):
         """Очистка панели компонентов"""
@@ -206,7 +215,7 @@ class WindowProduct(QWidget):
 
     def on_component_clicked(self):
         """Обработка выбора компонента"""
-        self.update_table_component_stage(self.ui.tableWidget_component.currentItem().data(Qt.UserRole))
+        self.update_table_component_history(self.ui.tableWidget_component.currentItem().data(Qt.UserRole))
 
     # =============================================================================
     # ОБРАБОТЧИКИ ДОПОЛНИТЕЛЬНЫХ ДЕЙСТВИЙ

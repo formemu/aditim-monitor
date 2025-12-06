@@ -49,7 +49,9 @@ def create_profiletool(profiletool: SchemaProfileToolCreate, db: Session = Depen
         db.add(tool)
         db.commit()
         db.refresh(tool)
+
         notify_clients("table", "profiletool", "created")
+        notify_clients("table", "profile", "updated")
         return tool
     except Exception as e:
         db.rollback()
@@ -68,7 +70,6 @@ def create_profiletool_component(profiletool_id: int, component: SchemaProfileTo
         db.add(db_component)
         db.commit()
         db.refresh(db_component)
-        notify_clients("table", "profiletool_component", "created")
         return db_component
     except Exception as e:
         db.rollback()
@@ -87,7 +88,11 @@ def create_profiletool_component_history(profiletool_component_id: int, history_
         db.add(db_history)
         db.commit()
         db.refresh(db_history)
-        notify_clients("table", "profiletool_component_history", "created")
+
+
+        notify_clients("table", "task", "updated") 
+        notify_clients("table", "taskdev", "updated")
+        notify_clients("table", "profiletool", "updated")
         return db_history
     except Exception as e:
         db.rollback()
@@ -108,7 +113,6 @@ def update_profiletool(profiletool_id: int, tool: SchemaProfileToolUpdate, db: S
     db.commit()
     db.refresh(db_tool)
     notify_clients("table", "profiletool", "updated")
-    notify_clients("table", "profiletool_component", "updated")
     return db_tool
 
 # =============================================================================
@@ -124,9 +128,7 @@ def delete_profiletool(profiletool_id: int, db: Session = Depends(get_db)):
     db.commit()
 
     notify_clients("table", "profiletool", "deleted")
-    notify_clients("table", "profiletool_component", "deleted")
     notify_clients("table", "task", "deleted")
-    notify_clients("table", "task_component", "deleted")
     notify_clients("table", "queue", "deleted")
 
     return {"detail": "Инструмент и его компоненты удалены успешно"}
@@ -140,9 +142,7 @@ def delete_profiletool_by_profile(profile_id: int, db: Session = Depends(get_db)
     db.commit()
 
     notify_clients("table", "profiletool", "deleted")
-    notify_clients("table", "profiletool_component", "deleted")
     notify_clients("table", "task", "deleted")
-    notify_clients("table", "task_component", "deleted")
     notify_clients("table", "queue", "deleted")
 
     return {"detail": f"Удалены все инструменты и компоненты профиля {profile_id}"}
@@ -155,8 +155,6 @@ def delete_all_profiletool_components(profiletool_id: int, db: Session = Depends
         raise HTTPException(status_code=404, detail="Компоненты не найдены")
     db.commit()
 
-    notify_clients("table", "profiletool_component", "deleted")
-    notify_clients("table", "task_component", "deleted")
 
     return {"detail": f"Удалены все компоненты инструмента {profiletool_id}"}
 
@@ -168,8 +166,5 @@ def delete_profiletool_component_by_id(component_id: int, db: Session = Depends(
         raise HTTPException(status_code=404, detail="Компонент не найден")
     db.delete(component)
     db.commit()
-
-    notify_clients("table", "profiletool_component", "deleted")
-    notify_clients("table", "task_component", "deleted")
 
     return {"detail": "Компонент удален успешно"}

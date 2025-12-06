@@ -94,20 +94,18 @@ class SchemaTaskComponentStageBase(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
 class SchemaTaskComponentStageCreate(SchemaTaskComponentStageBase):
+    """Создание этапа компонента задачи"""
     pass
 
 class SchemaTaskComponentStageUpdate(SchemaTaskComponentStageBase):
-    id: int
-    task_component_id : Optional[int] = None
-    work_subtype : Optional[WorkSubtype] = None
-    machine : Optional[SchemaDirMachine] = None
-    start : Optional[date] = None
-    finish : Optional[date] = None
+    """Частичное обновление этапа"""
+    start: Optional[date] = None
+    finish: Optional[date] = None
 
 class SchemaTaskComponentStageResponse(SchemaTaskComponentStageBase):
+    """Ответ с этапом компонента"""
     id: int
     machine: Optional[SchemaDirMachine] = None
     work_subtype: Optional[WorkSubtype] = None
     start: Optional[date] = None
     finish: Optional[date] = None
-

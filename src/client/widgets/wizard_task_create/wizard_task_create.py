@@ -57,7 +57,9 @@ class WizardTaskCreate(QWizard):
         self.addPage(self.ui.wizardPage_task_detail)
         self.currentIdChanged.connect(self.on_page_changed)
         self.setStartId(0)
-        
+
+        self.ui.dateEdit_date.setDate(QDate.currentDate().addDays(14))
+
         # Сигналы поиска
         self.ui.lineEdit_profile_search.textChanged.connect(self.on_search_profile)
         self.ui.lineEdit_profile_search.returnPressed.connect(self.on_profile_selected)
@@ -215,6 +217,9 @@ class WizardTaskCreate(QWizard):
 
     # --- Создание задач ---
     def accept(self):
+        self.task_data['description'] = self.ui.textEdit_description.toPlainText()
+        self.task_data['deadline'] = self.ui.dateEdit_date.date().toString("yyyy-MM-dd")
+        self.task_data['created'] = QDate.currentDate().toString("yyyy-MM-dd")
         if self.task_data["profiletool_id"]:
             if self.task_data['type_id'] == 0:
                 self.create_profiletool_task_dev()

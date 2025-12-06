@@ -31,8 +31,9 @@ def get_task(db: Session = Depends(get_db)):
 
 @router.get("/taskdev", response_model=List[SchemaTaskResponse])
 def get_taskdev(db: Session = Depends(get_db)):
-    type_dev = db.query(ModelDirTaskType).filter(ModelDirTaskType.name == "Разработка").first()
-    task = db.query(ModelTask).filter(ModelTask.type_id == type_dev.id).order_by(ModelTask.position).all()
+    type = db.query(ModelDirTaskType).filter(ModelDirTaskType.name == "Разработка").first()
+    status = db.query(ModelDirTaskStatus).filter(ModelDirTaskStatus.name == "В работе").first()
+    task = db.query(ModelTask).filter(ModelTask.type_id == type.id, ModelTask.status_id == status.id).order_by(ModelTask.position).all()
     return task
 
 @router.get("/task/queue", response_model=List[SchemaTaskResponse])
@@ -110,7 +111,7 @@ def create_task_component(
     db.add(db_component)
     db.commit()
     db.refresh(db_component)
-    notify_clients("table", "task_component", "created")
+    notify_clients("table", "task", "updated")
     return db_component
 
 @router.post("/task/component/{component_id}/stage", response_model=dict)
@@ -160,6 +161,7 @@ def update_task_status( task_id: int, task: SchemaTaskUpdate, db: Session = Depe
     db.commit()
     db.refresh(db_task)
     notify_clients("table", "task", "updated")
+    notify_clients("table", "taskdev", "updated")
     notify_clients("table", "queue", "updated")
     return db_task
 
@@ -187,5 +189,4 @@ def delete_task(task_id: int, db: Session = Depends(get_db)):
     db.delete(db_task)
     db.commit()
     notify_clients("table", "task", "deleted")
-    notify_clients("table", "task_component", "deleted")
     return {"detail": "Задача удалена успешно"}

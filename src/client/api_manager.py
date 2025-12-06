@@ -48,6 +48,7 @@ class ApiManager(QObject):
             ("task", "table", self.api_task.get_task),
             ("taskdev", "table", self.api_task.get_taskdev),
             ("queue", "table", self.api_task.get_queue),
+
             
             
             # Справочники
@@ -63,7 +64,9 @@ class ApiManager(QObject):
             
             # Планы
             ("task_component_stage", "plan", self.api_plan_task_component_stage.get_plan_task_component_stage),
+
         ]
+
 
         # Инициализация хранилищ
         for key, group, _ in self.registry:

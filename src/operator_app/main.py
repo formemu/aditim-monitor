@@ -1,302 +1,214 @@
 # main.py
 import flet as ft
 from datetime import date
-from api_client import *
+from api_client import (
+    get_work_types,
+    get_machines_by_work_type,
+    get_quenching_stages,
+    get_all_stages_by_work_type,
+    update_stage_dates
+)
 
-def main(page: ft.Page):
-    page.title = "Оператор"
-    page.vertical_spacing = 10
 
-    # Состояние
-    selected_mode = "category"  # "category" или "task"
-    selected_work_type = None
-    selected_machine = None
-    selected_task = None
-    all_stages = []  # Все этапы для выбранной категории
-
-    # Элементы интерфейса
-    mode_radio = ft.RadioGroup(
-        content=ft.Column([
-            ft.Radio(value="category", label="По категории и станку"),
-            ft.Radio(value="task", label="По задаче")
-        ])
-    )
+class OperatorApp:
+    """Приложение оператора для управления этапами производства"""
     
-    work_type_dropdown = ft.Dropdown(label="Категория", options=[])
-    machine_dropdown = ft.Dropdown(label="Станок (все)", options=[])
-    task_dropdown = ft.Dropdown(label="Задача", options=[])
-    stage_list = ft.Column()
-
-    def on_mode_change(e):
-        nonlocal selected_mode
-        selected_mode = e.control.value
+    def __init__(self, page: ft.Page):
+        self.page = page
+        self.page.title = "Оператор"
+        self.page.vertical_spacing = 10
         
-        # Показываем/скрываем соответствующие элементы
-        if selected_mode == "category":
-            work_type_dropdown.visible = True
-            machine_dropdown.visible = True
-            task_dropdown.visible = False
-        else:
-            work_type_dropdown.visible = False
-            machine_dropdown.visible = False
-            task_dropdown.visible = True
-            
-        # Очищаем данные
-        all_stages = []
-        stage_list.controls.clear()
-        page.update()
-
-    def on_work_type_change(e):
-        nonlocal selected_work_type, all_stages
+        # Состояние
+        self.selected_work_type = None
+        self.list_stage = []  # Все этапы для выбранной категории
+        
+        # UI элементы
+        self.dropdown_work_type = ft.Dropdown(label="Категория работ", options=[])
+        self.column_stage = ft.Column()
+        
+        self._setup_ui()
+    
+    def _setup_ui(self):
+        """Инициализация UI"""
+        # Загрузка типов работ
+        self.dropdown_work_type.options = [
+            ft.dropdown.Option(key=str(wt["id"]), text=wt["name"])
+            for wt in get_work_types()
+        ]
+        
+        # Подключение обработчиков
+        self.dropdown_work_type.on_change = self._on_work_type_change
+        
+        # Добавление элементов на страницу
+        self.page.add(
+            ft.Text("Приложение оператора", size=24, weight=ft.FontWeight.BOLD),
+            ft.Divider(),
+            self.dropdown_work_type,
+            ft.Divider(),
+            self.column_stage
+        )
+    
+    def _on_work_type_change(self, e):
+        """Обработчик изменения категории работ"""
         try:
-            selected_work_type = int(e.control.value)
+            self.selected_work_type = int(e.control.value)
         except (ValueError, TypeError):
-            selected_work_type = None
-
-        # Очищаем список станков, если категория не выбрана
-        if selected_work_type is None:
-            machine_dropdown.options = []
-            machine_dropdown.value = None
-            machine_dropdown.hint_text = "Сначала выберите категорию"
-            all_stages = []
+            self.selected_work_type = None
+        
+        if self.selected_work_type is None:
+            self.list_stage = []
+            self.column_stage.controls.clear()
         else:
-            # Загружаем станки только для выбранной категории
-            machines = get_machines_by_work_type(selected_work_type)
-            machine_dropdown.options = [
-                ft.dropdown.Option(key="all", text="Все станки")
-            ] + [
-                ft.dropdown.Option(key=str(m["id"]), text=m["name"])
-                for m in machines
-            ]
-            machine_dropdown.value = "all"
-            machine_dropdown.hint_text = "Выберите станок"
-            
             # Загружаем все этапы для выбранной категории
-            load_all_stages()
+            self._load_stage()
         
-        page.update()
-
-    def on_machine_change(e):
-        nonlocal selected_machine
-        if e.control.value == "all":
-            selected_machine = None
-        else:
-            selected_machine = int(e.control.value)
-        filter_stages()
-        page.update()
-
-    def on_task_change(e):
-        nonlocal selected_task, all_stages
-        try:
-            selected_task = int(e.control.value)
-        except (ValueError, TypeError):
-            selected_task = None
-        
-        if selected_task is None:
-            all_stages = []
-        else:
-            load_task_stages()
-        
-        page.update()
-
-    def load_all_stages():
+        self.page.update()
+    
+    def _load_stage(self):
         """Загружает все этапы для выбранной категории"""
-        nonlocal all_stages
-        stage_list.controls = [ft.Text("Загрузка...")]
-        page.update()
-        
-        all_stages = []
+        self.column_stage.controls = [ft.Text("Загрузка...")]
+        self.page.update()
         
         # Получаем название выбранной категории
-        work_types = get_work_types()
-        selected_work_type_name = None
-        for wt in work_types:
-            if wt["id"] == selected_work_type:
-                selected_work_type_name = wt["name"].lower()
+        list_work_type = get_work_types()
+        name_work_type = None
+        for wt in list_work_type:
+            if wt["id"] == self.selected_work_type:
+                name_work_type = wt["name"].lower()
                 break
         
-        # Если выбрана категория "закалка" - загружаем только этапы закалки
-        if selected_work_type_name and "закалка" in selected_work_type_name:
-            quenching_stages = get_quenching_stages(selected_work_type)
-            all_stages.extend(quenching_stages)
+        # Если выбрана категория "закалка" - загружаем этапы закалки
+        if name_work_type and "закалка" in name_work_type:
+            self.list_stage = get_quenching_stages(self.selected_work_type)
         else:
-            # Для остальных категорий загружаем этапы со всех станков
-            machines = get_machines_by_work_type(selected_work_type)
-            for machine in machines:
-                stages = get_stages_for_machine(machine["id"], selected_work_type)
-                all_stages.extend(stages)
+            # Для остальных категорий загружаем все этапы без привязки к станку
+            self.list_stage = get_all_stages_by_work_type(self.selected_work_type)
         
-        # Показываем все этапы
-        filter_stages()
-
-    def load_task_stages():
-        """Загружает все этапы для выбранной задачи"""
-        nonlocal all_stages
-        stage_list.controls = [ft.Text("Загрузка...")]
-        page.update()
+        # Отображаем этапы
+        self._display_stage(self.list_stage)
+    
+    def _display_stage(self, list_stage):
+        """Отображает список этапов"""
+        self.column_stage.controls.clear()
         
-        all_stages = []
-        
-        # Получаем все задачи
-        tasks = requests.get(f"{BASE_URL}/task").json()
-        
-        # Находим выбранную задачу
-        selected_task_data = None
-        for task in tasks:
-            if task["id"] == selected_task:
-                selected_task_data = task
-                break
-        
-        if not selected_task_data:
-            stage_list.controls = [ft.Text("Задача не найдена")]
-            page.update()
+        if not list_stage:
+            self.column_stage.controls.append(
+                ft.Text("Нет доступных этапов для выбранной категории", italic=True)
+            )
+            self.page.update()
             return
         
-        # Загружаем все этапы для этой задачи
-        for component in selected_task_data.get("component", []):
-            for stage in component.get("stage", []) or []:
-                # Добавляем контекст
-                stage["task_name"] = f"#{selected_task_data['id']} — {selected_task_data.get('product_name', 'Профиль')}"
-                comp_type = (
-                    component["profiletool_component"]["type"]["name"]
-                    if component.get("profiletool_component")
-                    else (component["product_component"]["name"] if component.get("product_component") else "Без имени")
-                )
-                stage["component_name"] = comp_type
-                
-                # Определяем тип этапа
-                if stage.get("work_subtype") and "закалка" in stage["work_subtype"]["name"].lower():
-                    stage["is_quenching"] = True
-                
-                all_stages.append(stage)
-        
-        # Показываем все этапы
-        display_stages(all_stages)
-
-    def filter_stages():
-        """Фильтрует этапы по выбранному станку"""
-        if selected_machine is None:
-            # Показываем все этапы
-            display_stages(all_stages)
-        else:
-            # Фильтруем по станку (закалка всегда показывается)
-            filtered_stages = []
-            for stage in all_stages:
-                if stage.get("is_quenching"):
-                    # Закалка всегда показывается
-                    filtered_stages.append(stage)
-                elif stage.get("machine") and stage["machine"]["id"] == selected_machine:
-                    # Обычные этапы фильтруются по станку
-                    filtered_stages.append(stage)
-            display_stages(filtered_stages)
-
-    def display_stages(stages):
-        """Отображает список этапов"""
-        stage_list.controls.clear()
-        for stage in stages:
+        for stage in list_stage:
             if stage.get("is_quenching"):
                 # Специальная обработка для закалки
-                start_btn = ft.ElevatedButton(
+                button_start = ft.ElevatedButton(
                     "Уехала на закалку",
                     disabled=stage["start"] is not None,
-                    on_click=lambda e, sid=stage["id"]: mark_start(sid),
+                    on_click=lambda e, sid=stage["id"]: self._mark_start(sid),
                 )
-                finish_btn = ft.ElevatedButton(
+                button_finish = ft.ElevatedButton(
                     "Приехала с закалки",
                     disabled=stage["finish"] is not None,
-                    on_click=lambda e, sid=stage["id"]: mark_finish(sid),
+                    on_click=lambda e, sid=stage["id"]: self._mark_finish(sid),
                 )
                 
-                stage_list.controls.append(
+                self.column_stage.controls.append(
                     ft.Card(
                         content=ft.Container(
                             padding=10,
                             content=ft.Column([
-                                ft.Text(f"{stage['task_name']} — {stage['component_name']} (ЗАКАЛКА)", 
-                                       weight=ft.FontWeight.BOLD, color=ft.Colors.ORANGE),
-                                ft.Text(f"Операция: {stage['work_subtype']['name']}"),
+                                ft.Text(f"{stage['task_name']} — {stage['component_name']}", 
+                                    weight=ft.FontWeight.BOLD, size=16),
+                                ft.Text(f"Операция: {stage['work_subtype']['name']}", color=ft.Colors.ORANGE),
                                 ft.Text(f"Уехала: {stage['start'] or '—'}"),
                                 ft.Text(f"Приехала: {stage['finish'] or '—'}"),
-                                ft.Row([start_btn, finish_btn])
+                                ft.Row([button_start, button_finish])
                             ])
                         )
                     )
                 )
             else:
-                # Обычная обработка для станков
-                start_btn = ft.ElevatedButton(
-                    "Взял в работу",
-                    disabled=stage["start"] is not None,
-                    on_click=lambda e, sid=stage["id"]: mark_start(sid),
-                )
-                finish_btn = ft.ElevatedButton(
-                    "Выполнено",
-                    disabled=stage["finish"] is not None,
-                    on_click=lambda e, sid=stage["id"]: mark_finish(sid),
+                # Обычная обработка — оператор выбирает станок
+                is_started = stage.get("start") is not None
+                is_finished = stage.get("finish") is not None
+                
+                # Список доступных станков для этой категории
+                list_machine = get_machines_by_work_type(self.selected_work_type)
+                
+                dropdown_machine = ft.Dropdown(
+                    label="Выберите станок",
+                    options=[
+                        ft.dropdown.Option(key=str(m["id"]), text=m["name"])
+                        for m in list_machine
+                    ],
+                    value=str(stage["machine"]["id"]) if stage.get("machine") else None,
+                    disabled=is_started,
+                    width=200
                 )
                 
-                # Добавляем информацию о станке
-                machine_info = f" — {stage['machine']['name']}" if stage.get("machine") else ""
+                # ИСПРАВЛЕНИЕ: передаём stage_id И dropdown напрямую через default аргументы
+                def create_start_handler(sid, dd):
+                    return lambda e: self._mark_start_with_machine(sid, dd)
                 
-                stage_list.controls.append(
+                button_start = ft.ElevatedButton(
+                    "Принял в работу",
+                    disabled=is_started,
+                    on_click=create_start_handler(stage["id"], dropdown_machine),
+                )
+                
+                button_finish = ft.ElevatedButton(
+                    "Завершил работу",
+                    disabled=not is_started or is_finished,
+                    on_click=lambda e, sid=stage["id"]: self._mark_finish(sid),
+                )
+                
+                # Информация о текущем станке
+                text_machine = f"Станок: {stage['machine']['name']}" if stage.get("machine") else "Станок не выбран"
+                
+                self.column_stage.controls.append(
                     ft.Card(
                         content=ft.Container(
                             padding=10,
                             content=ft.Column([
-                                ft.Text(f"{stage['task_name']} — {stage['component_name']}{machine_info}", 
-                                       weight=ft.FontWeight.BOLD),
+                                ft.Text(f"{stage['task_name']} — {stage['component_name']}", 
+                                    weight=ft.FontWeight.BOLD, size=16),
                                 ft.Text(f"Операция: {stage['work_subtype']['name']}"),
-                                ft.Text(f"Start: {stage['start'] or '—'}"),
-                                ft.Text(f"Finish: {stage['finish'] or '—'}"),
-                                ft.Row([start_btn, finish_btn])
-                            ])
+                                ft.Text(text_machine, color=ft.Colors.BLUE_700),
+                                ft.Text(f"Начал: {stage['start'] or '—'}"),
+                                ft.Text(f"Завершил: {stage['finish'] or '—'}"),
+                                dropdown_machine if not is_started else ft.Container(),
+                                ft.Row([button_start, button_finish], spacing=10)
+                            ], spacing=5)
                         )
                     )
                 )
-        page.update()
+        self.page.update()
+    def _mark_start_with_machine(self, stage_id, dropdown_machine):
+        """Отмечает начало выполнения этапа с привязкой к станку"""
+        if not dropdown_machine.value:
+            self.page.show_snack_bar(
+                ft.SnackBar(content=ft.Text("Выберите станок перед началом работы!"))
+            )
+            return
+        
+        machine_id = int(dropdown_machine.value)
+        update_stage_dates(stage_id, start=date.today(), machine_id=machine_id)  # ← date объект
+        self._load_stage()
 
-    def mark_start(stage_id):
-        update_stage_dates(stage_id, start=str(date.today()))
-        if selected_mode == "category":
-            load_all_stages()
-        else:
-            load_task_stages()
+    def _mark_start(self, stage_id):
+        """Отмечает начало выполнения этапа (для закалки)"""
+        update_stage_dates(stage_id, start=date.today())  # ← date объект
+        self._load_stage()
 
-    def mark_finish(stage_id):
-        update_stage_dates(stage_id, finish=str(date.today()))
-        if selected_mode == "category":
-            load_all_stages()
-        else:
-            load_task_stages()
+    def _mark_finish(self, stage_id):
+        """Отмечает завершение этапа"""
+        update_stage_dates(stage_id, finish=date.today())  # ← date объект
+        self._load_stage()
 
-    # Загрузка типов работ
-    work_type_dropdown.options = [
-        ft.dropdown.Option(key=str(wt["id"]), text=wt["name"])
-        for wt in get_work_types()
-    ]
 
-    # Загрузка задач
-    tasks = requests.get(f"{BASE_URL}/task").json()
-    task_dropdown.options = [
-        ft.dropdown.Option(key=str(task["id"]), text=f"#{task['id']} — {task.get('product_name', 'Профиль')}")
-        for task in tasks
-    ]
+def main(page: ft.Page):
+    """Точка входа в приложение"""
+    OperatorApp(page)
 
-    mode_radio.on_change = on_mode_change
-    work_type_dropdown.on_change = on_work_type_change
-    machine_dropdown.on_change = on_machine_change
-    task_dropdown.on_change = on_task_change
-
-    page.add(
-        ft.Text("Приложение оператора", size=24),
-        ft.Text("Режим работы:", size=16),
-        mode_radio,
-        ft.Divider(),
-        work_type_dropdown,
-        machine_dropdown,
-        task_dropdown,
-        ft.Divider(),
-        stage_list
-    )
 
 ft.app(target=main, view=ft.WEB_BROWSER, port=8550)
