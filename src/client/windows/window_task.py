@@ -180,26 +180,98 @@ class WindowTask(QWidget):
                 name_item.setData(Qt.UserRole, component['id'])
                 table.setItem(row, 0, name_item)
 
+    def get_component_stage_status(self, component):
+        """Определяет текущий статус этапа компонента
+        
+        Возвращает строку с текущим статусом:
+        - "Название этапа" - если этап в процессе (есть start, нет finish)
+        - "Ожидает: Название этапа" - если предыдущий завершён, текущий не начат
+        - "Изготовлен" - если все этапы завершены
+        """
+        list_stage = component.get('stage', [])
+        if not list_stage:
+            return "Нет этапов"
+        
+        # Сортируем по номеру этапа
+        sorted_stage = sorted(list_stage, key=lambda s: s.get('stage_num', 0))
+        
+        # Ищем последний этап с датой начала
+        last_started_stage = None
+        for stage in sorted_stage:
+            if stage.get('start') and stage['start'] != 'None':
+                last_started_stage = stage
+        
+        # Если есть начатый этап без окончания - текущий
+        if last_started_stage and (not last_started_stage.get('finish') or last_started_stage['finish'] == 'None'):
+            work_subtype = last_started_stage.get('work_subtype', {})
+            return work_subtype.get('name', 'Неизвестный этап')
+        
+        # Ищем первый незавершённый этап
+        for stage in sorted_stage:
+            start = stage.get('start')
+            finish = stage.get('finish')
+            
+            # Проверяем, что этап не начат или не завершён
+            if not start or start == 'None' or not finish or finish == 'None':
+                work_subtype = stage.get('work_subtype', {})
+                stage_name = work_subtype.get('name', 'Неизвестный этап')
+                
+                # Если этап не начат - ожидает
+                if not start or start == 'None':
+                    return f"Ожидает: {stage_name}"
+                # Если начат, но не завершён - текущий
+                return stage_name
+        
+        # Все этапы завершены
+        return "Изготовлен"
+
     def update_task_component_table(self):
         """Обновление таблицы компонентов задачи"""
         table = self.ui.tableWidget_component
         table.setRowCount(len(self.task['component']))
+        
         # Проверяем по первому элементу, какой тип компонента
-        if self.task['component'] and self.task['component'][0]['product_component_id']:
+        if self.task['product_id']:
             table.setColumnCount(1)
-            table.setHorizontalHeaderLabels(["№", "Название"])
+            table.setHorizontalHeaderLabels(["Название"])
             for row, component in enumerate(self.task['component']):
                 name_item = QTableWidgetItem(component['product_component']['name'])
                 name_item.setData(Qt.UserRole, component)
                 table.setItem(row, 0, name_item)
-        else:
-            table.setColumnCount(1)
-            table.setHorizontalHeaderLabels(["№", "Название"])
-            for row, component in enumerate(self.task['component']):
-                name_item = QTableWidgetItem(component['profiletool_component']['type']['name'])
-                name_item.setData(Qt.UserRole, component)
-                table.setItem(row, 0, name_item)
-
+        elif self.task['profiletool_id']:
+            if self.task['type_id'] == 0: 
+                # тип задачи "Разработка"
+                table.setColumnCount(2)
+                table.setHorizontalHeaderLabels(["Название", "Статус"])
+                for row, component in enumerate(self.task['component']):
+                    # Название компонента
+                    name_item = QTableWidgetItem(component['profiletool_component']['type']['name'])
+                    name_item.setData(Qt.UserRole, component)
+                    last_history = component['profiletool_component']['history'][-1]
+                    if last_history['status']['id'] == 2:
+                        status_name = last_history['status']['name']
+                    else:
+                        status_name = "Разработан"
+                    status_item = QTableWidgetItem(status_name)
+                    status_item.setData(Qt.UserRole, component)
+                    table.setItem(row, 0, name_item)
+                    table.setItem(row, 1, status_item)
+            elif self.task['type_id'] == 1:
+                # Тип задачи - "Изготовление"
+                table.setColumnCount(2)
+                table.setHorizontalHeaderLabels(["Название", "Этап"])
+                for row, component in enumerate(self.task['component']):
+                    name_item = QTableWidgetItem(component['profiletool_component']['type']['name'])
+                    name_item.setData(Qt.UserRole, component)
+                    
+                    # Определяем текущий статус этапа
+                    stage_status = self.get_component_stage_status(component)
+                    stage_item = QTableWidgetItem(stage_status)
+                    stage_item.setData(Qt.UserRole, component)
+                    
+                    table.setItem(row, 0, name_item)
+                    table.setItem(row, 1, stage_item)
+                    
     def update_table_component_stage(self, component):
         """Заполняет tableWidget_component_stage этапами из выбранного компонента"""
 
@@ -318,7 +390,7 @@ class WindowTask(QWidget):
         # Получаем ID задачи из текущей строки (колонка 0 — ID)
         current_task_id = self.ui.tableWidget_queue.item(selected_row, 0).data(Qt.UserRole)
         # Получаем текущий порядок задач в очереди (в статусе "В работе")
-        task_ids = [task['id'] for task in api_manager.queue]
+        task_ids = [task['id'] for task in api_manager.table['queue']]
         # Находим индекс задачи в списке api_manager.queue (не в таблице!)
         try:
             current_idx_in_list = next(i for i, tid in enumerate(task_ids) if tid == current_task_id)

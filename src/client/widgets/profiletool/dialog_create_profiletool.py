@@ -16,7 +16,6 @@ class DialogCreateProfileTool(QDialog):
         self.load_ui()
         self.load_dimension()
         self.setup_ui()
-        self.setup_component_table()
 
     def load_ui(self):
         """Загружает UI из файла"""
@@ -38,6 +37,7 @@ class DialogCreateProfileTool(QDialog):
         # Подключаем поиск профилей
         self.ui.lineEdit_profile_search.textChanged.connect(self.on_profile_search_changed)
         self.ui.listWidget_profile_results.itemClicked.connect(self.on_profile_selected)
+        self.ui.comboBox_dimension.currentIndexChanged.connect(self.on_dimension_changed)
         # Настройка таблицы компонентов
         self.ui.tableWidget_components.setSelectionBehavior(QAbstractItemView.SelectRows)
         self.ui.tableWidget_components.setSelectionMode(QAbstractItemView.SingleSelection)
@@ -56,24 +56,36 @@ class DialogCreateProfileTool(QDialog):
         self.ui.comboBox_dimension.clear()
         for dimension in api_manager.directory['profiletool_dimension']:
             name = dimension['name']
-            dimension_id = dimension['id']
-            self.ui.comboBox_dimension.addItem(name, dimension_id)
+            self.ui.comboBox_dimension.addItem(name, dimension)
 
     # =============================================================================
     # Управление таблицей компонентов
     # =============================================================================
-    def setup_component_table(self):
+
+    def on_dimension_changed(self, index):
+        """Обработчик изменения размерности"""
+        dimension = self.ui.comboBox_dimension.itemData(index)
+        self.setup_component_table(dimension)
+
+    def setup_component_table(self, dimension):
         """Загружает типы компонентов в таблицу"""
+        # Устанавливаем описание размерности в текстовое поле
+
+        self.ui.textEdit_description.setText(dimension['description'])
+
         # Очищаем таблицу
         self.ui.tableWidget_components.setRowCount(0)
         self.list_component_widget.clear()
-
-        # Заполняем таблицу типами компонентов
-        self.ui.tableWidget_components.setRowCount(len(api_manager.directory['component_type']))
-        for row, type in enumerate(api_manager.directory['component_type']):
+        # Фильтруем типы компонентов по выбранной размерности
+        list_filtered_type = [
+            type for type in api_manager.directory['component_type']
+            if type['profiletool_dimension_id'] == dimension['id']
+        ]
+        self.ui.tableWidget_components.setRowCount(len(list_filtered_type))
+        for row, type in enumerate(list_filtered_type):
             # Колонка 0: Checkbox "Использовать"
             checkbox = QCheckBox()
-            checkbox.setChecked(False)  # По умолчанию не выбран
+            checkbox.setChecked(True)
             self.ui.tableWidget_components.setCellWidget(row, 0, checkbox)
             # Колонка 1: Название типа компонента
             name_item = QTableWidgetItem(type['name'])
@@ -115,6 +127,7 @@ class DialogCreateProfileTool(QDialog):
             self.ui.listWidget_profile_results.clear()
             # Загружаем эскиз профиля
             self.load_profile_sketch(profile)
+            self.on_dimension_changed(0)
         else:
             pass
 
@@ -171,7 +184,7 @@ class DialogCreateProfileTool(QDialog):
         description = self.ui.textEdit_description.toPlainText().strip()
         tool = {
             "profile_id": self.selected_profile['id'],
-            "dimension_id": dimension,
+            "dimension_id": dimension['id'],
             "description": description
         }
          # Создаем инструмент

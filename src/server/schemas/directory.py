@@ -31,17 +31,20 @@ class SchemaDirTaskStatus(SchemaDirectoryResponse):
     """Справочник: Статусы задач"""
     pass
 
+class SchemaDirToolDimension(SchemaDirectoryResponse):
+    """Справочник: размерности инструментов"""
+    pass
+
 class SchemaDirProfiletoolComponentType(SchemaDirectoryResponse):
     """Справочник: Типы компонентов инструментов профиля"""
-    pass
+    profiletool_dimension_id: int
+    profiletool_dimension: Optional[SchemaDirToolDimension]
 
 class SchemaDirComponentStatus(SchemaDirectoryResponse):
     """Справочник: Статусы компонентов"""
     pass
 
-class SchemaDirToolDimension(SchemaDirectoryResponse):
-    """Справочник: размерности инструментов"""
-    pass
+
 
 class SchemaDirMachine(SchemaDirectoryResponse):
     """Справочник: станки"""

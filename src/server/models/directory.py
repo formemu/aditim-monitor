@@ -29,16 +29,20 @@ class ModelDirProfileToolDimension(Base): # +
     description = Column(Text)
     # Relationships
     profiletool = relationship("ModelProfileTool", back_populates="dimension")
+    list_component_type = relationship("ModelDirProfileToolComponentType", back_populates="profiletool_dimension")
+
 
 class ModelDirProfileToolComponentType(Base): # +
     """Справочник типов компонентов инструментов"""
     __tablename__ = "dir_profiletool_component_type"
     id = Column(Integer, primary_key=True, index=True)
     name = Column(String(50), nullable=False, unique=True)
+    profiletool_dimension_id = Column(Integer, ForeignKey("dir_profiletool_dimension.id"), nullable=True)
     description = Column(Text)
     # Relationships
     component = relationship("ModelProfileToolComponent", back_populates="type")
     plan_stage = relationship("ModelPlanTaskComponentStage", back_populates="profiletool_component_type")
+    profiletool_dimension = relationship( "ModelDirProfileToolDimension", back_populates="list_component_type" )
 
 class ModelDirProfileToolComponentStatus(Base): # +
     """Справочник статусов компонентов"""

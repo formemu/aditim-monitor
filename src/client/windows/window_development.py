@@ -105,11 +105,6 @@ class WindowDevelopment:
             self.ui.tableWidget_component.setContextMenuPolicy(Qt.CustomContextMenu)
             self.ui.tableWidget_component.customContextMenuRequested.connect(self.show_context_menu_component_table)
 
-
-
-
-
-
     def update_table_task_component(self):
         """Обновление таблицы компонентов задачи"""
         self.ui.tableWidget_component.setRowCount(0)
