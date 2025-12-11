@@ -70,12 +70,14 @@ def create_profiletool_component(profiletool_id: int, component: SchemaProfileTo
         db.add(db_component)
         db.commit()
         db.refresh(db_component)
+        notify_clients("table", "profiletool", "created")
+        notify_clients("table", "profile", "updated")
         return db_component
     except Exception as e:
         db.rollback()
         raise HTTPException(status_code=400, detail="Не удалось создать компонент: " + str(e))
 
-@router.post("/profile-tool-component/{profiletool_component_id}/history", response_model=SchemaProfileToolComponentHistoryResponse)
+@router.post("/profile-tool/component/{profiletool_component_id}/history", response_model=SchemaProfileToolComponentHistoryResponse)
 def create_profiletool_component_history(profiletool_component_id: int, history_data: SchemaProfileToolComponentHistoryCreate, db: Session = Depends(get_db)):
     """Создание истории изменений компонента инструмента профиля"""
     try:
@@ -166,5 +168,6 @@ def delete_profiletool_component_by_id(component_id: int, db: Session = Depends(
         raise HTTPException(status_code=404, detail="Компонент не найден")
     db.delete(component)
     db.commit()
-
+    notify_clients("table", "profiletool", "updated")
+    notify_clients("table", "profile", "updated")
     return {"detail": "Компонент удален успешно"}

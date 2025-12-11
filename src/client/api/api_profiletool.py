@@ -37,8 +37,8 @@ class ApiProfileTool(ApiClient):
 
     def delete_profiletool_component_by_id(self, component_id):
         """Удаление конкретного компонента по ID"""
-        self._request("DELETE", f"/api/profile-tool-component/{component_id}")
+        self._request("DELETE", f"/api/profile-tool/component/{component_id}")
 
     def create_profiletool_component_history(self, profiletool_component_id, history_data):
         """Создание истории изменений компонента инструмента профиля"""
-        return self._request("POST", f"/api/profile-tool-component/{profiletool_component_id}/history", json=history_data)
+        return self._request("POST", f"/api/profile-tool/component/{profiletool_component_id}/history", json=history_data)

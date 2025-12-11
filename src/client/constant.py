@@ -8,7 +8,8 @@ from pathlib import Path
 # Базовый путь к client директории
 CLIENT_BASE_PATH = Path(__file__).parent
 
-API_BASE_URL = os.getenv('ADITIM_API_URL', 'http://127.0.0.1:8000')
+# API_BASE_URL = os.getenv('ADITIM_API_URL', 'http://127.0.0.1:8000')
+API_BASE_URL = os.getenv('ADITIM_API_URL', 'http://192.168.5.100:8000')
 API_TIMEOUT = int(os.getenv('ADITIM_API_TIMEOUT', '30'))
 
 # UI Colors - ADITIM Corporate Style
@@ -53,6 +54,7 @@ UI_PATHS = {
     "DIALOG_EDIT_PROFILE": "ui/dialog_edit_profile.ui",
     "DIALOG_CREATE_PROFILETOOL": "ui/dialog_create_profiletool.ui",
     "DIALOG_EDIT_PROFILETOOL": "ui/dialog_edit_profiletool.ui",
+    "DIALOG_CREATE_PROFILETOOL_COMPONENT": "ui/dialog_create_profiletool_component.ui",
     "DIALOG_CREATE_PRODUCT": "ui/dialog_create_product.ui",
     "DIALOG_EDIT_PRODUCT": "ui/dialog_edit_product.ui",
     "DIALOG_CREATE_TASK": "ui/dialog_create_task.ui",

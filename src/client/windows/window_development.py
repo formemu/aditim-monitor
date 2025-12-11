@@ -80,6 +80,7 @@ class WindowDevelopment:
         self.table.setRowCount(len(api_manager.table['taskdev']))
         self.table.setColumnCount(2)
         self.table.setHorizontalHeaderLabels(["Название", "Срок"])
+        self.table.horizontalHeader().setStretchLastSection(True)
         for row, task in enumerate(api_manager.table['taskdev']):
             item_name = QTableWidgetItem(self.get_task_name(task))
             item_deadline = QTableWidgetItem(task['deadline'])
@@ -102,29 +103,41 @@ class WindowDevelopment:
                 self.load_and_show_sketch(sketch_data)
             else: self.ui.label_sketch.setText("Эскиз отсутствует")
             self.update_table_task_component()
-            self.ui.tableWidget_component.setContextMenuPolicy(Qt.CustomContextMenu)
-            self.ui.tableWidget_component.customContextMenuRequested.connect(self.show_context_menu_component_table)
+            
 
     def update_table_task_component(self):
         """Обновление таблицы компонентов задачи"""
-        self.ui.tableWidget_component.setRowCount(0)
-        self.ui.tableWidget_component.setColumnCount(2)
-        self.ui.tableWidget_component.setHorizontalHeaderLabels(["Название", "Статус"])
-        self.ui.tableWidget_component.setRowCount(len(self.task['profiletool']['component']))
-        
+        table = self.ui.tableWidget_component
+        table.setRowCount(0)
+        table.setColumnCount(3)
+        table.setHorizontalHeaderLabels(["Название", "Статус", "Описание"])
+        table.setRowCount(len(self.task['profiletool']['component']))
+        table.horizontalHeader().setStretchLastSection(True)
+
         for row, component in enumerate(self.task['profiletool']['component']):
             # Название компонента
             name_item = QTableWidgetItem(component["type"]["name"])
             name_item.setData(Qt.UserRole, component["id"])
+            history = component.get('history', [])
             # Последний статус из истории
-            last_history = component['history'][-1]
+            if not history:
+                continue
+            last_history = history[-1]
             status_name = last_history["status"]["name"]
             status_item = QTableWidgetItem(status_name)
             status_item.setData(Qt.UserRole, component["id"])
-            self.ui.tableWidget_component.setItem(row, 0, name_item)
-            self.ui.tableWidget_component.setItem(row, 1, status_item)  
-        
-        self.ui.tableWidget_component.itemClicked.connect(self.on_component_clicked)
+
+            description_item = QTableWidgetItem(component["description"])
+            description_item.setData(Qt.UserRole, component["id"])
+
+            table.setItem(row, 0, name_item)
+            table.setItem(row, 1, status_item)
+            table.setItem(row, 2, description_item)
+
+        table.itemClicked.connect(self.on_component_clicked)
+
+        table.setContextMenuPolicy(Qt.CustomContextMenu)
+        table.customContextMenuRequested.connect(self.show_context_menu_component_table)
 
     def get_task_name(self, task):
         """Возвращает название задачи: артикул профиля или имя изделия"""

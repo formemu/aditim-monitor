@@ -66,6 +66,7 @@ class WindowProfile(QWidget):
         table.setRowCount(len(api_manager.table["profile"]))
         table.setColumnCount(2)
         table.setHorizontalHeaderLabels(["Артикул", "Описание"])
+        table.horizontalHeader().setStretchLastSection(True)
 
         for row, profile in enumerate(api_manager.table["profile"]):
             item_article = QTableWidgetItem(profile['article'])

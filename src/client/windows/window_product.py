@@ -1,9 +1,8 @@
 """Содержимое изделий для ADITIM Monitor Client с вкладками и компонентами"""
-from ast import Pass
-from PySide6.QtWidgets import QWidget, QMessageBox, QTableWidgetItem,  QTableWidgetItem, QDialog
-from PySide6.QtCore import QFile, Qt
+from PySide6.QtWidgets import QWidget, QMessageBox, QTableWidgetItem,  QTableWidgetItem, QDialog, QMenu
+from PySide6.QtCore import QFile, Qt, QDate
 from PySide6.QtUiTools import QUiLoader
-from PySide6.QtGui import QPixmap
+from PySide6.QtGui import QPixmap, QAction
 from ..constant import UI_PATHS_ABS, ICON_PATHS_ABS, get_style_path
 from ..style_util import load_styles
 from ..api_manager import api_manager
@@ -11,6 +10,7 @@ from ..widgets.profiletool.dialog_create_profiletool import DialogCreateProfileT
 from ..widgets.profiletool.dialog_edit_profiletool import DialogEditProfileTool
 from ..widgets.product.dialog_create_product import DialogCreateProduct
 from ..widgets.product.dialog_edit_product import DialogEditProduct
+from ..widgets.profiletool.dialog_create_profiletool_component import DialogCreateProfiletoolComponent
 
 class WindowProduct(QWidget):
     """Виджет содержимого изделий с вкладками"""
@@ -18,6 +18,7 @@ class WindowProduct(QWidget):
         super().__init__()
         self.profiletool = None
         self.product = None
+        self.component_id = None
         self.load_ui()
         self.setup_ui()
         api_manager.data_updated.connect(self.refresh_data)
@@ -39,7 +40,7 @@ class WindowProduct(QWidget):
         self.load_logo()
         # Общие подключения
         self.ui.tabWidget_main.currentChanged.connect(self.refresh_data)
-        # Подключения: профили
+        # Подключения: инструменты профиля
         self.ui.pushButton_profiletool_add.clicked.connect(self.on_profiletool_add_clicked)
         self.ui.pushButton_profiletool_edit.clicked.connect(self.on_profiletool_edit_clicked)
         self.ui.pushButton_profiletool_delete.clicked.connect(self.on_profiletool_delete_clicked)
@@ -54,7 +55,6 @@ class WindowProduct(QWidget):
 
         # Подключение компонентов
         self.ui.pushButton_component_add.clicked.connect(self.on_component_add_clicked)
-        self.ui.pushButton_component_edit.clicked.connect(self.on_component_edit_clicked)
         self.ui.pushButton_component_delete.clicked.connect(self.on_component_delete_clicked)
         self.ui.tableWidget_component.itemClicked.connect(self.on_component_clicked)
 
@@ -90,6 +90,7 @@ class WindowProduct(QWidget):
         table.setRowCount(len(api_manager.table['profiletool']))
         table.setColumnCount(3)
         table.setHorizontalHeaderLabels(["Профиль", "Размер ","Описание"])
+        table.horizontalHeader().setStretchLastSection(True)
 
         for row, tool in enumerate(api_manager.table['profiletool']):
             item_name = QTableWidgetItem(tool['profile']['article'])
@@ -103,6 +104,8 @@ class WindowProduct(QWidget):
             table.setItem(row, 0, item_name)
             table.setItem(row, 1, item_dimension)
             table.setItem(row, 2, item_description)
+        
+        
 
     def update_table_product(self):
         """Обновление таблицы изделий с корректным отображением и заполнением по ширине"""
@@ -110,7 +113,7 @@ class WindowProduct(QWidget):
         table.setRowCount(len(api_manager.table['product']))
         table.setColumnCount(3)
         table.setHorizontalHeaderLabels(["Название", "Департамент", "Описание"])
-
+        table.horizontalHeader().setStretchLastSection(True)
         for row, product in enumerate(api_manager.table['product']):
             item_name = QTableWidgetItem(product['name'])
             item_department = QTableWidgetItem(product['department']['name'])
@@ -134,10 +137,12 @@ class WindowProduct(QWidget):
 
     def update_profiletool_component_table(self):
         """Обновление таблицы компонентов инструмента профиля"""
-        self.ui.tableWidget_component.setRowCount(0)
-        self.ui.tableWidget_component.setColumnCount(2)
-        self.ui.tableWidget_component.setHorizontalHeaderLabels(["Название", "Статус"])
-        self.ui.tableWidget_component.setRowCount(len(self.profiletool['component']))
+        table = self.ui.tableWidget_component
+        table.setRowCount(0)
+        table.setColumnCount(4)
+        table.setHorizontalHeaderLabels(["Название", "Статус", "Вариант", "Описание"])
+        table.setRowCount(len(self.profiletool['component']))
+        table.horizontalHeader().setStretchLastSection(True)
 
         for row, component in enumerate(self.profiletool['component']):
          # Название компонента
@@ -152,33 +157,55 @@ class WindowProduct(QWidget):
             else:
                 status_item = QTableWidgetItem("Новая")
                 status_item.setData(Qt.UserRole, component["id"])
+
+            variant_item = QTableWidgetItem(str(component["variant"]))
+            variant_item.setData(Qt.UserRole, component["id"])
+
+            description_text = component["description"].replace('\n', ' ')
+            description_item = QTableWidgetItem(description_text)
+            description_item.setData(Qt.UserRole, component["id"])
+
+
+
             self.ui.tableWidget_component.setItem(row, 0, name_item)
-            self.ui.tableWidget_component.setItem(row, 1, status_item)  
+            self.ui.tableWidget_component.setItem(row, 1, status_item)
+            self.ui.tableWidget_component.setItem(row, 2, variant_item)
+            self.ui.tableWidget_component.setItem(row, 3, description_item)
+        
+        table.setContextMenuPolicy(Qt.CustomContextMenu)
+        table.customContextMenuRequested.connect(self.show_context_menu_component_table)
 
     def update_product_component_table(self):
         """Обновление таблицы компонентов изделия"""
-        self.ui.tableWidget_component.setRowCount(0)
-        self.ui.tableWidget_component.setColumnCount(2)
-        self.ui.tableWidget_component.setRowCount(len(self.product['component']))
-        self.ui.tableWidget_component.setHorizontalHeaderLabels(["Название", "Количество"])
+        table = self.ui.tableWidget_component
+        table.setRowCount(0)
+        table.setColumnCount(3)
+        table.setRowCount(len(self.product['component']))
+        table.setHorizontalHeaderLabels(["Название", "Количество", "Описание"])
+        table.horizontalHeader().setStretchLastSection(True)
 
         for row, component in enumerate(self.product['component']):
             name_item = QTableWidgetItem(component["name"])
             quantity_item = QTableWidgetItem(str(component["quantity"]))
+            description_item = QTableWidgetItem(component["description"])
 
             name_item.setData(Qt.UserRole, component["id"])
             quantity_item.setData(Qt.UserRole, component["id"])
+            description_item.setData(Qt.UserRole, component["id"])
 
             self.ui.tableWidget_component.setItem(row, 0, name_item)
             self.ui.tableWidget_component.setItem(row, 1, quantity_item)
+            self.ui.tableWidget_component.setItem(row, 2, description_item)
 
     def update_table_component_history(self, profiletool_component_id):
         """
         Заполняет tableWidget_component_stage для изделия:
         группировка по задачам (type.name), внутри — этапы
         """
-        self.ui.tableWidget_component_stage.setColumnCount(2)
-        self.ui.tableWidget_component_stage.setHorizontalHeaderLabels(["Тип работы", "Дата"])
+        table = self.ui.tableWidget_component_stage
+        table.setColumnCount(3)
+        table.setHorizontalHeaderLabels(["Тип работы", "Дата", "Описание"])
+        table.horizontalHeader().setStretchLastSection(True)
         history_data = []
         for profiletool in api_manager.table['profiletool']:
             for component in profiletool["component"]:
@@ -187,19 +214,35 @@ class WindowProduct(QWidget):
                         history_data.append({
                             "type_name": history['status']['name'],
                             "date" : history["date"],
+                            "description": history["description"]
                         })
 
-        self.ui.tableWidget_component_stage.setRowCount(len(history_data))
+        table.setRowCount(len(history_data))
 
         for row, data in enumerate(history_data):
-                self.ui.tableWidget_component_stage.setItem(row, 0, QTableWidgetItem(data["type_name"]))
-                self.ui.tableWidget_component_stage.setItem(row, 1, QTableWidgetItem(data["date"]))
+                table.setItem(row, 0, QTableWidgetItem(data["type_name"]))
+                table.setItem(row, 1, QTableWidgetItem(data["date"]))
+                table.setItem(row, 2, QTableWidgetItem(data["description"]))
 
 
     def clear_info_panel(self):
         """Очистка панели компонентов"""
         self.ui.tableWidget_component.setRowCount(0)
         self.ui.tableWidget_component_stage.setRowCount(0)
+
+    def show_context_menu_component_table(self, pos):
+        """Показать контекстное меню для изменения статуса компонента"""
+        table = self.ui.tableWidget_component
+        menu = QMenu(table)
+        status_menu = QMenu("Изменить статус", menu)
+        for status in api_manager.directory['component_status']:
+            if status['name'] in ['На испытаниях', 'В работе', 'На исправление', 'Брак']:
+                action = QAction(status['name'], status_menu)
+                action.setCheckable(True)
+                action.triggered.connect(lambda _, status_id=status['id']: self.change_component_history(status_id))
+                status_menu.addAction(action)
+        menu.addMenu(status_menu)
+        menu.exec(table.viewport().mapToGlobal(pos))
 
     # =============================================================================
     # ОБРАБОТЧИКИ СОБЫТИЙ: ВЫДЕЛЕНИЕ
@@ -213,9 +256,10 @@ class WindowProduct(QWidget):
             self.product = api_manager.get_by_id("product", self.ui.tableWidget_product.currentItem().data(Qt.UserRole))
             self.update_product_info_panel()
 
-    def on_component_clicked(self):
+    def on_component_clicked(self, item):
         """Обработка выбора компонента"""
-        self.update_table_component_history(self.ui.tableWidget_component.currentItem().data(Qt.UserRole))
+        self.component_id = item.data(Qt.UserRole)
+        self.update_table_component_history(self.component_id)
 
     # =============================================================================
     # ОБРАБОТЧИКИ ДОПОЛНИТЕЛЬНЫХ ДЕЙСТВИЙ
@@ -230,10 +274,24 @@ class WindowProduct(QWidget):
             text = self.ui.lineEdit_search_product.text().lower()
 
         for row in range(table.rowCount()):
-            item = table.item(row, 1)
+            item = table.item(row, 0)
             if item:
                 visible = text.lower() in item.text().lower()
                 table.setRowHidden(row, not visible)
+
+    def change_component_history(self, status):
+        """Обновление истории компонентов задачи"""
+        
+        api_manager.api_profiletool.create_profiletool_component_history(
+            self.component_id,
+            {
+                "date": QDate.currentDate().toString("yyyy-MM-dd"),
+                "status_id": status,
+                "description": ""
+            }
+        )
+
+        self.update_profiletool_component_table()
 
     # =============================================================================
     # ОБРАБОТЧИКИ СОБЫТИЙ: УПРАВЛЕНИЕ
@@ -288,13 +346,14 @@ class WindowProduct(QWidget):
 
     def on_component_add_clicked(self):
         """Добавление компонента"""
-        QMessageBox.information(self, "Информация", "Функция будет реализована позже")
-
-    def on_component_edit_clicked(self):
-        """Редактирование компонента"""
-        QMessageBox.information(self, "Информация", "Функция будет реализована позже")
+        dialog = DialogCreateProfiletoolComponent(self, self.profiletool)
+        if dialog.exec() == QDialog.Accepted:
+            QMessageBox.warning(self, "Внимание", "Компонент инструмента профиля добавлен")
 
     def on_component_delete_clicked(self):
-        """Удаление компонента"""
-        QMessageBox.information(self, "Информация", "Функция будет реализована позже")
-
+        component_id = self.ui.tableWidget_component.currentItem().data(Qt.UserRole)
+        if component_id:
+            api_manager.api_profiletool.delete_profiletool_component_by_id(component_id)
+            QMessageBox.warning(self, "Внимание", "Компонент удален")
+        else:
+            QMessageBox.warning(self, "Внимание", "Выберите компонент для удаления")

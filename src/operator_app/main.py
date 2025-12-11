@@ -38,6 +38,9 @@ class OperatorApp:
         
         # Подключение обработчиков
         self.dropdown_work_type.on_change = self._on_work_type_change
+
+        # Включаем прокрутку для мобильных устройств
+        self.page.scroll = ft.ScrollMode.AUTO
         
         # Добавление элементов на страницу
         self.page.add(

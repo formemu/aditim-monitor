@@ -247,11 +247,17 @@ class WindowTask(QWidget):
                     # Название компонента
                     name_item = QTableWidgetItem(component['profiletool_component']['type']['name'])
                     name_item.setData(Qt.UserRole, component)
-                    last_history = component['profiletool_component']['history'][-1]
-                    if last_history['status']['id'] == 2:
-                        status_name = last_history['status']['name']
+                    history = component['profiletool_component']['history']
+                    if history:
+                        last_history = history[-1]
+                        if last_history['status']['id'] == 2:
+                            status_name = last_history['status']['name']
+                        else:
+                            status_name = "Разработан"
                     else:
-                        status_name = "Разработан"
+                        status_name = "Новая"
+                        last_history = {"status": {"id": None, "name": "Нет истории"}}
+
                     status_item = QTableWidgetItem(status_name)
                     status_item.setData(Qt.UserRole, component)
                     table.setItem(row, 0, name_item)
@@ -428,6 +434,15 @@ class WindowTask(QWidget):
         status_menu = QMenu("Изменить статус", menu)
         location_menu = QMenu("Изменить местоположение", menu)
         for status in api_manager.directory['task_status']:
+            # Проверяем, нужно ли добавлять этот статус в меню
+            current_status_name = self.task['status']['name']
+            status_name = status['name']
+            if status['id'] == self.task['status']['id']:
+                continue  # Уже установлен — не добавлять
+            if current_status_name == "В работе" and status_name == "Новая":
+                continue  # Не добавлять "Новая" если уже "В работе"
+            if current_status_name == "Выполнена" and status_name in ("В работе", "Новая"):
+                continue  # Не добавлять "В работе" и "Новая" если уже "Выполнена"
             action = QAction(status['name'], status_menu)
             action.setCheckable(True)
             action.triggered.connect(lambda _, status_id=status['id']: self.change_task_status(status_id))
@@ -443,6 +458,9 @@ class WindowTask(QWidget):
         menu.exec(table.viewport().mapToGlobal(pos))
 
     def change_task_status(self, status_id):
+        # Проверка: если выбранный статус совпадает с текущим, ничего не делать
+        if self.task['status']['id'] == status_id:
+            return
         # 1. Обновить статус
         task = api_manager.api_task.update_task_status(self.task['id'], status_id, QDate.currentDate().toString("yyyy-MM-dd"))
         # 2. Получить ВСЕ задачи в статусе "В работе"
