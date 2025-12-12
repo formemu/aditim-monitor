@@ -35,6 +35,7 @@ class ModelProfileToolComponent(Base):
     type = relationship("ModelDirProfileToolComponentType", back_populates="component")
     task_component = relationship("ModelTaskComponent", back_populates="profiletool_component")
     history = relationship("ModelProfileToolComponentHistory", back_populates="component", cascade="all, delete-orphan")
+    blank = relationship("ModelBlank", back_populates="profiletool_component")
 
 class ModelProfileToolComponentHistory(Base):
     """История изменений компонента инструмента для профиля"""

@@ -40,3 +40,14 @@ class ApiDirectory(ApiClient):
     def get_task_location(self):
         """Получение всех местоположений задач"""
         return self._request("GET", "/api/directory/dir_task_location")
+
+    def get_blank_material(self):
+        """Получение всех материалов заготовок"""
+        return self._request("GET", "/api/directory/dir_blank_material")
+
+    def get_blank_type(self, material_id=None):
+        """Получение всех типов заготовок с опциональным фильтром по материалу"""
+        params = {}
+        if material_id is not None:
+            params['material_id'] = material_id
+        return self._request("GET", "/api/directory/dir_blank_type", params=params)

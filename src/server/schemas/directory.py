@@ -1,71 +1,116 @@
-"""Pydantic schemas for directory"""
-from typing import Optional
+"""Схемы справочников"""
 from pydantic import BaseModel, ConfigDict
+from typing import Optional
 
-# Базовая модель — общие поля для всех справочников
+
 class SchemaDirectoryBase(BaseModel):
+    """Базовая схема справочника"""
     name: str
-    model_config = ConfigDict(from_attributes=True)
-    
-# Схема для создания — без id!
-class SchemaDirectoryCreate(SchemaDirectoryBase):
     description: Optional[str] = None
 
-# Схема для обновления — все поля опциональны
+    model_config = ConfigDict(from_attributes=True)
+
+
+class SchemaDirectoryCreate(SchemaDirectoryBase):
+    """Схема создания справочника"""
+    pass
+
+
 class SchemaDirectoryUpdate(BaseModel):
+    """Схема обновления справочника"""
     name: Optional[str] = None
     description: Optional[str] = None
 
-# Схема для ответа — включает id и поддержку ORM
+    model_config = ConfigDict(from_attributes=True)
+
+
 class SchemaDirectoryResponse(SchemaDirectoryBase):
+    """Схема ответа справочника"""
     id: int
-    description: Optional[str] = None
 
 
-# Конкретные справочники — наследуются и расширяются
+# Конкретные справочники
 class SchemaDirDepartment(SchemaDirectoryResponse):
     """Справочник: Подразделения"""
     pass
+
 
 class SchemaDirTaskStatus(SchemaDirectoryResponse):
     """Справочник: Статусы задач"""
     pass
 
+
 class SchemaDirToolDimension(SchemaDirectoryResponse):
     """Справочник: размерности инструментов"""
     pass
 
+
 class SchemaDirProfiletoolComponentType(SchemaDirectoryResponse):
     """Справочник: Типы компонентов инструментов профиля"""
-    profiletool_dimension_id: int
-    profiletool_dimension: Optional[SchemaDirToolDimension]
+    profiletool_dimension_id: Optional[int] = None
+    profiletool_dimension: Optional[SchemaDirToolDimension] = None
+
 
 class SchemaDirComponentStatus(SchemaDirectoryResponse):
     """Справочник: Статусы компонентов"""
     pass
 
 
-
 class SchemaDirMachine(SchemaDirectoryResponse):
-    """Справочник: станки"""
+    """Справочник: Станки"""
     work_type_id: int
-    work_type: Optional['SchemaDirWorkType']
-
-
-class WorkSubtype(SchemaDirectoryResponse):  
-    """Справочник:  стадии задач компонентов"""
-    work_type_id: Optional[int]
-    work_type: Optional['SchemaDirWorkType']
 
 
 class SchemaDirWorkType(SchemaDirectoryResponse):
-    """Справочник: типы станков"""
+    """Справочник: Типы работ"""
     pass
+
 
 class SchemaDirTaskType(SchemaDirectoryResponse):
-    """Справочник: типы задач"""
+    """Справочник: Типы задач"""
     pass
 
+
+class SchemaDirWorkSubtype(SchemaDirectoryResponse):
+    """Справочник: Подтипы работ"""
+    work_type_id: int
+    work_type: Optional[SchemaDirWorkType] = None
+
 class SchemaDirTaskLocation(SchemaDirectoryResponse):
-    """Справочник:  местоположения задач"""
+    """Справочник: Локации задач"""
     pass
+
+
+class SchemaDirBlankMaterial(SchemaDirectoryResponse):
+    """Справочник: Материалы заготовок"""
+    pass
+
+
+class SchemaDirBlankTypeBase(BaseModel):
+    """Базовая схема типа заготовки"""
+    width: Optional[int] = None
+    length: Optional[int] = None
+    height: Optional[int] = None
+    material_id: Optional[int] = None
+
+    model_config = ConfigDict(from_attributes=True)
+
+
+class SchemaDirBlankTypeCreate(SchemaDirBlankTypeBase):
+    """Схема создания типа заготовки"""
+    pass
+
+
+class SchemaDirBlankTypeUpdate(SchemaDirBlankTypeBase):
+    """Схема обновления типа заготовки"""
+    pass
+
+
+class SchemaDirBlankTypeResponse(SchemaDirBlankTypeBase):
+    """Схема ответа типа заготовки"""
+    id: int
+    material: Optional[SchemaDirBlankMaterial] = None
+
+
+# Алиасы для обратной совместимости
+WorkSubtype = SchemaDirWorkSubtype

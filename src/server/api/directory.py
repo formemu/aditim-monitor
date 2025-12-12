@@ -6,11 +6,13 @@ from sqlalchemy.orm import Session
 from ..database import get_db
 from ..models.directory import ( ModelDirDepartment, ModelDirTaskStatus, ModelDirProfileToolComponentType,
                                  ModelDirProfileToolComponentStatus, ModelDirProfileToolDimension, ModelDirMachine,
-                                 ModelDirWorkType, ModelDirWorkSubtype, ModelDirTaskType, ModelDirTaskLocation)
+                                 ModelDirWorkType, ModelDirWorkSubtype, ModelDirTaskType, ModelDirTaskLocation,
+                                 ModelDirBlankMaterial, ModelDirBlankType)
 
 from ..schemas.directory import ( SchemaDirDepartment, SchemaDirTaskStatus, SchemaDirProfiletoolComponentType,
                                   SchemaDirComponentStatus, SchemaDirToolDimension,
-                                  SchemaDirWorkType, WorkSubtype, SchemaDirTaskType, SchemaDirTaskLocation)
+                                  SchemaDirWorkType, WorkSubtype, SchemaDirTaskType, SchemaDirTaskLocation,
+                                  SchemaDirBlankMaterial, SchemaDirBlankTypeResponse)
 
 router = APIRouter(prefix="/api/directory", tags=["directory"], redirect_slashes=False)
 
@@ -73,3 +75,20 @@ def get_task_type(db: Session = Depends(get_db)):
 def get_task_location(db: Session = Depends(get_db)):
     """Получить все местоположения задач"""
     return db.query(ModelDirTaskLocation).all()
+
+@router.get("/dir_blank_material", response_model=List[SchemaDirBlankMaterial])
+def get_blank_material(db: Session = Depends(get_db)):
+    """Получить все материалы заготовок"""
+    return db.query(ModelDirBlankMaterial).all()
+
+@router.get("/dir_blank_type", response_model=List[SchemaDirBlankTypeResponse])
+def get_blank_type(
+    db: Session = Depends(get_db),
+    material_id: int = Query(None, description="Фильтр по материалу")
+):
+    """Получить все типы заготовок с опциональным фильтром по материалу"""
+    query = db.query(ModelDirBlankType)
+    if material_id is not None:
+        query = query.filter(ModelDirBlankType.material_id == material_id)
+    return query.all()
+

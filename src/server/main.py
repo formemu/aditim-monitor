@@ -16,6 +16,7 @@ from .api.profile import router as profile_router
 from .api.profiletool import router as profiletool_router
 from .api.plan import router as plan_router
 from .api.task_component_stage import router as task_component_stage_router
+from .api.blank import router as blank_router
 
 app = FastAPI(
     title="ADITIM Monitor API",
@@ -43,6 +44,7 @@ app.include_router(profile_router)
 app.include_router(profiletool_router)
 app.include_router(plan_router)
 app.include_router(task_component_stage_router)
+app.include_router(blank_router)
 
 # === Вебсокет эндпоинт ===
 @app.websocket("/ws/updates")

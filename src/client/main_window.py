@@ -11,6 +11,7 @@ from .windows.window_development import WindowDevelopment
 from .windows.window_product import WindowProduct
 from .windows.window_task import WindowTask
 from .windows.window_machine import WindowMachine
+from .windows.window_blank import WindowBlank
 
 
 
@@ -52,6 +53,7 @@ class MainWindow(QMainWindow):
         self.window_product = None
         self.window_task = None
         self.window_machine = None
+        self.window_blank = None
 
     def setup_ui(self):
         """Настройка UI компонентов после загрузки"""
@@ -128,7 +130,9 @@ class MainWindow(QMainWindow):
 
     def show_blank(self):
         """Показать заготовки"""
-        QMessageBox.information(self, "Заготовки", "Окно заготовок (в разработке)")
+        window = self.ensure_window_created("window_blank", WindowBlank)
+        self.ui.stackedWidget_content.setCurrentWidget(window.ui)
+        self.setWindowTitle("ADITIM Monitor - Заготовки")
 
     def show_setting(self):
         """Показать настройки"""

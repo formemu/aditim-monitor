@@ -9,6 +9,7 @@ from .api.api_product import ApiProduct
 from .api.api_task import ApiTask
 from .api.api_directory import ApiDirectory
 from .api.api_plan import ApiPlanTaskComponentStage
+from .api.api_blank import APIBlank
 
 class ApiManager(QObject):
     instance = None
@@ -33,6 +34,7 @@ class ApiManager(QObject):
         self.api_task = ApiTask()
         self.api_directory = ApiDirectory()
         self.api_plan_task_component_stage = ApiPlanTaskComponentStage()
+        self.api_blank = APIBlank()
 
         # Хранилища данных
         self.table = {}
@@ -61,9 +63,14 @@ class ApiManager(QObject):
             ("work_type", "directory", self.api_directory.get_work_type),
             ("task_type", "directory", self.api_directory.get_task_type),
             ("task_location", "directory", self.api_directory.get_task_location),
+            ("blank_material", "directory", self.api_directory.get_blank_material),
+            ("blank_type", "directory", self.api_directory.get_blank_type),
             
             # Планы
             ("task_component_stage", "plan", self.api_plan_task_component_stage.get_plan_task_component_stage),
+            
+            # Заготовки
+            ("blank", "table", self.api_blank.get_list_blank),
 
         ]
 

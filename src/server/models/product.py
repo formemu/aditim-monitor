@@ -27,3 +27,4 @@ class ModelProductComponent(Base):
     # Связи
     product = relationship("ModelProduct", back_populates="component")
     task_component = relationship("ModelTaskComponent", back_populates="product_component")
+    blank = relationship("ModelBlank", back_populates="product_component")
