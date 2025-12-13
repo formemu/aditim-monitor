@@ -1,6 +1,6 @@
 """API routes for directory"""
 from typing import List
-from fastapi import APIRouter, Depends, Query
+from fastapi import APIRouter, Depends, Query, HTTPException
 from sqlalchemy.orm import Session
 
 from ..database import get_db
@@ -10,9 +10,13 @@ from ..models.directory import ( ModelDirDepartment, ModelDirTaskStatus, ModelDi
                                  ModelDirBlankMaterial, ModelDirBlankType)
 
 from ..schemas.directory import ( SchemaDirDepartment, SchemaDirTaskStatus, SchemaDirProfiletoolComponentType,
-                                  SchemaDirComponentStatus, SchemaDirToolDimension,
+                                  SchemaDirComponentStatus, SchemaDirToolDimension, SchemaDirToolDimensionCreate,
+                                  SchemaDirToolDimensionUpdate, SchemaDirProfiletoolComponentTypeCreate,
+                                  SchemaDirProfiletoolComponentTypeUpdate,
                                   SchemaDirWorkType, WorkSubtype, SchemaDirTaskType, SchemaDirTaskLocation,
                                   SchemaDirBlankMaterial, SchemaDirBlankTypeResponse)
+
+from ..events import notify_clients
 
 router = APIRouter(prefix="/api/directory", tags=["directory"], redirect_slashes=False)
 
@@ -91,4 +95,145 @@ def get_blank_type(
     if material_id is not None:
         query = query.filter(ModelDirBlankType.material_id == material_id)
     return query.all()
+
+
+# =============================================================================
+# CRUD для размерностей инструментов (dir_profiletool_dimension)
+# =============================================================================
+@router.post("/dir_profiletool_dimension", response_model=SchemaDirToolDimension)
+def create_profiletool_dimension(
+    dimension: SchemaDirToolDimensionCreate,
+    db: Session = Depends(get_db)
+):
+    """Создание новой размерности инструмента"""
+    db_dimension = ModelDirProfileToolDimension(**dimension.model_dump())
+    db.add(db_dimension)
+    db.commit()
+    db.refresh(db_dimension)
+    
+    # Отправляем сигнал об изменении данных
+    notify_clients("directory", "profiletool_dimension", "create")
+
+    return db_dimension
+
+
+@router.put("/dir_profiletool_dimension/{dimension_id}", response_model=SchemaDirToolDimension)
+def update_profiletool_dimension(
+    dimension_id: int,
+    dimension: SchemaDirToolDimensionUpdate,
+    db: Session = Depends(get_db)
+):
+    """Обновление размерности инструмента"""
+    db_dimension = db.query(ModelDirProfileToolDimension).filter(
+        ModelDirProfileToolDimension.id == dimension_id
+    ).first()
+    
+    if not db_dimension:
+        raise HTTPException(status_code=404, detail="Размерность не найдена")
+    
+    # Обновляем только переданные поля
+    update_data = dimension.model_dump(exclude_unset=True)
+    for key, value in update_data.items():
+        setattr(db_dimension, key, value)
+    
+    db.commit()
+    db.refresh(db_dimension)
+    
+    # Отправляем сигнал об изменении данных
+    notify_clients("directory", "profiletool_dimension", "update")
+
+    return db_dimension
+
+
+@router.delete("/dir_profiletool_dimension/{dimension_id}")
+def delete_profiletool_dimension(
+    dimension_id: int,
+    db: Session = Depends(get_db)
+):
+    """Удаление размерности инструмента"""
+    db_dimension = db.query(ModelDirProfileToolDimension).filter(
+        ModelDirProfileToolDimension.id == dimension_id
+    ).first()
+    
+    if not db_dimension:
+        raise HTTPException(status_code=404, detail="Размерность не найдена")
+    
+    db.delete(db_dimension)
+    db.commit()
+    
+    # Отправляем сигнал об изменении данных
+    notify_clients("directory", "profiletool_dimension", "delete")
+
+    return {"status": "success", "message": "Размерность удалена"}
+
+
+# =============================================================================
+# CRUD для типов компонентов (dir_profiletool_component_type)
+# =============================================================================
+@router.post("/dir_component_type", response_model=SchemaDirProfiletoolComponentType)
+def create_component_type(
+    component_type: SchemaDirProfiletoolComponentTypeCreate,
+    db: Session = Depends(get_db)
+):
+    """Создание нового типа компонента"""
+    db_component_type = ModelDirProfileToolComponentType(**component_type.model_dump())
+    db.add(db_component_type)
+    db.commit()
+    db.refresh(db_component_type)
+    
+    # Отправляем сигнал об изменении данных
+    notify_clients("directory", "component_type", "create")
+
+    return db_component_type
+
+
+@router.put("/dir_component_type/{component_type_id}", response_model=SchemaDirProfiletoolComponentType)
+def update_component_type(
+    component_type_id: int,
+    component_type: SchemaDirProfiletoolComponentTypeUpdate,
+    db: Session = Depends(get_db)
+):
+    """Обновление типа компонента"""
+    db_component_type = db.query(ModelDirProfileToolComponentType).filter(
+        ModelDirProfileToolComponentType.id == component_type_id
+    ).first()
+    
+    if not db_component_type:
+        raise HTTPException(status_code=404, detail="Тип компонента не найден")
+    
+    # Обновляем только переданные поля
+    update_data = component_type.model_dump(exclude_unset=True)
+    for key, value in update_data.items():
+        setattr(db_component_type, key, value)
+    
+    db.commit()
+    db.refresh(db_component_type)
+    
+    # Отправляем сигнал об изменении данных
+    notify_clients("directory", "component_type", "update")
+
+    return db_component_type
+
+
+@router.delete("/dir_component_type/{component_type_id}")
+def delete_component_type(
+    component_type_id: int,
+    db: Session = Depends(get_db)
+):
+    """Удаление типа компонента"""
+    db_component_type = db.query(ModelDirProfileToolComponentType).filter(
+        ModelDirProfileToolComponentType.id == component_type_id
+    ).first()
+    
+    if not db_component_type:
+        raise HTTPException(status_code=404, detail="Тип компонента не найден")
+    
+    db.delete(db_component_type)
+    db.commit()
+    
+    # Отправляем сигнал об изменении данных
+    notify_clients("directory", "component_type", "delete")
+
+    return {"status": "success", "message": "Тип компонента удален"}
+
 

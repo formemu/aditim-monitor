@@ -9,7 +9,10 @@ from sqlalchemy.exc import SQLAlchemyError
 
 from ..database import get_db
 from ..models.plan import ModelPlanTaskComponentStage
-from ..schemas.plan import SchemaPlanTaskComponentStageResponse
+from ..schemas.plan import (SchemaPlanTaskComponentStageResponse, 
+                            SchemaPlanTaskComponentStageCreate,
+                            SchemaPlanTaskComponentStageUpdate)
+from ..events import notify_clients
 
 router = APIRouter(prefix="/api", tags=["plan"])
 
@@ -45,3 +48,73 @@ def get_plan(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Внутренняя ошибка сервера."
         )
+
+
+# =============================================================================
+# CRUD для плана стадий (plan_task_component_stage)
+# =============================================================================
+@router.post("/plan_task_component_stage", response_model=SchemaPlanTaskComponentStageResponse)
+def create_plan_task_component_stage(
+    plan_stage: SchemaPlanTaskComponentStageCreate,
+    db: Session = Depends(get_db)
+):
+    """Создание нового плана стадии"""
+    db_plan_stage = ModelPlanTaskComponentStage(**plan_stage.model_dump())
+    db.add(db_plan_stage)
+    db.commit()
+    db.refresh(db_plan_stage)
+    
+    # Отправляем сигнал об изменении данных
+    notify_clients("plan", "task_component_stage",  "create")
+
+    return db_plan_stage
+
+
+@router.put("/plan_task_component_stage/{plan_stage_id}", response_model=SchemaPlanTaskComponentStageResponse)
+def update_plan_task_component_stage(
+    plan_stage_id: int,
+    plan_stage: SchemaPlanTaskComponentStageUpdate,
+    db: Session = Depends(get_db)
+):
+    """Обновление плана стадии"""
+    db_plan_stage = db.query(ModelPlanTaskComponentStage).filter(
+        ModelPlanTaskComponentStage.id == plan_stage_id
+    ).first()
+    
+    if not db_plan_stage:
+        raise HTTPException(status_code=404, detail="План стадии не найден")
+    
+    # Обновляем только переданные поля
+    update_data = plan_stage.model_dump(exclude_unset=True)
+    for key, value in update_data.items():
+        setattr(db_plan_stage, key, value)
+    
+    db.commit()
+    db.refresh(db_plan_stage)
+    
+    # Отправляем сигнал об изменении данных
+    notify_clients("plan", "plan_task_component_stage",  "update")
+    
+    return db_plan_stage
+
+
+@router.delete("/plan_task_component_stage/{plan_stage_id}")
+def delete_plan_task_component_stage(
+    plan_stage_id: int,
+    db: Session = Depends(get_db)
+):
+    """Удаление плана стадии"""
+    db_plan_stage = db.query(ModelPlanTaskComponentStage).filter(
+        ModelPlanTaskComponentStage.id == plan_stage_id
+    ).first()
+    
+    if not db_plan_stage:
+        raise HTTPException(status_code=404, detail="План стадии не найден")
+    
+    db.delete(db_plan_stage)
+    db.commit()
+    
+    # Отправляем сигнал об изменении данных
+    notify_clients("plan", "plan_task_component_stage",  "delete")
+
+    return {"status": "success", "message": "План стадии удален"}

@@ -209,6 +209,25 @@ class WizardTaskCreate(QWizard):
             # Создаем task_component
             component_data = {"profiletool_component_id": component_id}
             task_component = api_manager.api_task.create_task_component(task['id'], component_data)
+            task_component_id = task_component['id']
+            
+            # Создаем этапы работ для заготовки (эрозионные и/или фрезерные)
+            for work in blank_data.get('work', []):
+                # Определяем номер этапа в зависимости от типа работы
+                # ID 8 - эрозионные работы (этап 1)
+                # ID 9 - фрезерные работы (этап 2)
+                if work['id'] == 8:
+                    stage_num = 1  # Эрозионные работы
+                elif work['id'] == 9:
+                    stage_num = 2  # Фрезерные работы
+                else:
+                    stage_num = 1  # По умолчанию
+                
+                stage_data = {
+                    "work_subtype_id": work['id'],
+                    "stage_num": stage_num
+                }
+                api_manager.api_task.create_task_component_stage(task_component_id, stage_data)
             
             # Обновляем заготовку: привязываем к компоненту и добавляем размеры детали
             blank_update_data = {

@@ -32,6 +32,10 @@ class ApiDirectory(ApiClient):
     def get_work_type(self):
         """Получение всех типов работ"""
         return self._request("GET", "/api/directory/dir_work_type")
+    
+    def get_work_subtype(self):
+        """Получение всех подтипов работ"""
+        return self._request("GET", "/api/directory/dir_work_subtype")
 
     def get_task_type(self):
         """Получение всех типов задач"""
@@ -51,3 +55,33 @@ class ApiDirectory(ApiClient):
         if material_id is not None:
             params['material_id'] = material_id
         return self._request("GET", "/api/directory/dir_blank_type", params=params)
+
+    # =============================================================================
+    # CRUD для размерностей инструментов (dir_profiletool_dimension)
+    # =============================================================================
+    def create_profiletool_dimension(self, dimension_data):
+        """Создание новой размерности инструмента"""
+        return self._request("POST", "/api/directory/dir_profiletool_dimension", json=dimension_data)
+    
+    def update_profiletool_dimension(self, dimension_id, dimension_data):
+        """Обновление размерности инструмента"""
+        return self._request("PUT", f"/api/directory/dir_profiletool_dimension/{dimension_id}", json=dimension_data)
+    
+    def delete_profiletool_dimension(self, dimension_id):
+        """Удаление размерности инструмента"""
+        return self._request("DELETE", f"/api/directory/dir_profiletool_dimension/{dimension_id}")
+
+    # =============================================================================
+    # CRUD для типов компонентов (dir_profiletool_component_type)
+    # =============================================================================
+    def create_component_type(self, component_type_data):
+        """Создание нового типа компонента"""
+        return self._request("POST", "/api/directory/dir_component_type", json=component_type_data)
+    
+    def update_component_type(self, component_type_id, component_type_data):
+        """Обновление типа компонента"""
+        return self._request("PUT", f"/api/directory/dir_component_type/{component_type_id}", json=component_type_data)
+    
+    def delete_component_type(self, component_type_id):
+        """Удаление типа компонента"""
+        return self._request("DELETE", f"/api/directory/dir_component_type/{component_type_id}")

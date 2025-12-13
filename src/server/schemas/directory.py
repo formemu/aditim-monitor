@@ -45,6 +45,16 @@ class SchemaDirToolDimension(SchemaDirectoryResponse):
     pass
 
 
+class SchemaDirToolDimensionCreate(SchemaDirectoryBase):
+    """Схема создания размерности инструмента"""
+    pass
+
+
+class SchemaDirToolDimensionUpdate(SchemaDirectoryUpdate):
+    """Схема обновления размерности инструмента"""
+    pass
+
+
 class SchemaDirProfiletoolComponentType(SchemaDirectoryResponse):
     """Справочник: Типы компонентов инструментов профиля"""
     profiletool_dimension_id: Optional[int] = None
@@ -52,6 +62,30 @@ class SchemaDirProfiletoolComponentType(SchemaDirectoryResponse):
     height: Optional[int] = None
     length: Optional[int] = None
     profiletool_dimension: Optional[SchemaDirToolDimension] = None
+
+
+class SchemaDirProfiletoolComponentTypeCreate(BaseModel):
+    """Схема создания типа компонента"""
+    name: str
+    description: Optional[str] = None
+    profiletool_dimension_id: Optional[int] = None
+    width: Optional[int] = None
+    height: Optional[int] = None
+    length: Optional[int] = None
+
+    model_config = ConfigDict(from_attributes=True)
+
+
+class SchemaDirProfiletoolComponentTypeUpdate(BaseModel):
+    """Схема обновления типа компонента"""
+    name: Optional[str] = None
+    description: Optional[str] = None
+    profiletool_dimension_id: Optional[int] = None
+    width: Optional[int] = None
+    height: Optional[int] = None
+    length: Optional[int] = None
+
+    model_config = ConfigDict(from_attributes=True)
 
 
 class SchemaDirComponentStatus(SchemaDirectoryResponse):

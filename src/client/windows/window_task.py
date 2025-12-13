@@ -277,6 +277,21 @@ class WindowTask(QWidget):
                     
                     table.setItem(row, 0, name_item)
                     table.setItem(row, 1, stage_item)
+            elif self.task['type_id'] == 3:
+                # Тип задачи - "Изготовление заготовок"
+                table.setColumnCount(2)
+                table.setHorizontalHeaderLabels(["Название", "Этап"])
+                for row, component in enumerate(self.task['component']):
+                    name_item = QTableWidgetItem(component['profiletool_component']['type']['name'])
+                    name_item.setData(Qt.UserRole, component)
+                    
+                    # Определяем текущий статус этапа
+                    stage_status = self.get_component_stage_status(component)
+                    stage_item = QTableWidgetItem(stage_status)
+                    stage_item.setData(Qt.UserRole, component)
+                    
+                    table.setItem(row, 0, name_item)
+                    table.setItem(row, 1, stage_item)
                     
     def update_table_component_stage(self, component):
         """Заполняет tableWidget_component_stage этапами из выбранного компонента"""
@@ -481,6 +496,9 @@ class WindowTask(QWidget):
             self.update_component_history(status, task['component'])
         elif task['type']['name'] == 'Изготовление' and task['status']['name'] == 'В работе':
             status = 4 # Изготовление
+            self.update_component_history(status, task['component'])
+        elif task['type']['name'] == 'Заготовка' and task['status']['name'] == 'В работе':
+            status = 11 # Изготовление
             self.update_component_history(status, task['component'])
         
 

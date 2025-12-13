@@ -56,11 +56,13 @@ class ApiManager(QObject):
             # Справочники
             ("department", "directory", self.api_directory.get_department),
             ("component_type", "directory", self.api_directory.get_component_type),
+            ("profiletool_component_type", "directory", self.api_directory.get_component_type),
             ("component_status", "directory", self.api_directory.get_component_status),
             ("task_status", "directory", self.api_directory.get_task_status),
             ("profiletool_dimension", "directory", self.api_directory.get_tool_dimension),
             ("machine", "directory", self.api_directory.get_machine),
             ("work_type", "directory", self.api_directory.get_work_type),
+            ("work_subtype", "directory", self.api_directory.get_work_subtype),
             ("task_type", "directory", self.api_directory.get_task_type),
             ("task_location", "directory", self.api_directory.get_task_location),
             ("blank_material", "directory", self.api_directory.get_blank_material),
