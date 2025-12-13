@@ -82,9 +82,9 @@ class ApiManager(QObject):
         # Вебсокет
         # self.ws_url = "ws://0.0.0.0:8000/ws/updates"
         
-        # self.ws_url = "ws://127.0.0.1:8000/ws/updates"
+        self.ws_url = "ws://127.0.0.1:8000/ws/updates"
 
-        self.ws_url = "ws://192.168.5.100:8000/ws/updates"
+        # self.ws_url = "ws://192.168.5.100:8000/ws/updates"
         self.websocket_task = None
         self.reconnect_delay = 5
         self.initialized = True

@@ -8,8 +8,8 @@ from pathlib import Path
 # Базовый путь к client директории
 CLIENT_BASE_PATH = Path(__file__).parent
 
-# API_BASE_URL = os.getenv('ADITIM_API_URL', 'http://127.0.0.1:8000')
-API_BASE_URL = os.getenv('ADITIM_API_URL', 'http://192.168.5.100:8000')
+API_BASE_URL = os.getenv('ADITIM_API_URL', 'http://127.0.0.1:8000')
+# API_BASE_URL = os.getenv('ADITIM_API_URL', 'http://192.168.5.100:8000')
 API_TIMEOUT = int(os.getenv('ADITIM_API_TIMEOUT', '30'))
 
 # UI Colors - ADITIM Corporate Style

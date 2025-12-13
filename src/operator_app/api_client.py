@@ -3,8 +3,8 @@ import requests
 from typing import List, Dict
 from datetime import date
 
-# BASE_URL = "http://0.0.0.0:8000/api"
-BASE_URL = "http://192.168.5.100:8000/api"
+BASE_URL = "http://0.0.0.0:8000/api"
+# BASE_URL = "http://192.168.5.100:8000/api"
 
 def get_work_types():
     url = f"{BASE_URL}/directory/dir_work_type"

@@ -1,4 +1,4 @@
-"""Виджет для выбора параметров заготовки компонента"""
+"""Виджет параметров заготовки для компонента"""
 from PySide6.QtWidgets import QWidget
 from PySide6.QtCore import QFile
 from PySide6.QtUiTools import QUiLoader
@@ -6,7 +6,7 @@ from ...constant import UI_PATHS_ABS
 from ...api_manager import api_manager
 
 
-class WidgetTaskCreateBlank(QWidget):
+class WidgetBlankParameter(QWidget):
     """Виджет для выбора заготовки и указания размеров обработанной детали"""
     
     def __init__(self, component, parent=None):

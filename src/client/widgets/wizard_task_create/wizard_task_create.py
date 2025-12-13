@@ -1,12 +1,15 @@
 """Мастер создания задачи"""
-from PySide6.QtWidgets import QWizard, QListWidgetItem, QWidget, QCheckBox
-from PySide6.QtCore import QFile, Qt, QDate
+from PySide6.QtWidgets import QWizard
+from PySide6.QtCore import QFile, QDate
 from PySide6.QtUiTools import QUiLoader
 from ...constant import UI_PATHS_ABS, get_style_path
 from ...api_manager import api_manager
 from ...style_util import load_styles
-from .widget_task_creare_profiletool_component import WidgetTaskCreateProfiletoolComponent
-from .widget_task_create_blank import WidgetTaskCreateBlank
+from .page_profiletool_selection import PageProfiletoolSelection
+from .page_profiletool_component_dev import PageProfiletoolComponentDev
+from .page_profiletool_component_prod import PageProfiletoolComponentProd
+from .page_profiletool_component_rev import PageProfiletoolComponentRev
+from .page_profiletool_blank import PageProfiletoolBlank
 
 # Константы
 PAGE = {
@@ -35,6 +38,14 @@ class WizardTaskCreate(QWizard):
             "component": list()
         }
         self.load_ui()
+        
+        # Инициализация страниц
+        self.page_profiletool_selection = PageProfiletoolSelection(self, self.ui)
+        self.page_profiletool_component_dev = PageProfiletoolComponentDev(self, self.ui)
+        self.page_profiletool_component_prod = PageProfiletoolComponentProd(self, self.ui)
+        self.page_profiletool_component_rev = PageProfiletoolComponentRev(self, self.ui)
+        self.page_profiletool_blank = PageProfiletoolBlank(self, self.ui)
+        
         self.setup_ui()
         self.setWizardStyle(QWizard.WizardStyle.ClassicStyle)
     
@@ -62,16 +73,7 @@ class WizardTaskCreate(QWizard):
         self.setStartId(0)
 
         self.ui.dateEdit_date.setDate(QDate.currentDate().addDays(14))
-
-        # Сигналы поиска
-        self.ui.lineEdit_profile_search.textChanged.connect(self.on_search_profile)
-        self.ui.lineEdit_profile_search.returnPressed.connect(self.on_profile_selected)
-
-        # Выбор из результатов
-        self.ui.listWidget_profile_search.itemSelectionChanged.connect(self.on_profile_selected)
-        self.ui.listWidget_profile_search.itemClicked.connect(lambda _: self.on_profile_selected())
         
-
         self.load_comboBox_task_type()
 
     def on_page_changed(self, id: int):
@@ -79,13 +81,13 @@ class WizardTaskCreate(QWizard):
         if id == PAGE["START"]:
             pass
         elif id == PAGE["PROFILETOOL_COMPONENT_DEV"]:
-            self.load_profiletool_component_dev()
+            self.page_profiletool_component_dev.load()
         elif id == PAGE["PROFILETOOL_COMPONENT_SELECTION"]:
-            self.load_profiletool_component_prod()
+            self.page_profiletool_component_prod.load()
         elif id == PAGE["PROFILETOOL_COMPONENT_REV"]:
-            self.load_profiletool_component_rev()
+            self.page_profiletool_component_rev.load()
         elif id == PAGE["PROFILETOOL_BLANK"]:
-            self.load_profiletool_component_blank()
+            self.page_profiletool_blank.load()
         elif id == PAGE["TASK_DETAIL"]:
             self.task_data["type_id"] = self.ui.comboBox_work_type.currentIndex()
             self.create_list_profiletool_component_selected()
@@ -128,140 +130,23 @@ class WizardTaskCreate(QWizard):
         for type in api_manager.directory['task_type']:
             self.ui.comboBox_work_type.addItem(type['name'], type['id'])
 
-    # --- Страница выбора инструмента профиля ---
-    def on_search_profile(self, text: str):
-        """поиск профиля по артиклу"""
-        self.ui.listWidget_profile_search.clear()
-        for profile in api_manager.search_in('profile', 'article', text)[:10]:
-            item = QListWidgetItem(f"{profile['article']}")
-            item.setData(Qt.UserRole, profile)
-            self.ui.listWidget_profile_search.addItem(item)
-
-    def on_profile_selected(self):
-        item = self.ui.listWidget_profile_search.currentItem()
-        if not item:
-            return
-        self.task_data["profile"] = item.data(Qt.UserRole)
-        self.ui.lineEdit_profile_search.setText(f"{self.task_data['profile']['article']}")
-        self.ui.comboBox_dimension.clear()
-        for profiletool in self.task_data["profile"]['profiletool']:
-            name = profiletool['dimension']['name']
-            self.ui.comboBox_dimension.addItem(name, profiletool)
-
-        self.ui.comboBox_dimension.currentIndexChanged.connect(self.on_dimension_selected)
-    
-    def on_dimension_selected(self):
-        if self.ui.comboBox_dimension.currentIndex() == -1:
-            self.profileTool = None
-        else:
-            self.profileTool = self.ui.comboBox_dimension.currentData()
-            self.task_data["profiletool_id"] = self.profileTool['id']
-
-    # --- Страница выбора компонентов для разработки ---
-    def load_profiletool_component_dev(self):
-        """Загружает компоненты для разработки"""
-        self.ui.listWidget_profiletool_component_dev.clear()
-        for component in self.profileTool['component']:
-            item = QListWidgetItem()
-            checkbox = QCheckBox(f"{component['type']['name']}")
-            checkbox.setProperty("component_id", component['id'])
-            self.ui.listWidget_profiletool_component_dev.addItem(item)
-            self.ui.listWidget_profiletool_component_dev.setItemWidget(item, checkbox)
-
-    # --- Страница выбора компонентов инструментов и работ ---
-    def load_profiletool_component_prod(self):
-        self.ui.listWidget_profiletool_component_prod.clear()    
-        for child in self.ui.widget_profiletool_component_container.findChildren(QWidget):
-            child.deleteLater()
-        for component in self.profileTool['component']:
-            component.setdefault('stage', [])
-            item = QListWidgetItem("")
-            item.setData(Qt.UserRole, component)
-            self.ui.listWidget_profiletool_component_prod.addItem(item)
-            checkbox = QCheckBox(f"{component['type']['name']}")
-            checkbox.setProperty("component_id", component['id'])
-            checkbox.toggled.connect(lambda checked, comp=component, checkBox=checkbox: 
-                                     self.activate_profiletool_component(checked, comp))
-            self.ui.listWidget_profiletool_component_prod.setItemWidget(item, checkbox)
-
-    def activate_profiletool_component(self, checked, component):
-        layout = self.ui.widget_profiletool_component_container.layout()
-        if checked:
-            widget_component = WidgetTaskCreateProfiletoolComponent(component)
-            layout.addWidget(widget_component)
-        else:
-            layout.removeWidget(widget_component)
-            widget_component.deleteLater()
-
     def create_list_profiletool_component_selected(self):
-        # Для задач с заготовками не собираем компоненты из listWidget
-        # так как они будут обработаны отдельно в create_profiletool_task_blank
+        """Получает выбранные компоненты из страниц"""
+        # Для задач с заготовками компоненты обрабатываются отдельно
         if self.task_data['type_id'] == 3:
             return
         
+        # Получаем компоненты через страницы
         if self.task_data['type_id'] == 0:
-            listWidget_selected = self.ui.listWidget_profiletool_component_dev
+            selected_components = self.page_profiletool_component_dev.get_selected_component()
         elif self.task_data['type_id'] == 1:
-            listWidget_selected = self.ui.listWidget_profiletool_component_prod
+            selected_components = self.page_profiletool_component_prod.get_selected_component()
         elif self.task_data['type_id'] == 2:
-            listWidget_selected = self.ui.listWidget_profiletool_component_rev
-
-        for i in range(listWidget_selected.count()):
-            item = listWidget_selected.item(i)
-            checkBox = listWidget_selected.itemWidget(item)
-            if checkBox.isChecked():
-                component_id = checkBox.property("component_id")
-                component = None
-                for comp in self.profileTool['component']:
-                    if comp.get('id') == component_id:
-                        component = comp
-                        break
-                self.task_data["component"].append(component)
-
-    # --- Страница выбора компонентов для изменения ---
-    def load_profiletool_component_rev(self):
-        """Загружает компоненты для изменения"""
-        self.ui.listWidget_profiletool_component_rev.clear()
-        for component in self.profileTool['component']:
-            item = QListWidgetItem("")
-            checkbox = QCheckBox(f"{component['type']['name']}")
-            checkbox.setProperty("component_id", component['id'])
-            self.ui.listWidget_profiletool_component_rev.addItem(item)
-            self.ui.listWidget_profiletool_component_rev.setItemWidget(item, checkbox)
-
-    # --- Страница выбора компонентов для заготовок ---
-    def load_profiletool_component_blank(self):
-        """Загружает компоненты для изготовления заготовок"""
-        self.ui.listWidget_profiletool_blank.clear()
-        
-        # Очищаем контейнер виджетов параметров заготовок
-        layout = self.ui.widget_blank_container.layout()
-        for child in self.ui.widget_blank_container.findChildren(QWidget):
-            child.deleteLater()
-        
-        for component in self.profileTool['component']:
-            item = QListWidgetItem("")
-            checkbox = QCheckBox(f"{component['type']['name']}")
-            checkbox.setProperty("component_id", component['id'])
-            checkbox.toggled.connect(lambda checked, comp=component: 
-                                     self.activate_blank_component(checked, comp))
-            self.ui.listWidget_profiletool_blank.addItem(item)
-            self.ui.listWidget_profiletool_blank.setItemWidget(item, checkbox)
-    
-    def activate_blank_component(self, checked, component):
-        """Добавляет или удаляет виджет параметров заготовки"""
-        layout = self.ui.widget_blank_container.layout()
-        if checked:
-            widget_blank = WidgetTaskCreateBlank(component)
-            widget_blank.setProperty("component_id", component['id'])
-            layout.addWidget(widget_blank)
+            selected_components = self.page_profiletool_component_rev.get_selected_component()
         else:
-            # Находим и удаляем виджет для этого компонента
-            for child in self.ui.widget_blank_container.findChildren(WidgetTaskCreateBlank):
-                if child.property("component_id") == component['id']:
-                    layout.removeWidget(child)
-                    child.deleteLater()
-                    break
+            selected_components = []
+        
+        self.task_data["component"] = selected_components
 
     # --- Создание задач ---
     def accept(self):
@@ -311,10 +196,10 @@ class WizardTaskCreate(QWizard):
         """Создание задачи для изготовления заготовок"""
         task = api_manager.api_task.create_task(self.task_data)
         
-        # Получаем параметры заготовок из виджетов
-        for widget_blank in self.ui.widget_blank_container.findChildren(WidgetTaskCreateBlank):
-            blank_data = widget_blank.get_blank_data()
-            
+        # Получаем параметры заготовок через страницу
+        blank_data_list = self.page_profiletool_blank.get_blank_data_list()
+        
+        for blank_data in blank_data_list:
             if not blank_data:
                 continue  # Пропускаем, если заготовка не выбрана
             
