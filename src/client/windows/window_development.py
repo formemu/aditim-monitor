@@ -1,54 +1,35 @@
-from PySide6.QtCore import QFile, Qt, QDate
+from PySide6.QtCore import Qt, QDate
 import base64
-from PySide6.QtUiTools import QUiLoader
 from PySide6.QtGui import QPixmap, QAction
-from PySide6.QtWidgets import  QMenu, QAbstractItemView
-from ..constant import UI_PATHS_ABS, get_style_path, ICON_PATHS_ABS
-from ..style_util import load_styles
-from ..api_manager import api_manager
-from PySide6.QtWidgets import QTableWidgetItem
+from PySide6.QtWidgets import QMenu, QAbstractItemView
 
-class WindowDevelopment:
+from ..base_window import BaseWindow
+from ..base_table import BaseTable
+from ..constant import UI_PATHS_ABS
+from ..api_manager import api_manager
+
+
+class WindowDevelopment(BaseWindow):
     """Окно для управления разработками"""
     def __init__(self):
-        super().__init__()
         self.task = None
         self.component_id = None
-        self.load_ui()
-        self.table = self.ui.tableWidget_taskdev
-        self.setup_ui()
-        api_manager.data_updated.connect(self.refresh_data)
+        super().__init__(UI_PATHS_ABS["DEVELOPMENT_CONTENT"], api_manager)
     
     # =============================================================================
     # ИНИЦИАЛИЗАЦИЯ И ЗАГРУЗКА ИНТЕРФЕЙСА
     # =============================================================================
-    def load_ui(self):
-        """Загрузка UI из файла"""
-        ui_file = QFile(UI_PATHS_ABS["DEVELOPMENT_CONTENT"])
-        ui_file.open(QFile.ReadOnly)
-        loader = QUiLoader()
-        self.ui = loader.load(ui_file)
-        ui_file.close()
-
     def setup_ui(self):
         """Настройка UI компонентов после загрузки"""
-        self.ui.setStyleSheet(load_styles(get_style_path("MAIN")))
+        self.apply_styles()
         self.load_logo()
-        self.table.itemClicked.connect(self.on_main_table_clicked)
+        self.ui.tableWidget_taskdev.itemClicked.connect(self.on_main_table_clicked)
         # Настройка контекстного меню для таблицы задач
-        self.table.setContextMenuPolicy(Qt.CustomContextMenu)
-        self.table.setSelectionBehavior(QAbstractItemView.SelectRows)
-        self.table.setSelectionMode(QAbstractItemView.SingleSelection)
-        self.table.setFocusPolicy(Qt.NoFocus)
+        self.ui.tableWidget_taskdev.setContextMenuPolicy(Qt.CustomContextMenu)
+        self.ui.tableWidget_taskdev.setSelectionBehavior(QAbstractItemView.SelectRows)
+        self.ui.tableWidget_taskdev.setSelectionMode(QAbstractItemView.SingleSelection)
+        self.ui.tableWidget_taskdev.setFocusPolicy(Qt.NoFocus)
         self.refresh_data()
-
-    def load_logo(self):
-        """Загрузка логотипа ADITIM"""
-        logo_path = ICON_PATHS_ABS.get("ADITIM_LOGO_MAIN")
-        pixmap = QPixmap(logo_path)
-        scaled = pixmap.scaled(300, 100, Qt.KeepAspectRatio, Qt.SmoothTransformation)
-        self.ui.label_logo.setPixmap(scaled)
-        self.ui.label_logo.setText("")
 
     def load_and_show_sketch(self, sketch_data):
         """Отображение эскиза профиля"""
@@ -77,21 +58,19 @@ class WindowDevelopment:
 
     def update_table_task_dev(self):
         """Обновление таблицы задач разработки"""
-        self.table.setRowCount(len(api_manager.table['taskdev']))
-        self.table.setColumnCount(2)
-        self.table.setHorizontalHeaderLabels(["Название", "Срок"])
-        self.table.horizontalHeader().setStretchLastSection(True)
-        for row, task in enumerate(api_manager.table['taskdev']):
-            item_name = QTableWidgetItem(self.get_task_name(task))
-            item_deadline = QTableWidgetItem(task['deadline'])
-
-            item_name.setData(Qt.UserRole, task['id'])
-            item_deadline.setData(Qt.UserRole, task['id'])
-
-            self.table.setItem(row, 0, item_name)
-            self.table.setItem(row, 1, item_deadline)
-            self.table.setContextMenuPolicy(Qt.CustomContextMenu)
-            self.table.customContextMenuRequested.connect(self.show_context_menu_main_table)
+        BaseTable.populate_table(
+            self.ui.tableWidget_taskdev,
+            ["Название", "Срок"],
+            api_manager.table['taskdev'],
+            func_row_mapper=lambda task: [
+                self.get_task_name(task),
+                task['deadline']
+            ],
+            func_id_getter=lambda task: task['id']
+        )
+        
+        self.ui.tableWidget_taskdev.setContextMenuPolicy(Qt.CustomContextMenu)
+        self.ui.tableWidget_taskdev.customContextMenuRequested.connect(self.show_context_menu_main_table)
 
     def update_task_info_panel(self):
         """Обновление панели информации о задаче"""
@@ -108,34 +87,32 @@ class WindowDevelopment:
     def update_table_task_component(self):
         """Обновление таблицы компонентов задачи"""
         table = self.ui.tableWidget_component
-        table.setRowCount(0)
-        table.setColumnCount(3)
-        table.setHorizontalHeaderLabels(["Название", "Статус", "Описание"])
-        table.setRowCount(len(self.task['profiletool']['component']))
-        table.horizontalHeader().setStretchLastSection(True)
-
-        for row, component in enumerate(self.task['profiletool']['component']):
-            # Название компонента
-            name_item = QTableWidgetItem(component["type"]["name"])
-            name_item.setData(Qt.UserRole, component["id"])
-            history = component.get('history', [])
+        
+        # Маппер для строки компонента
+        def map_component_row(component):
             # Последний статус из истории
-            if not history:
-                continue
-            last_history = history[-1]
-            status_name = last_history["status"]["name"]
-            status_item = QTableWidgetItem(status_name)
-            status_item.setData(Qt.UserRole, component["id"])
-
-            description_item = QTableWidgetItem(component["description"])
-            description_item.setData(Qt.UserRole, component["id"])
-
-            table.setItem(row, 0, name_item)
-            table.setItem(row, 1, status_item)
-            table.setItem(row, 2, description_item)
+            history = component.get('history', [])
+            if history:
+                last_history = history[-1]
+                status_name = last_history["status"]["name"]
+            else:
+                status_name = ""
+            
+            return [
+                component["type"]["name"],
+                status_name,
+                component.get("description", "") or ""
+            ]
+        
+        BaseTable.populate_table(
+            table,
+            ["Название", "Статус", "Описание"],
+            self.task['profiletool']['component'],
+            func_row_mapper=map_component_row,
+            func_id_getter=lambda c: c["id"]
+        )
 
         table.itemClicked.connect(self.on_component_clicked)
-
         table.setContextMenuPolicy(Qt.CustomContextMenu)
         table.customContextMenuRequested.connect(self.show_context_menu_component_table)
 
@@ -160,12 +137,13 @@ class WindowDevelopment:
     # =============================================================================
     def on_main_table_clicked(self, item):
         """Обработка клика по элементу таблицы"""
-        self.task = api_manager.get_by_id('task', item.data(Qt.UserRole))
+        task_id = BaseTable.get_selected_id(self.ui.tableWidget_taskdev)
+        self.task = api_manager.get_by_id('task', task_id)
         self.update_task_info_panel()
 
     def on_component_clicked(self, item):
         """Обработка клика по элементу таблицы компонентов"""
-        self.component_id = item.data(Qt.UserRole)
+        self.component_id = BaseTable.get_selected_id(self.ui.tableWidget_component)
 
     def show_context_menu_main_table(self, pos):
         """Показать контекстное меню для изменения статуса задачи"""

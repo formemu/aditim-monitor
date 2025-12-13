@@ -1,33 +1,23 @@
 """Диалог для создания изделия"""
-from PySide6.QtWidgets import (QDialog,  QTableWidgetItem,  QSpinBox, QAbstractItemView, QHeaderView)
-from PySide6.QtCore import  QFile, Qt, Slot
-from PySide6.QtUiTools import QUiLoader
-from ...constant import UI_PATHS_ABS
-from ...api_manager import api_manager
+from PySide6.QtWidgets import (QTableWidgetItem, QSpinBox, QAbstractItemView, QHeaderView)
+from PySide6.QtCore import Qt, Slot
 import warnings
 
+from ...base_dialog import BaseDialog
+from ...constant import UI_PATHS_ABS
+from ...api_manager import api_manager
 
-class DialogCreateProduct(QDialog):
+
+class DialogCreateProduct(BaseDialog):
     """Диалог для создания изделия с компонентами"""
     def __init__(self, parent=None):
-        super().__init__(parent)
-
-        self.load_ui()
+        super().__init__(UI_PATHS_ABS["DIALOG_CREATE_PRODUCT"], api_manager, parent)
         self.load_department()
-        self.setup_ui()
         self.setup_component_table()
-
-    def load_ui(self):
-        """Загружает UI из файла"""
-        ui_file = QFile(UI_PATHS_ABS["DIALOG_CREATE_PRODUCT"])
-        ui_file.open(QFile.ReadOnly)
-        loader = QUiLoader()
-        self.ui = loader.load(ui_file, self)
-        ui_file.close()
-        # Устанавливаем заголовок и свойства диалога
+        
+        # Устанавливаем заголовок
         self.setWindowTitle("Создание изделия")
         self.setModal(True)
-        self.setLayout(self.ui.layout())
 
     def setup_ui(self):
         """Настройка UI компонентов"""

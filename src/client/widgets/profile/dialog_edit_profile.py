@@ -1,33 +1,20 @@
 """Диалог для редактирования существующего профиля."""
-from PySide6.QtWidgets import QDialog
-from PySide6.QtCore import QFile, QBuffer, Qt
-from PySide6.QtUiTools import QUiLoader
+from PySide6.QtCore import QBuffer, Qt
 from PySide6.QtGui import QPixmap
 from PySide6.QtWidgets import QApplication, QMessageBox
 import base64
+
+from ...base_dialog import BaseDialog
 from ...constant import UI_PATHS_ABS
 from ...api_manager import api_manager
 
-class DialogEditProfile(QDialog):
+
+class DialogEditProfile(BaseDialog):
     """Диалог для редактирования существующего профиля."""
     def __init__(self, profile, parent):
-        super().__init__(parent)
         self.profile = profile
         self.sketch_data = profile['sketch']
-
-        self.load_ui()
-        self.setup_ui()
-
-
-
-    def load_ui(self):
-        """Загружает UI из файла."""
-        ui_file = QFile(UI_PATHS_ABS["DIALOG_EDIT_PROFILE"])
-        ui_file.open(QFile.ReadOnly)
-        loader = QUiLoader()
-        self.ui = loader.load(ui_file, self)
-        ui_file.close()
-        self.setLayout(self.ui.layout())
+        super().__init__(UI_PATHS_ABS["DIALOG_EDIT_PROFILE"], api_manager, parent)
 
     def setup_ui(self):
         """Настраивает логику диалога."""

@@ -1,37 +1,27 @@
 """Содержимое задач для ADITIM Monitor Client"""
-from PySide6.QtWidgets import QWidget, QTableWidgetItem, QAbstractItemView,  QMenu, QDialog
-from PySide6.QtCore import QFile, Qt, QDate
-from PySide6.QtGui import QAction, QPixmap
-from PySide6.QtUiTools import QUiLoader
-from ..constant import UI_PATHS_ABS, ICON_PATHS_ABS, get_style_path
-from ..widgets.wizard_task_create.wizard_task_create import WizardTaskCreate
-from ..style_util import load_styles
-from ..api_manager import api_manager
-from PySide6.QtWidgets import QMessageBox
+from PySide6.QtWidgets import QTableWidgetItem, QAbstractItemView, QMenu, QDialog, QMessageBox
+from PySide6.QtCore import Qt, QDate
+from PySide6.QtGui import QAction
 
-class WindowTask(QWidget):
+from ..base_window import BaseWindow
+from ..base_table import BaseTable
+from ..constant import UI_PATHS_ABS
+from ..widgets.wizard_task_create.wizard_task_create import WizardTaskCreate
+from ..api_manager import api_manager
+
+
+class WindowTask(BaseWindow):
     """Виджет содержимого задач"""
     def __init__(self):
-        super().__init__()
         self.task = None
-        self.load_ui()
-        self.setup_ui()
-        api_manager.data_updated.connect(self.refresh_data)
+        super().__init__(UI_PATHS_ABS["TASK_CONTENT"], api_manager)
 
     # =============================================================================
     # ИНИЦИАЛИЗАЦИЯ И ЗАГРУЗКА ИНТЕРФЕЙСА
     # =============================================================================
-    def load_ui(self):
-        """Загрузка UI из файла"""
-        ui_file = QFile(UI_PATHS_ABS["TASK_CONTENT"])
-        ui_file.open(QFile.ReadOnly)
-        loader = QUiLoader()
-        self.ui = loader.load(ui_file)
-        ui_file.close()
-
     def setup_ui(self):
         """Настройка UI компонентов"""
-        self.ui.setStyleSheet(load_styles(get_style_path("MAIN")))
+        self.apply_styles()
         self.load_logo()
         # По умолчанию скрыть группу этапов работ
         self.ui.groupBox_component_stage.setVisible(False)
@@ -59,14 +49,6 @@ class WindowTask(QWidget):
         table.setSelectionMode(QAbstractItemView.SingleSelection)
         table.setFocusPolicy(Qt.NoFocus)
         self.refresh_data()
-
-    def load_logo(self):
-        """Загрузка логотипа ADITIM"""
-        logo_path = ICON_PATHS_ABS.get("ADITIM_LOGO_MAIN")
-        pixmap = QPixmap(logo_path)
-        scaled = pixmap.scaled(300, 100, Qt.KeepAspectRatio, Qt.SmoothTransformation)
-        self.ui.label_logo.setPixmap(scaled)
-        self.ui.label_logo.setText("")
     
     # =============================================================================
     # УПРАВЛЕНИЕ ДАННЫМИ: ЗАГРУЗКА И ОБНОВЛЕНИЕ
@@ -85,70 +67,40 @@ class WindowTask(QWidget):
 
     def update_table_task(self):
         """Обновление таблицы задач с корректным отображением и заполнением по ширине"""
-        table = self.ui.tableWidget_task
-        table.setRowCount(len(api_manager.table['task']))
-        table.setColumnCount(8) 
-        table.setHorizontalHeaderLabels(["№ задачи", "Название","Тип работ", "Статус", "Местоположение", "Срок", "Создано", "Описание"])
-
-        for row, task in enumerate(api_manager.table['task']):
-            item_number = QTableWidgetItem(f"Задача № {task['id']}")
-            item_name = QTableWidgetItem(self.get_task_name(task))
-            item_work_type = QTableWidgetItem(task['type']['name'])
-            item_status = QTableWidgetItem(task['status']['name'])
-            item_location = QTableWidgetItem(task['location']['name'])
-            item_deadline = QTableWidgetItem(task['deadline'])
-            item_created = QTableWidgetItem(task['created'])
-            item_description = QTableWidgetItem(task['description'])
-
-            item_number.setData(Qt.UserRole, task['id'])
-            item_name.setData(Qt.UserRole, task['id'])
-            item_work_type.setData(Qt.UserRole, task['id'])
-            item_status.setData(Qt.UserRole, task['id'])
-            item_location.setData(Qt.UserRole, task['id'])
-            item_deadline.setData(Qt.UserRole, task['id'])
-            item_created.setData(Qt.UserRole, task['id'])
-            item_description.setData(Qt.UserRole, task['id'])
-
-            table.setItem(row, 0, item_number)
-            table.setItem(row, 1, item_name)
-            table.setItem(row, 2, item_work_type)
-            table.setItem(row, 3, item_status)
-            table.setItem(row, 4, item_location)
-            table.setItem(row, 5, item_deadline)
-            table.setItem(row, 6, item_created)
-            table.setItem(row, 7, item_description)
+        BaseTable.populate_table(
+            self.ui.tableWidget_task,
+            ["№ задачи", "Название", "Тип работ", "Статус", "Местоположение", "Срок", "Создано", "Описание"],
+            api_manager.table['task'],
+            func_row_mapper=lambda task: [
+                f"Задача № {task['id']}",
+                self.get_task_name(task),
+                task['type']['name'],
+                task['status']['name'],
+                task['location']['name'],
+                task['deadline'],
+                task['created'],
+                task.get('description', '') or ''
+            ],
+            func_id_getter=lambda task: task['id']
+        )
 
     def update_table_queue(self):
         """Обновление таблицы очереди с корректным отображением и заполнением по ширине"""
-        table = self.ui.tableWidget_queue
-        table.setRowCount(len(api_manager.table['queue']))
-        table.setColumnCount(7) 
-        # Заголовки столбцов
-        table.setHorizontalHeaderLabels(["Позиция", "Название", "Тип работ", "Статус", "Срок", "Создано", "Описание"])
-        for row, task in enumerate(api_manager.table['queue']):
-            item_position = QTableWidgetItem(str(task['position']))
-            item_name = QTableWidgetItem(self.get_task_name(task))
-            item_work_type = QTableWidgetItem(task['type']['name'])
-            item_status = QTableWidgetItem(task['status']['name'])
-            item_deadline = QTableWidgetItem(task['deadline'])
-            item_created = QTableWidgetItem(task['created'])
-            item_description = QTableWidgetItem(task['description'])
-
-            item_position.setData(Qt.UserRole, task['id'])
-            item_name.setData(Qt.UserRole, task['id'])
-            item_work_type.setData(Qt.UserRole, task['id'])
-            item_status.setData(Qt.UserRole, task['id'])
-            item_deadline.setData(Qt.UserRole, task['id'])
-            item_created.setData(Qt.UserRole, task['id'])
-            item_description.setData(Qt.UserRole, task['id'])
-
-            table.setItem(row, 0, item_position)
-            table.setItem(row, 1, item_name)
-            table.setItem(row, 2, item_work_type)
-            table.setItem(row, 3, item_status)
-            table.setItem(row, 4, item_deadline)
-            table.setItem(row, 5, item_created)
-            table.setItem(row, 6, item_description)
+        BaseTable.populate_table(
+            self.ui.tableWidget_queue,
+            ["Позиция", "Название", "Тип работ", "Статус", "Срок", "Создано", "Описание"],
+            api_manager.table['queue'],
+            func_row_mapper=lambda task: [
+                str(task['position']),
+                self.get_task_name(task),
+                task['type']['name'],
+                task['status']['name'],
+                task['deadline'],
+                task['created'],
+                task.get('description', '') or ''
+            ],
+            func_id_getter=lambda task: task['id']
+        )
 
     def update_task_info_panel(self):
         """Обновление панели информации о задаче"""
@@ -163,22 +115,32 @@ class WindowTask(QWidget):
     def update_queue_component_table(self):
         """Обновление таблицы компонентов очереди"""
         table = self.ui.tableWidget_component
-        table.setRowCount(len(self.task['component']))
+        
         # Проверяем по первому элементу, какой тип компонента
         if self.task['component'] and self.task['component'][0]['product_component_id']:
-            table.setColumnCount(1)
-            table.setHorizontalHeaderLabels(["№", "Название"])
-            for row, component in enumerate(self.task['component']):
-                name_item = QTableWidgetItem(component['product_component']['name'])
-                name_item.setData(Qt.UserRole, component['id'])
-                table.setItem(row, 0, name_item)
+            # Компоненты изделия
+            BaseTable.populate_table(
+                table,
+                ["Название", "Описание"],
+                self.task['component'],
+                func_row_mapper=lambda c: [
+                    c['product_component']['name'],
+                    c['product_component'].get('description', '') or ''
+                ],
+                func_id_getter=lambda c: c['id']
+            )
         else:
-            table.setColumnCount(1)
-            table.setHorizontalHeaderLabels(["№", "Название"])
-            for row, component in enumerate(self.task['component']):
-                name_item = QTableWidgetItem(component['profiletool_component']['type']['name'])
-                name_item.setData(Qt.UserRole, component['id'])
-                table.setItem(row, 0, name_item)
+            # Компоненты профиля/инструмента
+            BaseTable.populate_table(
+                table,
+                ["Название", "Описание"],
+                self.task['component'],
+                func_row_mapper=lambda c: [
+                    c['profiletool_component']['type']['name'],
+                    c['profiletool_component'].get('description', '') or ''
+                ],
+                func_id_getter=lambda c: c['id']
+            )
 
     def get_component_stage_status(self, component):
         """Определяет текущий статус этапа компонента
@@ -228,25 +190,36 @@ class WindowTask(QWidget):
     def update_task_component_table(self):
         """Обновление таблицы компонентов задачи"""
         table = self.ui.tableWidget_component
-        table.setRowCount(len(self.task['component']))
         
         # Проверяем по первому элементу, какой тип компонента
         if self.task['product_id']:
-            table.setColumnCount(1)
-            table.setHorizontalHeaderLabels(["Название"])
+            # Компоненты изделия
+            BaseTable.setup_table(
+                table,
+                ["Название", "Описание"],
+                len(self.task['component'])
+            )
             for row, component in enumerate(self.task['component']):
-                name_item = QTableWidgetItem(component['product_component']['name'])
-                name_item.setData(Qt.UserRole, component)
-                table.setItem(row, 0, name_item)
+                BaseTable.populate_row(
+                    table,
+                    row,
+                    [
+                        component['product_component']['name'],
+                        component['product_component'].get('description', '') or ''
+                    ],
+                    component['id']
+                )
+                
         elif self.task['profiletool_id']:
             if self.task['type_id'] == 0: 
                 # тип задачи "Разработка"
-                table.setColumnCount(2)
-                table.setHorizontalHeaderLabels(["Название", "Статус"])
+                BaseTable.setup_table(
+                    table,
+                    ["Название", "Статус", "Описание"],
+                    len(self.task['component'])
+                )
                 for row, component in enumerate(self.task['component']):
-                    # Название компонента
-                    name_item = QTableWidgetItem(component['profiletool_component']['type']['name'])
-                    name_item.setData(Qt.UserRole, component)
+                    # Определяем статус
                     history = component['profiletool_component']['history']
                     if history:
                         last_history = history[-1]
@@ -256,79 +229,97 @@ class WindowTask(QWidget):
                             status_name = "Разработан"
                     else:
                         status_name = "Новая"
-                        last_history = {"status": {"id": None, "name": "Нет истории"}}
-
-                    status_item = QTableWidgetItem(status_name)
-                    status_item.setData(Qt.UserRole, component)
-                    table.setItem(row, 0, name_item)
-                    table.setItem(row, 1, status_item)
+                    
+                    BaseTable.populate_row(
+                        table,
+                        row,
+                        [
+                            component['profiletool_component']['type']['name'],
+                            status_name,
+                            component['profiletool_component'].get('description', '') or ''
+                        ],
+                        component['id']
+                    )
+                    
             elif self.task['type_id'] == 1:
                 # Тип задачи - "Изготовление"
-                table.setColumnCount(2)
-                table.setHorizontalHeaderLabels(["Название", "Этап"])
+                BaseTable.setup_table(
+                    table,
+                    ["Название", "Этап", "Описание"],
+                    len(self.task['component'])
+                )
                 for row, component in enumerate(self.task['component']):
-                    name_item = QTableWidgetItem(component['profiletool_component']['type']['name'])
-                    name_item.setData(Qt.UserRole, component)
-                    
                     # Определяем текущий статус этапа
                     stage_status = self.get_component_stage_status(component)
-                    stage_item = QTableWidgetItem(stage_status)
-                    stage_item.setData(Qt.UserRole, component)
                     
-                    table.setItem(row, 0, name_item)
-                    table.setItem(row, 1, stage_item)
+                    BaseTable.populate_row(
+                        table,
+                        row,
+                        [
+                            component['profiletool_component']['type']['name'],
+                            stage_status,
+                            component['profiletool_component'].get('description', '') or ''
+                        ],
+                        component['id']
+                    )
+                    
             elif self.task['type_id'] == 3:
                 # Тип задачи - "Изготовление заготовок"
-                table.setColumnCount(2)
-                table.setHorizontalHeaderLabels(["Название", "Этап"])
+                BaseTable.setup_table(
+                    table,
+                    ["Название", "Этап", "Описание"],
+                    len(self.task['component'])
+                )
                 for row, component in enumerate(self.task['component']):
-                    name_item = QTableWidgetItem(component['profiletool_component']['type']['name'])
-                    name_item.setData(Qt.UserRole, component)
-                    
                     # Определяем текущий статус этапа
                     stage_status = self.get_component_stage_status(component)
-                    stage_item = QTableWidgetItem(stage_status)
-                    stage_item.setData(Qt.UserRole, component)
                     
-                    table.setItem(row, 0, name_item)
-                    table.setItem(row, 1, stage_item)
+                    BaseTable.populate_row(
+                        table,
+                        row,
+                        [
+                            component['profiletool_component']['type']['name'],
+                            stage_status,
+                            component['profiletool_component'].get('description', '') or ''
+                        ],
+                        component['id']
+                    )
                     
-    def update_table_component_stage(self, component):
-        """Заполняет tableWidget_component_stage этапами из выбранного компонента"""
+    def update_table_component_stage(self, component_id):
+        """Заполняет tableWidget_component_stage этапами из выбранного компонента
+        
+        Args:
+            component_id: ID компонента задачи
+        """
+        # Находим компонент по ID в текущей задаче
+        component = next((c for c in self.task['component'] if c['id'] == component_id), None)
+        if component is None:
+            return
 
-        table = self.ui.tableWidget_component_stage
-        table.setRowCount(len(component["stage"]))
-        table.setColumnCount(5)
-        table.setHorizontalHeaderLabels(["№", "Операция", "Станок", "Начало", "Окончание"])
-
-        for row, stage in enumerate(component["stage"]):
-            # Порядковый номер
-            stage_num = str(stage["stage_num"])
-            item_stage_num = QTableWidgetItem(stage_num)
-            item_stage_num.setData(Qt.UserRole, stage["id"])
-            self.ui.tableWidget_component_stage.setItem(row, 0, item_stage_num)
-
-            # Название операции
+        # Маппер для строки этапа
+        def map_stage_row(stage):
             work_subtype = stage["work_subtype"]
             work_name = work_subtype["name"] if work_subtype else "Без типа"
-            work_item = QTableWidgetItem(work_name)
-            self.ui.tableWidget_component_stage.setItem(row, 1, work_item)
-
-            # Станок
+            
             machine = stage["machine"]
             machine_name = machine["name"] if machine else ""
-            item_machine = QTableWidgetItem(machine_name)
-            self.ui.tableWidget_component_stage.setItem(row, 2, item_machine)
-
-            # Дата начала
-            start = stage["start"]
-            item_start = QTableWidgetItem(start)
-            self.ui.tableWidget_component_stage.setItem(row, 3, item_start)
-
-            # Дата окончания
-            finish = stage["finish"]
-            item_finish = QTableWidgetItem(finish)
-            self.ui.tableWidget_component_stage.setItem(row, 4, item_finish)
+            
+            return [
+                str(stage["stage_num"]),
+                work_name,
+                machine_name,
+                stage.get("start", "") or "",
+                stage.get("finish", "") or "",
+                stage.get("description", "") or ""
+            ]
+        
+        BaseTable.populate_table(
+            self.ui.tableWidget_component_stage,
+            ["№", "Операция", "Станок", "Начало", "Окончание", "Описание"],
+            component["stage"],
+            func_row_mapper=map_stage_row,
+            func_id_getter=lambda s: s["id"]
+        )
 
     def update_component_history(self, status, list_component):
         """Обновление истории компонентов задачи"""
@@ -375,7 +366,8 @@ class WindowTask(QWidget):
             self.ui.groupBox_component_stage.setVisible(False)
         else:
             self.ui.groupBox_component_stage.setVisible(True)
-            self.update_table_component_stage(self.ui.tableWidget_component.currentItem().data(Qt.UserRole))
+            component_id = self.ui.tableWidget_component.currentItem().data(Qt.UserRole)
+            self.update_table_component_stage(component_id)
 
     # =============================================================================
     # ОБРАБОТЧИКИ СОБЫТИЙ: УПРАВЛЕНИЕ

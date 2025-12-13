@@ -1,40 +1,28 @@
 """Диалог для редактирования существующего изделия."""
 from typing import Dict, Any, List
-from PySide6.QtWidgets import (QDialog, QMessageBox, QTableWidgetItem, QSpinBox, QAbstractItemView, QHeaderView)
-from PySide6.QtCore import Signal, QFile, Qt, Slot
-from PySide6.QtUiTools import QUiLoader
-from ...constant import UI_PATHS_ABS
-from ...api_manager import api_manager
+from PySide6.QtWidgets import (QMessageBox, QTableWidgetItem, QSpinBox, QAbstractItemView, QHeaderView)
+from PySide6.QtCore import Signal, Qt, Slot
 import warnings
 
+from ...base_dialog import BaseDialog
+from ...constant import UI_PATHS_ABS
+from ...api_manager import api_manager
 
-class DialogEditProduct(QDialog):
+
+class DialogEditProduct(BaseDialog):
     """Диалог для редактирования изделия с компонентами"""
     
     def __init__(self, product, parent=None):
-        super().__init__(parent)
         self.product = product
-
-        self.load_ui()
-        self.setup_ui()
+        super().__init__(UI_PATHS_ABS["DIALOG_EDIT_PRODUCT"], api_manager, parent)
         self.load_department()
         # Заполняем форму данными изделия
         self.fill_product()
         self.fill_component()
-
-    def load_ui(self):
-        """Загружает UI из файла"""
-        ui_file = QFile(UI_PATHS_ABS["DIALOG_EDIT_PRODUCT"])
-        ui_file.open(QFile.ReadOnly)
         
-        loader = QUiLoader()
-        self.ui = loader.load(ui_file, self)
-        ui_file.close()
-
-        # Устанавливаем заголовок и свойства диалога
+        # Устанавливаем заголовок
         self.setWindowTitle("Редактирование изделия")
         self.setModal(True)
-        self.setLayout(self.ui.layout())
 
     def setup_ui(self):
         """Настройка UI компонентов"""

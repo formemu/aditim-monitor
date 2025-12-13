@@ -1,40 +1,30 @@
 """Содержимое настроек для ADITIM Monitor Client"""
-from PySide6.QtWidgets import QWidget, QMessageBox, QTableWidgetItem, QDialog
-from PySide6.QtCore import QFile, Qt
-from PySide6.QtUiTools import QUiLoader
-from PySide6.QtGui import QPixmap
-from ..constant import UI_PATHS_ABS, ICON_PATHS_ABS, get_style_path
+from PySide6.QtWidgets import QMessageBox, QDialog
+from PySide6.QtCore import Qt
+
+from ..base_window import BaseWindow
+from ..base_table import BaseTable
+from ..constant import UI_PATHS_ABS
 from ..api_manager import api_manager
-from ..style_util import load_styles
 from ..widgets.setting.dialog_dimension import DialogDimension
 from ..widgets.setting.dialog_component_type import DialogComponentType
 from ..widgets.setting.dialog_plan_stage import DialogPlanStage
 
-class WindowSetting(QWidget):
+
+class WindowSetting(BaseWindow):
     """Виджет окна настроек для управления типами инструментов и их компонентами"""
     def __init__(self):
-        super().__init__()
         self.dimension = None  # Выбранная размерность (тип инструмента)
         self.component_type = None  # Выбранный компонент
         self.plan_stage = None  # Выбранная стадия
-        self.load_ui()
-        self.setup_ui()
-        api_manager.data_updated.connect(self.refresh_data)
+        super().__init__(UI_PATHS_ABS["SETTING_CONTENT"], api_manager)
 
     # =============================================================================
     # ИНИЦИАЛИЗАЦИЯ И ЗАГРУЗКА ИНТЕРФЕЙСА
     # =============================================================================
-    def load_ui(self):
-        """Загрузка UI из файла"""
-        ui_file = QFile(UI_PATHS_ABS["SETTING_CONTENT"])
-        ui_file.open(QFile.ReadOnly)
-        loader = QUiLoader()
-        self.ui = loader.load(ui_file)
-        ui_file.close()
-
     def setup_ui(self):
         """Настройка UI компонентов"""
-        self.ui.setStyleSheet(load_styles(get_style_path("MAIN")))
+        self.apply_styles()
         self.load_logo()
 
         # Подключение сигналов для размерностей (типов инструментов)
@@ -57,14 +47,6 @@ class WindowSetting(QWidget):
 
         self.refresh_data()
 
-    def load_logo(self):
-        """Загрузка логотипа ADITIM"""
-        logo_path = ICON_PATHS_ABS.get("ADITIM_LOGO_MAIN")
-        pixmap = QPixmap(logo_path)
-        scaled = pixmap.scaled(300, 100, Qt.KeepAspectRatio, Qt.SmoothTransformation)
-        self.ui.label_logo.setPixmap(scaled)
-        self.ui.label_logo.setText("")
-
     # =============================================================================
     # УПРАВЛЕНИЕ ДАННЫМИ: ЗАГРУЗКА И ОБНОВЛЕНИЕ
     # =============================================================================
@@ -82,26 +64,19 @@ class WindowSetting(QWidget):
     # =============================================================================
     def update_table_dimension(self):
         """Обновление таблицы размерностей (типов инструментов)"""
-        table = self.ui.tableWidget_dimension
         list_dimension = api_manager.directory.get('profiletool_dimension', [])
-        table.setRowCount(len(list_dimension))
-        table.setColumnCount(2)
-        table.setHorizontalHeaderLabels(["Название", "Описание"])
-        table.horizontalHeader().setStretchLastSection(True)
-
-        for row, dimension in enumerate(list_dimension):
-            item_name = QTableWidgetItem(dimension['name'])
-            item_description = QTableWidgetItem(dimension.get('description', ''))
-
-            item_name.setData(Qt.UserRole, dimension['id'])
-            item_description.setData(Qt.UserRole, dimension['id'])
-
-            table.setItem(row, 0, item_name)
-            table.setItem(row, 1, item_description)
+        
+        BaseTable.populate_table(
+            self.ui.tableWidget_dimension,
+            ["Название", "Описание"],
+            list_dimension,
+            func_row_mapper=lambda d: [d['name'], d.get('description', '') or ''],
+            func_id_getter=lambda d: d['id']
+        )
 
     def on_dimension_table_clicked(self):
         """Обработчик выбора размерности в таблице"""
-        dimension_id = self.ui.tableWidget_dimension.currentItem().data(Qt.UserRole)
+        dimension_id = BaseTable.get_selected_id(self.ui.tableWidget_dimension)
         self.dimension = api_manager.get_by_id('profiletool_dimension', dimension_id)
         # При выборе размерности обновляем компоненты
         self.component_type = None
@@ -159,42 +134,34 @@ class WindowSetting(QWidget):
     # КОМПОНЕНТЫ: ТАБЛИЦА И ОБРАБОТЧИКИ
     # =============================================================================
     def update_table_component_type(self):
-        """Обновление таблицы компонентов для выбранной размерности"""
-        table = self.ui.tableWidget_component_type
+        """Обновление таблицы типов компонентов"""
+        list_component_type = api_manager.directory.get('profiletool_component_type', [])
         
-        # Если размерность не выбрана, очищаем таблицу
-        if not self.dimension:
-            table.setRowCount(0)
-            return
+        # Фильтрация по выбранному габариту
+        dimension_id = BaseTable.get_selected_id(self.ui.tableWidget_dimension)
+        if dimension_id:
+            list_component_type = [
+                ct for ct in list_component_type 
+                if ct.get('profiletool_dimension_id') == dimension_id
+            ]
         
-        # Фильтруем компоненты по выбранной размерности
-        all_components = api_manager.directory.get('profiletool_component_type', [])
-        list_component = [c for c in all_components if c.get('profiletool_dimension_id') == self.dimension['id']]
-        
-        table.setRowCount(len(list_component))
-        table.setColumnCount(4)
-        table.setHorizontalHeaderLabels(["Название", "Ширина", "Высота", "Длина"])
-        table.horizontalHeader().setStretchLastSection(True)
-
-        for row, component_type in enumerate(list_component):
-            item_name = QTableWidgetItem(component_type['name'])
-            item_width = QTableWidgetItem(str(component_type.get('width', '')))
-            item_height = QTableWidgetItem(str(component_type.get('height', '')))
-            item_length = QTableWidgetItem(str(component_type.get('length', '')))
-
-            item_name.setData(Qt.UserRole, component_type['id'])
-            item_width.setData(Qt.UserRole, component_type['id'])
-            item_height.setData(Qt.UserRole, component_type['id'])
-            item_length.setData(Qt.UserRole, component_type['id'])
-
-            table.setItem(row, 0, item_name)
-            table.setItem(row, 1, item_width)
-            table.setItem(row, 2, item_height)
-            table.setItem(row, 3, item_length)
+        BaseTable.populate_table(
+            self.ui.tableWidget_component_type,
+            ["Название", "Ширина", "Высота", "Длина", "Описание"],
+            list_component_type,
+            func_row_mapper=lambda ct: [
+                ct['name'],
+                str(ct.get('width', '') or ''),
+                str(ct.get('height', '') or ''),
+                str(ct.get('length', '') or ''),
+                ct.get('description', '') or ''
+            ],
+            func_id_getter=lambda ct: ct['id']
+        )
 
     def on_component_type_table_clicked(self):
         """Обработчик выбора компонента в таблице"""
-        component_type_id = self.ui.tableWidget_component_type.currentItem().data(Qt.UserRole)
+        component_type_id = BaseTable.get_selected_id(self.ui.tableWidget_component_type)
         self.component_type = api_manager.get_by_id('profiletool_component_type', component_type_id)
         # При выборе компонента обновляем стадии
         self.plan_stage = None
@@ -255,48 +222,43 @@ class WindowSetting(QWidget):
     # =============================================================================
     def update_table_plan_stage(self):
         """Обновление таблицы стадий для выбранного компонента"""
-        table = self.ui.tableWidget_plan_stage
+        list_stage = api_manager.plan.get('task_component_stage', [])
         
-        # Если компонент не выбран, очищаем таблицу
-        if not self.component_type:
-            table.setRowCount(0)
-            return
-        
-        # Фильтруем стадии по выбранному компоненту
-        all_stages = api_manager.plan.get('task_component_stage', [])
-        list_stage = [s for s in all_stages if s.get('profiletool_component_type_id') == self.component_type['id']]
+        # Фильтрация по выбранному типу компонента
+        component_type_id = BaseTable.get_selected_id(self.ui.tableWidget_component_type)
+        if component_type_id:
+            list_stage = [
+                s for s in list_stage 
+                if s.get('profiletool_component_type_id') == component_type_id
+            ]
         
         # Сортируем по номеру стадии
         list_stage.sort(key=lambda x: x.get('stage_num', 0))
         
-        table.setRowCount(len(list_stage))
-        table.setColumnCount(3)
-        table.setHorizontalHeaderLabels(["№", "Работа", "ID"])
-        table.horizontalHeader().setStretchLastSection(True)
-
-        for row, plan_stage in enumerate(list_stage):
-            # Получаем работу
+        # Маппер для получения имени работы
+        def map_stage_row(stage):
             work_name = ""
-            if plan_stage.get('work_subtype_id'):
-                work = api_manager.get_by_id('work_subtype', plan_stage['work_subtype_id'])
+            if stage.get('work_subtype_id'):
+                work = api_manager.get_by_id('work_subtype', stage['work_subtype_id'])
                 if work:
                     work_name = work['name']
-
-            item_stage_num = QTableWidgetItem(str(plan_stage.get('stage_num', '')))
-            item_work = QTableWidgetItem(work_name)
-            item_id = QTableWidgetItem(str(plan_stage['id']))
-
-            item_stage_num.setData(Qt.UserRole, plan_stage['id'])
-            item_work.setData(Qt.UserRole, plan_stage['id'])
-            item_id.setData(Qt.UserRole, plan_stage['id'])
-
-            table.setItem(row, 0, item_stage_num)
-            table.setItem(row, 1, item_work)
-            table.setItem(row, 2, item_id)
+            return [
+                str(stage.get('stage_num', '') or ''),
+                work_name,
+                stage.get('description', '') or ''
+            ]
+        
+        BaseTable.populate_table(
+            self.ui.tableWidget_plan_stage,
+            ["№", "Работа", "Описание"],
+            list_stage,
+            func_row_mapper=map_stage_row,
+            func_id_getter=lambda s: s['id']
+        )
 
     def on_plan_stage_table_clicked(self):
         """Обработчик выбора стадии в таблице"""
-        plan_stage_id = self.ui.tableWidget_plan_stage.currentItem().data(Qt.UserRole)
+        plan_stage_id = BaseTable.get_selected_id(self.ui.tableWidget_plan_stage)
         self.plan_stage = api_manager.get_by_id('task_component_stage', plan_stage_id)
 
     def on_plan_stage_add_clicked(self):

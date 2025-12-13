@@ -1,31 +1,18 @@
 """Диалог для создания инструмента профиля"""
-from PySide6.QtWidgets import QDialog
-from PySide6.QtCore import QFile
-from PySide6.QtUiTools import QUiLoader
+from ...base_dialog import BaseDialog
 from ...constant import UI_PATHS_ABS
 from ...api_manager import api_manager
 
-class DialogCreateProfiletoolComponent(QDialog):
+
+class DialogCreateProfiletoolComponent(BaseDialog):
     """Диалог для создания инструмента профиля с компонентами"""
     def __init__(self, parent=None, profiletool=None):
-        super().__init__(parent)
-
         self.profiletool = profiletool
-
-        self.load_ui()
-        self.setup_ui()
-
-    def load_ui(self):
-        """Загружает UI из файла"""
-        ui_file = QFile(UI_PATHS_ABS["DIALOG_CREATE_PROFILETOOL_COMPONENT"])
-        ui_file.open(QFile.ReadOnly)
-        loader = QUiLoader()
-        self.ui = loader.load(ui_file)
-        ui_file.close()
-        # Устанавливаем заголовок и свойства диалога
+        super().__init__(UI_PATHS_ABS["DIALOG_CREATE_PROFILETOOL_COMPONENT"], api_manager, parent)
+        
+        # Устанавливаем заголовок
         self.setWindowTitle("Создание компонента инструмента профиля")
         self.setModal(True)
-        self.setLayout(self.ui.layout())
         
     def setup_ui(self):
         """Настраивает UI компонентов после загрузки"""
@@ -36,7 +23,7 @@ class DialogCreateProfiletoolComponent(QDialog):
 
     def load_component_type(self):
         list_filtered_type = [
-            type for type in api_manager.directory['component_type']
+            type for type in self.api_manager.directory['component_type']
             if type['profiletool_dimension_id'] == self.profiletool['dimension']['id']
         ]       
         self.ui.comboBox_component_type.clear()

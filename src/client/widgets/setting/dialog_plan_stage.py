@@ -1,36 +1,26 @@
 """Диалог создания/редактирования стадии изготовления"""
-from PySide6.QtWidgets import QDialog, QMessageBox
-from PySide6.QtCore import QFile
-from PySide6.QtUiTools import QUiLoader
+from PySide6.QtWidgets import QMessageBox
+
+from ...base_dialog import BaseDialog
 from ...constant import UI_PATHS_ABS, get_style_path
 from ...style_util import load_styles
 from ...api_manager import api_manager
 
-class DialogPlanStage(QDialog):
+
+class DialogPlanStage(BaseDialog):
     """Диалог для создания или редактирования стадии изготовления"""
     def __init__(self, parent=None, plan_stage=None, component_type=None):
-        super().__init__(parent)
         self.plan_stage = plan_stage
         self.component_type = component_type
         self.is_edit_mode = plan_stage is not None
-        self.load_ui()
-        self.setup_ui()
+        super().__init__(UI_PATHS_ABS["DIALOG_PLAN_STAGE"], api_manager, parent)
         self.load_work_list()
         if self.is_edit_mode:
             self.load_plan_stage_data()
-
-    def load_ui(self):
-        """Загрузка UI из файла"""
-        ui_file = QFile(UI_PATHS_ABS["DIALOG_PLAN_STAGE"])
-        ui_file.open(QFile.ReadOnly)
-        loader = QUiLoader()
-        self.ui = loader.load(ui_file, self)
-        ui_file.close()
         
-        # Копируем геометрию и заголовок
+        # Копируем заголовок и геометрию из UI
         self.setWindowTitle(self.ui.windowTitle())
         self.setGeometry(self.ui.geometry())
-        self.setLayout(self.ui.layout())
 
     def setup_ui(self):
         """Настройка UI компонентов"""

@@ -1,59 +1,37 @@
 """
 Станки ADITIM Monitor Client
 """
-from PySide6.QtWidgets import QWidget
-from PySide6.QtGui import QStandardItemModel, QStandardItem, QPixmap
-from PySide6.QtUiTools import QUiLoader
-from PySide6.QtCore import QFile, Qt
-
-from ..constant import UI_PATHS_ABS, ICON_PATHS_ABS, get_style_path
-from ..api_manager import api_manager
-from ..style_util import load_styles
+from PySide6.QtGui import QStandardItemModel, QStandardItem
+from PySide6.QtCore import Qt
 from PySide6.QtWidgets import QMessageBox
 
-class WindowMachine(QWidget):
+from ..base_window import BaseWindow
+from ..constant import UI_PATHS_ABS
+from ..api_manager import api_manager
+
+
+class WindowMachine(BaseWindow):
     """Виджет станков"""
 
     def __init__(self):
-        super().__init__()
-        self.load_ui()
-        self.setup_ui()
+        super().__init__(UI_PATHS_ABS["MACHINE_CONTENT"], api_manager)
         self.setup_tree()
-        self.connect_signals()
 
     # =============================================================================
     # ИНИЦИАЛИЗАЦИЯ И ЗАГРУЗКА ИНТЕРФЕЙСА
     # =============================================================================
-    def load_ui(self):
-        """Загрузка UI из файла"""
-        ui_file = QFile(UI_PATHS_ABS["MACHINE_CONTENT"])
-        ui_file.open(QFile.ReadOnly)
-        loader = QUiLoader()
-        self.ui = loader.load(ui_file)
-        ui_file.close()
-        
     def setup_ui(self):
         """Настройка UI компонентов"""
-        self.ui.setStyleSheet(load_styles(get_style_path("MAIN")))
+        self.apply_styles()
         self.load_logo()
-        self.refresh_data()
         self.ui.treeView_machine.clicked.connect(self.on_machine_clicked)
-
-    def load_logo(self):
-        """Загрузка логотипа ADITIM"""
-        logo_path = ICON_PATHS_ABS.get("ADITIM_LOGO_MAIN")
-        pixmap = QPixmap(logo_path)
-        scaled = pixmap.scaled(300, 100, Qt.KeepAspectRatio, Qt.SmoothTransformation)
-        self.ui.label_logo.setPixmap(scaled)
-        self.ui.label_logo.setText("")
+        
+        # Подключаемся к специфичному обновлению
+        api_manager.data_updated.connect(self.on_data_updated)
 
     # =============================================================================
     # УПРАВЛЕНИЕ ДАННЫМИ: ЗАГРУЗКА И ОБНОВЛЕНИЕ
     # =============================================================================
-    def connect_signals(self):
-        """Подключаемся к сигналам ApiManager"""
-        api_manager.data_updated.connect(self.on_data_updated)
-
     def on_data_updated(self, group: str, key: str, success: bool):
         """Реакция на обновление данных"""
         if success and group == "directory" and key == "machine":
@@ -85,7 +63,7 @@ class WindowMachine(QWidget):
             machine_name = machine["name"]
             work_type_id = machine["work_type_id"]
             machine_item = QStandardItem(machine_name)
-            machine_item.setData(machine, role=Qt.UserRole)  # Сохраняем весь объект
+            machine_item.setData(machine["id"], role=Qt.UserRole)  # Сохраняем только ID
 
             if work_type_id in work_type_items:
                 parent_item = work_type_items[work_type_id]
@@ -98,10 +76,10 @@ class WindowMachine(QWidget):
     def on_machine_clicked(self, index):
 
         item = self.ui.treeView_machine.model().itemFromIndex(index)
-        machine = item.data(Qt.UserRole)
-        if machine is None:
+        machine_id = item.data(Qt.UserRole)
+        if machine_id is None:
             return
-        machine_id = machine["id"]
+        
         list_operation = []
         for task in api_manager.table["queue"]:
             for component in task["component"]:

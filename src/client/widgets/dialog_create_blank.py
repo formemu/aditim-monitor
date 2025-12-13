@@ -1,39 +1,29 @@
 """Диалог создания заготовки"""
-from PySide6.QtWidgets import (QDialog, QMessageBox, QTableWidgetItem, 
+from PySide6.QtWidgets import (QMessageBox, QTableWidgetItem, 
                                 QAbstractItemView, QPushButton)
-from PySide6.QtCore import QFile, QDate, Qt
-from PySide6.QtUiTools import QUiLoader
+from PySide6.QtCore import QDate, Qt
+
+from ..base_dialog import BaseDialog
 from ..constant import UI_PATHS_ABS
 from ..api_manager import api_manager
 
 
-class DialogCreateBlank(QDialog):
+class DialogCreateBlank(BaseDialog):
     """Диалог для создания нового заказа с несколькими позициями заготовок"""
     
     def __init__(self, parent=None):
-        super().__init__(parent)
         self.list_position = []  # Список позиций заказа
         self.order_number = None  # Номер заказа
-        self.load_ui()
-        self.setup_ui()
-    
-    def load_ui(self):
-        """Загрузка UI из файла"""
-        ui_file = QFile(UI_PATHS_ABS["DIALOG_CREATE_BLANK"])
-        ui_file.open(QFile.ReadOnly)
-        loader = QUiLoader()
-        self.ui = loader.load(ui_file, self)
-        ui_file.close()
+        super().__init__(UI_PATHS_ABS["DIALOG_CREATE_BLANK"], api_manager, parent)
         
-        # Копируем геометрию и заголовок
+        # Копируем заголовок из UI
         self.setWindowTitle(self.ui.windowTitle())
-        self.setLayout(self.ui.layout())
     
     def setup_ui(self):
         """Настройка UI компонентов"""
         # Получение следующего номера заказа
         try:
-            result = api_manager.api_blank.get_next_order_number()
+            result = self.api_manager.api_blank.get_next_order_number()
             self.order_number = result.get('next_order', 1)
             self.ui.label_order_number.setText(f"Заказ № {self.order_number}")
         except Exception:

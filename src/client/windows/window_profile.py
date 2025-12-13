@@ -1,38 +1,28 @@
 """Содержимое профилей для ADITIM Monitor Client"""
 import base64
-from PySide6.QtWidgets import QWidget, QMessageBox, QTableWidgetItem
-from PySide6.QtCore import QFile, Qt
-from PySide6.QtUiTools import QUiLoader
+from PySide6.QtWidgets import QMessageBox
+from PySide6.QtCore import Qt
 from PySide6.QtGui import QPixmap
-from ..constant import UI_PATHS_ABS, ICON_PATHS_ABS, get_style_path
+from ..base_window import BaseWindow
+from ..base_table import BaseTable
+from ..constant import UI_PATHS_ABS
 from ..widgets.profile.dialog_create_profile import DialogCreateProfile
 from ..widgets.profile.dialog_edit_profile import DialogEditProfile
 from ..api_manager import api_manager
-from ..style_util import load_styles
 
-class WindowProfile(QWidget):
+
+class WindowProfile(BaseWindow):
     """Виджет содержимого профилей с таблицей, фильтрацией и просмотром эскизов"""
     def __init__(self):
-        super().__init__()
         self.profile = None
-        self.load_ui()
-        self.setup_ui()
-        api_manager.data_updated.connect(self.refresh_data)
+        super().__init__(UI_PATHS_ABS["PROFILE_CONTENT"], api_manager)
 
     # =============================================================================
     # ИНИЦИАЛИЗАЦИЯ И ЗАГРУЗКА ИНТЕРФЕЙСА
     # =============================================================================
-    def load_ui(self):
-        """Загрузка UI из файла"""
-        ui_file = QFile(UI_PATHS_ABS["PROFILE_CONTENT"])
-        ui_file.open(QFile.ReadOnly)
-        loader = QUiLoader()
-        self.ui = loader.load(ui_file)
-        ui_file.close()
-
     def setup_ui(self):
         """Настройка UI компонентов"""
-        self.ui.setStyleSheet(load_styles(get_style_path("MAIN")))
+        self.apply_styles()
         self.load_logo()
 
         self.ui.pushButton_profile_add.clicked.connect(self.on_profile_add_clicked)
@@ -42,14 +32,6 @@ class WindowProfile(QWidget):
         self.ui.tableWidget_profile.itemClicked.connect(self.on_main_table_clicked)
 
         self.refresh_data()
-
-    def load_logo(self):
-        """Загрузка логотипа ADITIM"""
-        logo_path = ICON_PATHS_ABS.get("ADITIM_LOGO_MAIN")
-        pixmap = QPixmap(logo_path)
-        scaled = pixmap.scaled(300, 100, Qt.KeepAspectRatio, Qt.SmoothTransformation)
-        self.ui.label_logo.setPixmap(scaled)
-        self.ui.label_logo.setText("")
 
     # =============================================================================
     # УПРАВЛЕНИЕ ДАННЫМИ: ЗАГРУЗКА И ОБНОВЛЕНИЕ
@@ -62,21 +44,13 @@ class WindowProfile(QWidget):
 
     def update_profile_table(self):
         """Обновление таблицы профилей"""
-        table = self.ui.tableWidget_profile
-        table.setRowCount(len(api_manager.table["profile"]))
-        table.setColumnCount(2)
-        table.setHorizontalHeaderLabels(["Артикул", "Описание"])
-        table.horizontalHeader().setStretchLastSection(True)
-
-        for row, profile in enumerate(api_manager.table["profile"]):
-            item_article = QTableWidgetItem(profile['article'])
-            item_description = QTableWidgetItem(profile['description'])
-
-            item_article.setData(Qt.UserRole, profile['id'])
-            item_description.setData(Qt.UserRole, profile['id'])
-
-            table.setItem(row, 0, item_article)
-            table.setItem(row, 1, item_description)
+        BaseTable.populate_table(
+            self.ui.tableWidget_profile,
+            ["Артикул", "Описание"],
+            api_manager.table["profile"],
+            func_row_mapper=lambda p: [p['article'], p['description']],
+            func_id_getter=lambda p: p['id']
+        )
 
     def update_profile_info_panel(self):
         """Обновление панели профиля"""
@@ -135,7 +109,10 @@ class WindowProfile(QWidget):
     # =============================================================================
     def on_main_table_clicked(self):
         """Обработка выбора строки"""
-        self.profile = api_manager.get_by_id("profile", self.ui.tableWidget_profile.currentItem().data(Qt.UserRole))
+        profile_id = BaseTable.get_selected_id(self.ui.tableWidget_profile)
+        if profile_id is None:
+            return
+        self.profile = api_manager.get_by_id("profile", profile_id)
         self.update_profile_info_panel()
 
     # =============================================================================

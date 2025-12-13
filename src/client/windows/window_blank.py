@@ -1,39 +1,29 @@
 """Окно управления заготовками для ADITIM Monitor Client"""
-from PySide6.QtWidgets import QWidget, QTableWidgetItem, QAbstractItemView, QMenu, QDialog, QMessageBox
-from PySide6.QtCore import QFile, Qt
-from PySide6.QtGui import QAction, QPixmap
-from PySide6.QtUiTools import QUiLoader
-from ..constant import UI_PATHS_ABS, ICON_PATHS_ABS, get_style_path
-from ..style_util import load_styles
+from PySide6.QtWidgets import QTableWidgetItem, QAbstractItemView, QMenu, QDialog, QMessageBox
+from PySide6.QtCore import Qt
+from PySide6.QtGui import QAction
+
+from ..base_window import BaseWindow
+from ..base_table import BaseTable
+from ..constant import UI_PATHS_ABS
 from ..api_manager import api_manager
 from ..widgets.dialog_create_blank import DialogCreateBlank
 
 
-class WindowBlank(QWidget):
+class WindowBlank(BaseWindow):
     """Виджет управления заготовками"""
     
     def __init__(self):
-        super().__init__()
         self.selected_order = None  # Выбранный заказ
         self.dict_expanded_order = {}  # Словарь развернутых заказов {order_num: True/False}
-        self.load_ui()
-        self.setup_ui()
-        api_manager.data_updated.connect(self.refresh_data)
+        super().__init__(UI_PATHS_ABS["BLANK_CONTENT"], api_manager)
     
     # =============================================================================
     # ИНИЦИАЛИЗАЦИЯ И ЗАГРУЗКА ИНТЕРФЕЙСА
     # =============================================================================
-    def load_ui(self):
-        """Загрузка UI из файла"""
-        ui_file = QFile(UI_PATHS_ABS["BLANK_CONTENT"])
-        ui_file.open(QFile.ReadOnly)
-        loader = QUiLoader()
-        self.ui = loader.load(ui_file)
-        ui_file.close()
-    
     def setup_ui(self):
         """Настройка UI компонентов после загрузки"""
-        self.ui.setStyleSheet(load_styles(get_style_path("MAIN")))
+        self.apply_styles()
         self.load_logo()
         
         # Настройка таблицы заказов (вкладка "Заказы")
@@ -61,14 +51,6 @@ class WindowBlank(QWidget):
         self.ui.pushButton_blank_delete.clicked.connect(self.on_blank_delete_clicked)
         
         self.refresh_data()
-    
-    def load_logo(self):
-        """Загрузка логотипа ADITIM"""
-        logo_path = ICON_PATHS_ABS.get("ADITIM_LOGO_MAIN")
-        pixmap = QPixmap(logo_path)
-        scaled = pixmap.scaled(300, 100, Qt.KeepAspectRatio, Qt.SmoothTransformation)
-        self.ui.label_logo.setPixmap(scaled)
-        self.ui.label_logo.setText("")
     
     # =============================================================================
     # УПРАВЛЕНИЕ ДАННЫМИ: ЗАГРУЗКА И ОБНОВЛЕНИЕ
@@ -303,33 +285,21 @@ class WindowBlank(QWidget):
         
         # Сортировка по материалу, затем по размеру
         list_sorted_keys = sorted(dict_stock.keys())
+        list_stock = [dict_stock[key] for key in list_sorted_keys]
         
-        table.setRowCount(len(list_sorted_keys))
-        table.setColumnCount(4)
-        table.setHorizontalHeaderLabels([
-            "Материал", "Размер", "В наличии", "Свободные"
-        ])
-        table.horizontalHeader().setStretchLastSection(True)
-        
-        for row, key in enumerate(list_sorted_keys):
-            stock = dict_stock[key]
-            
-            # Материал
-            item_material = QTableWidgetItem(stock['material'])
-            
-            # Размер
-            item_size = QTableWidgetItem(stock['size'])
-            
-            # В наличии (прибыли)
-            item_total = QTableWidgetItem(str(stock['total']))
-            
-            # Свободные (не обработаны)
-            item_free = QTableWidgetItem(str(stock['free']))
-            
-            table.setItem(row, 0, item_material)
-            table.setItem(row, 1, item_size)
-            table.setItem(row, 2, item_total)
-            table.setItem(row, 3, item_free)
+        # Используем BaseTable для заполнения
+        BaseTable.populate_table(
+            table,
+            ["Материал", "Размер", "В наличии", "Свободные"],
+            list_stock,
+            func_row_mapper=lambda stock: [
+                stock['material'],
+                stock['size'],
+                str(stock['total']),
+                str(stock['free'])
+            ],
+            func_id_getter=None  # Нет ID для группировки
+        )
     
 
     

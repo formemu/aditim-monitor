@@ -1,33 +1,25 @@
 """Диалог для создания инструмента профиля"""
-from PySide6.QtWidgets import (QDialog, QTableWidgetItem, QCheckBox, QAbstractItemView, QListWidgetItem)
-from PySide6.QtCore import QFile, Qt, Slot
-from PySide6.QtUiTools import QUiLoader
+from PySide6.QtWidgets import (QTableWidgetItem, QCheckBox, QAbstractItemView, QListWidgetItem)
+from PySide6.QtCore import Qt, Slot
 from PySide6.QtGui import QPixmap
 import base64
+
+from ...base_dialog import BaseDialog
 from ...constant import UI_PATHS_ABS
 from ...api_manager import api_manager
 
-class DialogCreateProfileTool(QDialog):
+
+class DialogCreateProfileTool(BaseDialog):
     """Диалог для создания инструмента профиля с компонентами"""
     def __init__(self, parent=None):
-        super().__init__(parent)
         self.list_component_widget = []
         self.selected_profile = None
-        self.load_ui()
+        super().__init__(UI_PATHS_ABS["DIALOG_CREATE_PROFILETOOL"], api_manager, parent)
         self.load_dimension()
-        self.setup_ui()
-
-    def load_ui(self):
-        """Загружает UI из файла"""
-        ui_file = QFile(UI_PATHS_ABS["DIALOG_CREATE_PROFILETOOL"])
-        ui_file.open(QFile.ReadOnly)
-        loader = QUiLoader()
-        self.ui = loader.load(ui_file)
-        ui_file.close()
-        # Устанавливаем заголовок и свойства диалога
+        
+        # Устанавливаем заголовок
         self.setWindowTitle("Создание инструмента профиля")
         self.setModal(True)
-        self.setLayout(self.ui.layout())
         
     def setup_ui(self):
         """Настраивает UI компонентов после загрузки"""

@@ -1,10 +1,11 @@
 """Содержимое изделий для ADITIM Monitor Client с вкладками и компонентами"""
-from PySide6.QtWidgets import QWidget, QMessageBox, QTableWidgetItem,  QTableWidgetItem, QDialog, QMenu
-from PySide6.QtCore import QFile, Qt, QDate
-from PySide6.QtUiTools import QUiLoader
-from PySide6.QtGui import QPixmap, QAction
-from ..constant import UI_PATHS_ABS, ICON_PATHS_ABS, get_style_path
-from ..style_util import load_styles
+from PySide6.QtWidgets import QMessageBox, QDialog, QMenu
+from PySide6.QtCore import Qt, QDate
+from PySide6.QtGui import QAction
+
+from ..base_window import BaseWindow
+from ..base_table import BaseTable
+from ..constant import UI_PATHS_ABS
 from ..api_manager import api_manager
 from ..widgets.profiletool.dialog_create_profiletool import DialogCreateProfileTool
 from ..widgets.profiletool.dialog_edit_profiletool import DialogEditProfileTool
@@ -12,31 +13,21 @@ from ..widgets.product.dialog_create_product import DialogCreateProduct
 from ..widgets.product.dialog_edit_product import DialogEditProduct
 from ..widgets.profiletool.dialog_create_profiletool_component import DialogCreateProfiletoolComponent
 
-class WindowProduct(QWidget):
+
+class WindowProduct(BaseWindow):
     """Виджет содержимого изделий с вкладками"""
     def __init__(self):
-        super().__init__()
         self.profiletool = None
         self.product = None
         self.component_id = None
-        self.load_ui()
-        self.setup_ui()
-        api_manager.data_updated.connect(self.refresh_data)
+        super().__init__(UI_PATHS_ABS["PRODUCT_CONTENT"], api_manager)
 
     # =============================================================================
     # ИНИЦИАЛИЗАЦИЯ И ЗАГРУЗКА ИНТЕРФЕЙСА
     # =============================================================================
-    def load_ui(self):
-        """Загрузка UI из файла"""
-        ui_file = QFile(UI_PATHS_ABS["PRODUCT_CONTENT"])
-        ui_file.open(QFile.ReadOnly)
-        loader = QUiLoader()
-        self.ui = loader.load(ui_file)
-        ui_file.close()
-
     def setup_ui(self):
         """Настройка UI компонентов"""
-        self.ui.setStyleSheet(load_styles(get_style_path("MAIN")))
+        self.apply_styles()
         self.load_logo()
         # Общие подключения
         self.ui.tabWidget_main.currentChanged.connect(self.refresh_data)
@@ -61,14 +52,6 @@ class WindowProduct(QWidget):
         # Инициализация таблицы
         self.refresh_data()
 
-    def load_logo(self):
-        """Загрузка логотипа ADITIM"""
-        logo_path = ICON_PATHS_ABS.get("ADITIM_LOGO_MAIN")
-        pixmap = QPixmap(logo_path)
-        scaled = pixmap.scaled(300, 100, Qt.KeepAspectRatio, Qt.SmoothTransformation)
-        self.ui.label_logo.setPixmap(scaled)
-        self.ui.label_logo.setText("")
-
     # =============================================================================
     # УПРАВЛЕНИЕ ДАННЫМИ: ЗАГРУЗКА И ОБНОВЛЕНИЕ
     # =============================================================================
@@ -85,47 +68,34 @@ class WindowProduct(QWidget):
             self.update_table_product()
 
     def update_table_profiletool(self):
-        """Обновление таблицы инструментов профиля с корректным отображением и заполнением по ширине"""
-        table = self.ui.tableWidget_profiletool
-        table.setRowCount(len(api_manager.table['profiletool']))
-        table.setColumnCount(3)
-        table.setHorizontalHeaderLabels(["Профиль", "Размер ","Описание"])
-        table.horizontalHeader().setStretchLastSection(True)
-
-        for row, tool in enumerate(api_manager.table['profiletool']):
-            item_name = QTableWidgetItem(tool['profile']['article'])
-            item_dimension = QTableWidgetItem(tool['dimension']['name'])
-            item_description = QTableWidgetItem(tool['description'])
-
-            item_name.setData(Qt.UserRole, tool['id'])
-            item_dimension.setData(Qt.UserRole, tool['id'])
-            item_description.setData(Qt.UserRole, tool['id'])
-
-            table.setItem(row, 0, item_name)
-            table.setItem(row, 1, item_dimension)
-            table.setItem(row, 2, item_description)
+        """Обновление таблицы инструментов профиля"""
+        BaseTable.populate_table(
+            self.ui.tableWidget_profiletool,
+            ["Профиль", "Размер", "Описание"],
+            api_manager.table['profiletool'],
+            func_row_mapper=lambda t: [
+                t['profile']['article'],
+                t['dimension']['name'],
+                t['description']
+            ],
+            func_id_getter=lambda t: t['id']
+        )
         
         
 
     def update_table_product(self):
-        """Обновление таблицы изделий с корректным отображением и заполнением по ширине"""
-        table = self.ui.tableWidget_product
-        table.setRowCount(len(api_manager.table['product']))
-        table.setColumnCount(3)
-        table.setHorizontalHeaderLabels(["Название", "Департамент", "Описание"])
-        table.horizontalHeader().setStretchLastSection(True)
-        for row, product in enumerate(api_manager.table['product']):
-            item_name = QTableWidgetItem(product['name'])
-            item_department = QTableWidgetItem(product['department']['name'])
-            item_description = QTableWidgetItem(product['description'])
-
-            item_name.setData(Qt.UserRole, product['id'])
-            item_department.setData(Qt.UserRole, product['id'])
-            item_description.setData(Qt.UserRole, product['id'])
-
-            table.setItem(row, 0, item_name)
-            table.setItem(row, 1, item_department)
-            table.setItem(row, 2, item_description)
+        """Обновление таблицы изделий"""
+        BaseTable.populate_table(
+            self.ui.tableWidget_product,
+            ["Название", "Департамент", "Описание"],
+            api_manager.table['product'],
+            func_row_mapper=lambda p: [
+                p['name'],
+                p['department']['name'],
+                p['description']
+            ],
+            func_id_getter=lambda p: p['id']
+        )
 
     def update_profiletool_info_panel(self):
         """Обновление панели инструмента профиля"""
@@ -137,65 +107,53 @@ class WindowProduct(QWidget):
 
     def update_profiletool_component_table(self):
         """Обновление таблицы компонентов инструмента профиля"""
-        table = self.ui.tableWidget_component
-        table.setRowCount(0)
-        table.setColumnCount(4)
-        table.setHorizontalHeaderLabels(["Название", "Статус", "Вариант", "Описание"])
-        table.setRowCount(len(self.profiletool['component']))
-        table.horizontalHeader().setStretchLastSection(True)
-
-        for row, component in enumerate(self.profiletool['component']):
-         # Название компонента
-            name_item = QTableWidgetItem(component["type"]["name"])
-            name_item.setData(Qt.UserRole, component["id"])
+        
+        def map_component_row(component: dict) -> list:
+            """Преобразование компонента в строку таблицы"""
+            # Название компонента
+            name = component["type"]["name"]
+            
             # Последний статус из истории
             if component['history']:
                 last_history = component['history'][-1]
-                status_name = last_history["status"]["name"]
-                status_item = QTableWidgetItem(status_name)
-                status_item.setData(Qt.UserRole, component["id"])
+                status = last_history["status"]["name"]
             else:
-                status_item = QTableWidgetItem("Новая")
-                status_item.setData(Qt.UserRole, component["id"])
-
-            variant_item = QTableWidgetItem(str(component["variant"]))
-            variant_item.setData(Qt.UserRole, component["id"])
-
-            description_text = component["description"].replace('\n', ' ')
-            description_item = QTableWidgetItem(description_text)
-            description_item.setData(Qt.UserRole, component["id"])
-
-
-
-            self.ui.tableWidget_component.setItem(row, 0, name_item)
-            self.ui.tableWidget_component.setItem(row, 1, status_item)
-            self.ui.tableWidget_component.setItem(row, 2, variant_item)
-            self.ui.tableWidget_component.setItem(row, 3, description_item)
+                status = "Новая"
+            
+            # Вариант
+            variant = str(component["variant"])
+            
+            # Описание без переносов строк
+            description = component["description"].replace('\n', ' ')
+            
+            return [name, status, variant, description]
         
+        BaseTable.populate_table(
+            self.ui.tableWidget_component,
+            ["Название", "Статус", "Вариант", "Описание"],
+            self.profiletool['component'],
+            func_row_mapper=map_component_row,
+            func_id_getter=lambda c: c["id"]
+        )
+        
+        # Контекстное меню
+        table = self.ui.tableWidget_component
         table.setContextMenuPolicy(Qt.CustomContextMenu)
         table.customContextMenuRequested.connect(self.show_context_menu_component_table)
 
     def update_product_component_table(self):
         """Обновление таблицы компонентов изделия"""
-        table = self.ui.tableWidget_component
-        table.setRowCount(0)
-        table.setColumnCount(3)
-        table.setRowCount(len(self.product['component']))
-        table.setHorizontalHeaderLabels(["Название", "Количество", "Описание"])
-        table.horizontalHeader().setStretchLastSection(True)
-
-        for row, component in enumerate(self.product['component']):
-            name_item = QTableWidgetItem(component["name"])
-            quantity_item = QTableWidgetItem(str(component["quantity"]))
-            description_item = QTableWidgetItem(component["description"])
-
-            name_item.setData(Qt.UserRole, component["id"])
-            quantity_item.setData(Qt.UserRole, component["id"])
-            description_item.setData(Qt.UserRole, component["id"])
-
-            self.ui.tableWidget_component.setItem(row, 0, name_item)
-            self.ui.tableWidget_component.setItem(row, 1, quantity_item)
-            self.ui.tableWidget_component.setItem(row, 2, description_item)
+        BaseTable.populate_table(
+            self.ui.tableWidget_component,
+            ["Название", "Количество", "Описание"],
+            self.product['component'],
+            func_row_mapper=lambda c: [
+                c["name"],
+                str(c["quantity"]),
+                c["description"]
+            ],
+            func_id_getter=lambda c: c["id"]
+        )
 
     def update_table_component_history(self, profiletool_component_id):
         """
@@ -203,9 +161,8 @@ class WindowProduct(QWidget):
         группировка по задачам (type.name), внутри — этапы
         """
         table = self.ui.tableWidget_component_stage
-        table.setColumnCount(3)
-        table.setHorizontalHeaderLabels(["Тип работы", "Дата", "Описание"])
-        table.horizontalHeader().setStretchLastSection(True)
+        
+        # Собираем историю
         history_data = []
         for profiletool in api_manager.table['profiletool']:
             for component in profiletool["component"]:
@@ -213,22 +170,23 @@ class WindowProduct(QWidget):
                     for history in component["history"]:
                         history_data.append({
                             "type_name": history['status']['name'],
-                            "date" : history["date"],
+                            "date": history["date"],
                             "description": history["description"]
                         })
 
-        table.setRowCount(len(history_data))
-
+        # Заполняем таблицу
+        BaseTable.setup_table(table, ["Тип работы", "Дата", "Описание"], len(history_data))
+        
         for row, data in enumerate(history_data):
-                table.setItem(row, 0, QTableWidgetItem(data["type_name"]))
-                table.setItem(row, 1, QTableWidgetItem(data["date"]))
-                table.setItem(row, 2, QTableWidgetItem(data["description"]))
+            BaseTable.set_cell_value(table, row, 0, data["type_name"])
+            BaseTable.set_cell_value(table, row, 1, data["date"])
+            BaseTable.set_cell_value(table, row, 2, data["description"])
 
 
     def clear_info_panel(self):
         """Очистка панели компонентов"""
-        self.ui.tableWidget_component.setRowCount(0)
-        self.ui.tableWidget_component_stage.setRowCount(0)
+        BaseTable.clear_table(self.ui.tableWidget_component)
+        BaseTable.clear_table(self.ui.tableWidget_component_stage)
 
     def show_context_menu_component_table(self, pos):
         """Показать контекстное меню для изменения статуса компонента"""

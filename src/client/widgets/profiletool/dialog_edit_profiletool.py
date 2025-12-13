@@ -1,37 +1,27 @@
 """Диалог для редактирования инструмента профиля."""
-from PySide6.QtWidgets import (QDialog, QTableWidgetItem, QCheckBox, QAbstractItemView)
-from PySide6.QtCore import QFile, Qt, Slot
-from PySide6.QtUiTools import QUiLoader
+from PySide6.QtWidgets import (QTableWidgetItem, QCheckBox, QAbstractItemView)
+from PySide6.QtCore import Qt, Slot
 from PySide6.QtGui import QPixmap
 import base64
+
+from ...base_dialog import BaseDialog
 from ...constant import UI_PATHS_ABS
 from ...api_manager import api_manager
 
 
-class DialogEditProfileTool(QDialog):
+class DialogEditProfileTool(BaseDialog):
     """Диалог для редактирования инструмента профиля с компонентами"""
     def __init__(self, profiletool, parent=None):
-        super().__init__(parent)
         self.profiletool = profiletool
         self.list_component_widget = []
-        self.load_ui()
-        self.setup_ui()
+        super().__init__(UI_PATHS_ABS["DIALOG_EDIT_PROFILETOOL"], api_manager, parent)
         # Заполняем форму данными инструмента
         self.fill_profiletool()
         self.fill_component()
-
-    def load_ui(self):
-        """Загружает UI из файла"""
-        ui_file = QFile(UI_PATHS_ABS["DIALOG_EDIT_PROFILETOOL"])
-        ui_file.open(QFile.ReadOnly)
-        loader = QUiLoader()
-        self.ui = loader.load(ui_file)
-        ui_file.close()
-
-        # Устанавливаем заголовок и свойства диалога
+        
+        # Устанавливаем заголовок
         self.setWindowTitle("Редактирование инструмента профиля")
         self.setModal(True)
-        self.setLayout(self.ui.layout())
 
     def setup_ui(self):
         """Настраивает UI компонентов после загрузки"""
