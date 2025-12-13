@@ -218,9 +218,25 @@
    <attribute name="pageId">
     <string notr="true">6</string>
    </attribute>
-   <layout class="QHBoxLayout" name="horizontalLayout_2">
+   <layout class="QVBoxLayout" name="verticalLayout_4">
     <item>
      <widget class="QListWidget" name="listWidget_product_component"/>
+    </item>
+   </layout>
+  </widget>
+  <widget class="QWizardPage" name="wizardPage_profiletool_blank">
+   <property name="title">
+    <string>Изготовить заготовки</string>
+   </property>
+   <property name="subTitle">
+    <string>Укажите элементы инструмента, для которых нужно изготовить заготовки</string>
+   </property>
+   <attribute name="pageId">
+    <string notr="true">7</string>
+   </attribute>
+   <layout class="QVBoxLayout" name="verticalLayout_3">
+    <item>
+     <widget class="QListWidget" name="listWidget_profiletool_blank"/>
     </item>
    </layout>
   </widget>
@@ -232,7 +248,7 @@
     <string>Укажите срок и описание</string>
    </property>
    <attribute name="pageId">
-    <string notr="true">7</string>
+    <string notr="true">8</string>
    </attribute>
    <layout class="QFormLayout" name="formLayout_4">
     <item row="0" column="0">

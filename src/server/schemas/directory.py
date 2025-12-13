@@ -48,6 +48,9 @@ class SchemaDirToolDimension(SchemaDirectoryResponse):
 class SchemaDirProfiletoolComponentType(SchemaDirectoryResponse):
     """Справочник: Типы компонентов инструментов профиля"""
     profiletool_dimension_id: Optional[int] = None
+    width: Optional[int] = None
+    height: Optional[int] = None
+    length: Optional[int] = None
     profiletool_dimension: Optional[SchemaDirToolDimension] = None
 
 

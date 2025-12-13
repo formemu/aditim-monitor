@@ -6,6 +6,7 @@ from ...constant import UI_PATHS_ABS, get_style_path
 from ...api_manager import api_manager
 from ...style_util import load_styles
 from .widget_task_creare_profiletool_component import WidgetTaskCreateProfiletoolComponent
+from .widget_task_create_blank import WidgetTaskCreateBlank
 
 # Константы
 PAGE = {
@@ -14,9 +15,10 @@ PAGE = {
     "PROFILETOOL_COMPONENT_DEV": 2,
     "PROFILETOOL_COMPONENT_SELECTION": 3,
     "PROFILETOOL_COMPONENT_REV": 4,
-    "PRODUCT_SELECTION": 5,
-    "PRODUCT_COMPONENT_SELECTION": 6,
-    "TASK_DETAIL": 7
+    "PROFILETOOL_BLANK": 5,
+    "PRODUCT_SELECTION": 6,
+    "PRODUCT_COMPONENT_SELECTION": 7,
+    "TASK_DETAIL": 8
 }
 
 class WizardTaskCreate(QWizard):
@@ -52,6 +54,7 @@ class WizardTaskCreate(QWizard):
         self.addPage(self.ui.wizardPage_profiletool_component_dev)
         self.addPage(self.ui.wizardPage_profiletool_component_selection)
         self.addPage(self.ui.wizardPage_profiletool_component_rev)
+        self.addPage(self.ui.wizardPage_profiletool_blank)
         self.addPage(self.ui.wizardPage_product_selection)
         self.addPage(self.ui.wizardPage_product_component_selection)
         self.addPage(self.ui.wizardPage_task_detail)
@@ -81,6 +84,8 @@ class WizardTaskCreate(QWizard):
             self.load_profiletool_component_prod()
         elif id == PAGE["PROFILETOOL_COMPONENT_REV"]:
             self.load_profiletool_component_rev()
+        elif id == PAGE["PROFILETOOL_BLANK"]:
+            self.load_profiletool_component_blank()
         elif id == PAGE["TASK_DETAIL"]:
             self.task_data["type_id"] = self.ui.comboBox_work_type.currentIndex()
             self.create_list_profiletool_component_selected()
@@ -99,11 +104,15 @@ class WizardTaskCreate(QWizard):
                 return PAGE["PROFILETOOL_COMPONENT_SELECTION"]
             elif self.ui.comboBox_work_type.currentIndex() == 2:
                 return PAGE["PROFILETOOL_COMPONENT_REV"]
+            elif self.ui.comboBox_work_type.currentIndex() == 3:
+                return PAGE["PROFILETOOL_BLANK"]
         elif self.currentId() == PAGE["PROFILETOOL_COMPONENT_DEV"]:
             return PAGE["TASK_DETAIL"]
         elif self.currentId() == PAGE["PROFILETOOL_COMPONENT_REV"]:
             return PAGE["TASK_DETAIL"]  
         elif self.currentId() == PAGE["PROFILETOOL_COMPONENT_SELECTION"]:
+            return PAGE["TASK_DETAIL"]
+        elif self.currentId() == PAGE["PROFILETOOL_BLANK"]:
             return PAGE["TASK_DETAIL"]
         elif self.currentId() == PAGE["PRODUCT_SELECTION"]:
             return PAGE["PRODUCT_COMPONENT_SELECTION"]
@@ -185,6 +194,11 @@ class WizardTaskCreate(QWizard):
             widget_component.deleteLater()
 
     def create_list_profiletool_component_selected(self):
+        # Для задач с заготовками не собираем компоненты из listWidget
+        # так как они будут обработаны отдельно в create_profiletool_task_blank
+        if self.task_data['type_id'] == 3:
+            return
+        
         if self.task_data['type_id'] == 0:
             listWidget_selected = self.ui.listWidget_profiletool_component_dev
         elif self.task_data['type_id'] == 1:
@@ -215,6 +229,40 @@ class WizardTaskCreate(QWizard):
             self.ui.listWidget_profiletool_component_rev.addItem(item)
             self.ui.listWidget_profiletool_component_rev.setItemWidget(item, checkbox)
 
+    # --- Страница выбора компонентов для заготовок ---
+    def load_profiletool_component_blank(self):
+        """Загружает компоненты для изготовления заготовок"""
+        self.ui.listWidget_profiletool_blank.clear()
+        
+        # Очищаем контейнер виджетов параметров заготовок
+        layout = self.ui.widget_blank_container.layout()
+        for child in self.ui.widget_blank_container.findChildren(QWidget):
+            child.deleteLater()
+        
+        for component in self.profileTool['component']:
+            item = QListWidgetItem("")
+            checkbox = QCheckBox(f"{component['type']['name']}")
+            checkbox.setProperty("component_id", component['id'])
+            checkbox.toggled.connect(lambda checked, comp=component: 
+                                     self.activate_blank_component(checked, comp))
+            self.ui.listWidget_profiletool_blank.addItem(item)
+            self.ui.listWidget_profiletool_blank.setItemWidget(item, checkbox)
+    
+    def activate_blank_component(self, checked, component):
+        """Добавляет или удаляет виджет параметров заготовки"""
+        layout = self.ui.widget_blank_container.layout()
+        if checked:
+            widget_blank = WidgetTaskCreateBlank(component)
+            widget_blank.setProperty("component_id", component['id'])
+            layout.addWidget(widget_blank)
+        else:
+            # Находим и удаляем виджет для этого компонента
+            for child in self.ui.widget_blank_container.findChildren(WidgetTaskCreateBlank):
+                if child.property("component_id") == component['id']:
+                    layout.removeWidget(child)
+                    child.deleteLater()
+                    break
+
     # --- Создание задач ---
     def accept(self):
         self.task_data['description'] = self.ui.textEdit_description.toPlainText()
@@ -227,6 +275,8 @@ class WizardTaskCreate(QWizard):
                 self.create_profiletool_task_prod()
             elif self.task_data['type_id'] == 2:
                 self.create_profiletool_task_rev()
+            elif self.task_data['type_id'] == 3:
+                self.create_profiletool_task_blank()
         elif self.task_data["product_id"]:
             self.create_product_task()
         super().accept()
@@ -256,4 +306,31 @@ class WizardTaskCreate(QWizard):
         for component in self.task_data["component"]:
             component_data = {"profiletool_component_id": component['id']}
             api_manager.api_task.create_task_component(task['id'], component_data)
+
+    def create_profiletool_task_blank(self):
+        """Создание задачи для изготовления заготовок"""
+        task = api_manager.api_task.create_task(self.task_data)
+        
+        # Получаем параметры заготовок из виджетов
+        for widget_blank in self.ui.widget_blank_container.findChildren(WidgetTaskCreateBlank):
+            blank_data = widget_blank.get_blank_data()
+            
+            if not blank_data:
+                continue  # Пропускаем, если заготовка не выбрана
+            
+            component_id = blank_data['component_id']
+            blank_id = blank_data['blank_id']
+            
+            # Создаем task_component
+            component_data = {"profiletool_component_id": component_id}
+            task_component = api_manager.api_task.create_task_component(task['id'], component_data)
+            
+            # Обновляем заготовку: привязываем к компоненту и добавляем размеры детали
+            blank_update_data = {
+                "profiletool_component_id": component_id,
+                "product_width": blank_data['product_width'],
+                "product_height": blank_data['product_height'],
+                "product_length": blank_data['product_length']
+            }
+            api_manager.api_blank.update_blank(blank_id, blank_update_data)
 

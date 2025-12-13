@@ -30,6 +30,9 @@ class ModelDirProfileToolComponentType(ModelDirectoryBase):
     """Справочник типов компонентов инструментов"""
     __tablename__ = "dir_profiletool_component_type"
     profiletool_dimension_id = Column(Integer, ForeignKey("dir_profiletool_dimension.id"), nullable=True)
+    width = Column(Integer, nullable=True)
+    height = Column(Integer, nullable=True)
+    length = Column(Integer, nullable=True)
     component = relationship("ModelProfileToolComponent", back_populates="type")
     plan_stage = relationship("ModelPlanTaskComponentStage", back_populates="profiletool_component_type")
     profiletool_dimension = relationship("ModelDirProfileToolDimension", back_populates="list_component_type")
