@@ -5,6 +5,7 @@ from fastapi import APIRouter, Depends, HTTPException, Query, Path, Body
 from sqlalchemy.orm import Session , selectinload
 from ..database import get_db
 from ..models.task import ModelTask, ModelTaskComponent, ModelTaskComponentStage
+from ..models.profiletool import ModelProfileTool
 from ..models.directory import ModelDirTaskStatus, ModelDirTaskType
 from ..schemas.task import (
     SchemaTaskCreate,
@@ -25,22 +26,42 @@ router = APIRouter(prefix="/api", tags=["task"])
 
 @router.get("/task", response_model=List[SchemaTaskResponse])
 def get_task(db: Session = Depends(get_db)):
-    query = db.query(ModelTask)
-    tasks = query.order_by(ModelTask.id).all()
-    return tasks
+    """Получить все задачи с загрузкой связанных данных"""
+    return db.query(ModelTask).options(
+        selectinload(ModelTask.profiletool).selectinload(ModelProfileTool.profile),
+        selectinload(ModelTask.product),
+        selectinload(ModelTask.status),
+        selectinload(ModelTask.type),
+        selectinload(ModelTask.location),
+        selectinload(ModelTask.component).selectinload(ModelTaskComponent.stage)
+    ).order_by(ModelTask.id).all()
 
 @router.get("/taskdev", response_model=List[SchemaTaskResponse])
 def get_taskdev(db: Session = Depends(get_db)):
+    """Получить задачи в разработке с загрузкой связанных данных"""
     type = db.query(ModelDirTaskType).filter(ModelDirTaskType.name == "Разработка").first()
     status = db.query(ModelDirTaskStatus).filter(ModelDirTaskStatus.name == "В работе").first()
-    task = db.query(ModelTask).filter(ModelTask.type_id == type.id, ModelTask.status_id == status.id).order_by(ModelTask.position).all()
-    return task
+    return db.query(ModelTask).options(
+        selectinload(ModelTask.profiletool).selectinload(ModelProfileTool.profile),
+        selectinload(ModelTask.product),
+        selectinload(ModelTask.status),
+        selectinload(ModelTask.type),
+        selectinload(ModelTask.location),
+        selectinload(ModelTask.component).selectinload(ModelTaskComponent.stage)
+    ).filter(ModelTask.type_id == type.id, ModelTask.status_id == status.id).order_by(ModelTask.position).all()
 
 @router.get("/task/queue", response_model=List[SchemaTaskResponse])
 def get_queue(db: Session = Depends(get_db)):
+    """Получить очередь задач с загрузкой связанных данных"""
     status_in_progress = db.query(ModelDirTaskStatus).filter(ModelDirTaskStatus.name == "В работе").first()
-    task = db.query(ModelTask).filter(ModelTask.status_id == status_in_progress.id, ModelTask.position.isnot(None)).order_by(ModelTask.position).all()
-    return task
+    return db.query(ModelTask).options(
+        selectinload(ModelTask.profiletool).selectinload(ModelProfileTool.profile),
+        selectinload(ModelTask.product),
+        selectinload(ModelTask.status),
+        selectinload(ModelTask.type),
+        selectinload(ModelTask.location),
+        selectinload(ModelTask.component).selectinload(ModelTaskComponent.stage)
+    ).filter(ModelTask.status_id == status_in_progress.id, ModelTask.position.isnot(None)).order_by(ModelTask.position).all()
 
 
 
@@ -182,10 +203,15 @@ def update_task_location(task_id: int, task: SchemaTaskUpdate, db: Session = Dep
 # =============================================================================
 @router.delete("/task/{task_id}", response_model=dict)
 def delete_task(task_id: int, db: Session = Depends(get_db)):
-    """Удалить задачу по ID"""
-    db_task = db.get(ModelTask, task_id)
+    """Удалить задачу по ID с каскадным удалением компонентов"""
+    # Используем query с явной загрузкой связей для корректного каскадного удаления
+    db_task = db.query(ModelTask).options(
+        selectinload(ModelTask.component).selectinload(ModelTaskComponent.stage)
+    ).filter(ModelTask.id == task_id).first()
+    
     if not db_task:
         raise HTTPException(status_code=404, detail="Задача не найдена")
+    
     db.delete(db_task)
     db.commit()
     notify_clients("table", "task", "deleted")

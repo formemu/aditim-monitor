@@ -12,6 +12,8 @@ class PageProfiletoolBlank:
     
     def load(self):
         """Загрузка компонентов для изготовления заготовок"""
+        from ...api_manager import api_manager
+        
         self.ui.listWidget_profiletool_blank.clear()
         
         # Очищаем контейнер виджетов параметров заготовок
@@ -22,7 +24,21 @@ class PageProfiletoolBlank:
         if not self.wizard.profileTool:
             return
         
+        # Получаем все заготовки для проверки
+        list_blank = api_manager.table.get('blank', [])
+        
         for component in self.wizard.profileTool['component']:
+            # Проверяем, есть ли у компонента уже готовая заготовка
+            has_blank = any(
+                blank.get('profiletool_component_id') == component['id'] 
+                and blank.get('date_product')  # Заготовка уже обработана
+                for blank in list_blank
+            )
+            
+            # Если у компонента уже есть готовая заготовка, пропускаем его
+            if has_blank:
+                continue
+            
             item = QListWidgetItem("")
             checkbox = QCheckBox(f"{component['type']['name']}")
             checkbox.setProperty("component_id", component['id'])

@@ -109,12 +109,23 @@ class WindowMachine(BaseWindow):
         stage = operation["stage"]
 
         # 1. Основное имя: профиль или продукт
-        if task["profiletool_id"]: name = task["profiletool"]['profile']['article']
-        elif task["product_id"]: name = task["product"]["name"]
-        else: name = "Без объекта"
+        if task.get("profiletool_id"):
+            profiletool = task.get("profiletool")
+            if profiletool and profiletool.get('profile'):
+                name = profiletool['profile']['article']
+            elif profiletool:
+                profile = api_manager.get_by_id('profile', profiletool.get('profile_id'))
+                name = profile['article'] if profile else "N/A"
+            else:
+                name = "N/A"
+        elif task.get("product_id"):
+            product = task.get("product")
+            name = product["name"] if product else "N/A"
+        else:
+            name = "Без объекта"
 
         # 1.1. тип задачи
-        if task["type"]: type_name = task["type"]["name"]
+        if task.get("type"): type_name = task["type"]["name"]
 
         # 2. Имя компонента
         if component["profiletool_component_id"]: component_name = component["profiletool_component"]["type"]["name"]

@@ -74,9 +74,9 @@ class WindowProduct(BaseWindow):
             ["Профиль", "Размер", "Описание"],
             api_manager.table['profiletool'],
             func_row_mapper=lambda t: [
-                t['profile']['article'],
-                t['dimension']['name'],
-                t['description']
+                t.get('profile', {}).get('article', 'N/A') if t.get('profile') else api_manager.get_by_id('profile', t.get('profile_id'), {}).get('article', 'N/A'),
+                t.get('dimension', {}).get('name', 'N/A') if t.get('dimension') else api_manager.get_by_id('dir_profiletool_dimension', t.get('dimension_id'), {}).get('name', 'N/A'),
+                t.get('description', '')
             ],
             func_id_getter=lambda t: t['id']
         )

@@ -13,6 +13,7 @@ from .windows.window_task import WindowTask
 from .windows.window_machine import WindowMachine
 from .windows.window_blank import WindowBlank
 from .windows.window_setting import WindowSetting
+from .windows.window_report import WindowReport
 
 
 
@@ -56,6 +57,7 @@ class MainWindow(QMainWindow):
         self.window_machine = None
         self.window_blank = None
         self.window_setting = None
+        self.window_report = None
 
     def setup_ui(self):
         """Настройка UI компонентов после загрузки"""
@@ -144,4 +146,6 @@ class MainWindow(QMainWindow):
 
     def show_report(self):
         """Показать отчеты"""
-        QMessageBox.information(self, "Отчеты", "Отчеты (в разработке)")
+        window = self.ensure_window_created("window_report", WindowReport)
+        self.ui.stackedWidget_content.setCurrentWidget(window.ui)
+        self.setWindowTitle("ADITIM Monitor - Отчёты")

@@ -161,6 +161,9 @@ class WizardTaskCreate(QWizard):
             elif self.task_data['type_id'] == 2:
                 self.create_profiletool_task_rev()
             elif self.task_data['type_id'] == 3:
+                # Проверяем наличие заготовок перед созданием задачи
+                if not self.validate_blank_availability():
+                    return  # Не создаем задачу, если недостаточно заготовок
                 self.create_profiletool_task_blank()
         elif self.task_data["product_id"]:
             self.create_product_task()
@@ -192,19 +195,122 @@ class WizardTaskCreate(QWizard):
             component_data = {"profiletool_component_id": component['id']}
             api_manager.api_task.create_task_component(task['id'], component_data)
 
+    def validate_blank_availability(self):
+        """Проверка достаточного количества заготовок для всех компонентов"""
+        from PySide6.QtWidgets import QMessageBox
+        
+        # Получаем параметры заготовок через страницу
+        blank_data_list = self.page_profiletool_blank.get_blank_data_list()
+        
+        # Получаем все компоненты профиля
+        all_components = self.profileTool.get('component', []) if self.profileTool else []
+        
+        # Подсчитываем требуемое количество заготовок для каждого размера
+        dict_required_blank = {}  # {(material_id, width, height, length): required_count}
+        list_error_message = []
+        
+        # Получаем список компонентов, для которых выбраны заготовки
+        dict_component_blank = {bd['component_id']: bd for bd in blank_data_list if bd}
+        
+        for component in all_components:
+            component_id = component['id']
+            
+            # Если для компонента не выбрана заготовка
+            if component_id not in dict_component_blank:
+                # Пропускаем компоненты, у которых уже есть готовая заготовка
+                # (они не отображаются в списке благодаря фильтрации в page_profiletool_blank.load())
+                continue
+            
+            blank_data = dict_component_blank[component_id]
+            list_blank = blank_data.get('list_blank', [])
+            
+            if not list_blank or len(list_blank) == 0:
+                # Нет доступных заготовок
+                component_name = component['type']['name']
+                list_error_message.append(f"• Компонент '{component_name}': нет доступных заготовок")
+                continue
+            
+            # Получаем параметры для идентификации размера
+            first_blank = list_blank[0]
+            material_id = first_blank.get('material', {}).get('id')
+            width = first_blank.get('blank_width', 0)
+            height = first_blank.get('blank_height', 0)
+            length = first_blank.get('blank_length', 0)
+            
+            size_key = (material_id, width, height, length)
+            
+            # Требуется 1 заготовка на компонент
+            if size_key not in dict_required_blank:
+                dict_required_blank[size_key] = {
+                    'required': 0,
+                    'available': len(list_blank),
+                    'material_name': first_blank.get('material', {}).get('name', 'Неизвестно'),
+                    'size': f"{width}×{height}×{length}"
+                }
+            dict_required_blank[size_key]['required'] += 1
+        
+        # Проверяем, достаточно ли заготовок для каждого размера
+        for size_key, data in dict_required_blank.items():
+            if data['required'] > data['available']:
+                list_error_message.append(
+                    f"• {data['material_name']} {data['size']} мм: "
+                    f"требуется {data['required']} шт, доступно {data['available']} шт"
+                )
+        
+        # Если есть ошибки, показываем сообщение и не создаем задачу
+        if list_error_message:
+            error_text = "Невозможно создать задачу:\n\n" + "\n".join(list_error_message)
+            QMessageBox.warning(self, "Недостаточно заготовок", error_text)
+            return False
+        
+        return True
+
     def create_profiletool_task_blank(self):
         """Создание задачи для изготовления заготовок"""
+        from PySide6.QtCore import QDate
+        
         task = api_manager.api_task.create_task(self.task_data)
         
         # Получаем параметры заготовок через страницу
         blank_data_list = self.page_profiletool_blank.get_blank_data_list()
+        
+        # Словарь для отслеживания использованных заготовок по размеру
+        dict_used_blank = {}  # {(material_id, width, height, length): [used_blank_ids]}
         
         for blank_data in blank_data_list:
             if not blank_data:
                 continue  # Пропускаем, если заготовка не выбрана
             
             component_id = blank_data['component_id']
-            blank_id = blank_data['blank_id']
+            list_blank = blank_data.get('list_blank', [])
+            
+            if not list_blank:
+                continue  # Пропускаем, если нет доступных заготовок
+            
+            # Получаем параметры для идентификации размера
+            first_blank = list_blank[0]
+            material_id = first_blank.get('material', {}).get('id')
+            width = first_blank.get('blank_width', 0)
+            height = first_blank.get('blank_height', 0)
+            length = first_blank.get('blank_length', 0)
+            size_key = (material_id, width, height, length)
+            
+            # Инициализируем список использованных заготовок для этого размера
+            if size_key not in dict_used_blank:
+                dict_used_blank[size_key] = []
+            
+            # Ищем первую неиспользованную заготовку
+            selected_blank = None
+            for blank in list_blank:
+                if blank['id'] not in dict_used_blank[size_key]:
+                    selected_blank = blank
+                    dict_used_blank[size_key].append(blank['id'])
+                    break
+            
+            if not selected_blank:
+                continue  # Нет доступных заготовок (все уже использованы)
+            
+            blank_id = selected_blank['id']
             
             # Создаем task_component
             component_data = {"profiletool_component_id": component_id}
@@ -212,29 +318,43 @@ class WizardTaskCreate(QWizard):
             task_component_id = task_component['id']
             
             # Создаем этапы работ для заготовки (эрозионные и/или фрезерные)
+            erosion_offset = blank_data.get('erosion_offset', 0.7)  # Получаем припуск из данных
+            
             for work in blank_data.get('work', []):
                 # Определяем номер этапа в зависимости от типа работы
                 # ID 8 - эрозионные работы (этап 1)
                 # ID 9 - фрезерные работы (этап 2)
                 if work['id'] == 8:
                     stage_num = 1  # Эрозионные работы
+                    # Добавляем описание с информацией о припуске для эрозионных работ
+                    description = f"Припуск на обработку: {erosion_offset} мм"
                 elif work['id'] == 9:
                     stage_num = 2  # Фрезерные работы
+                    description = None
                 else:
                     stage_num = 1  # По умолчанию
+                    description = None
                 
                 stage_data = {
                     "work_subtype_id": work['id'],
                     "stage_num": stage_num
                 }
+                
+                # Добавляем описание, если оно есть
+                if description:
+                    stage_data["description"] = description
+                
                 api_manager.api_task.create_task_component_stage(task_component_id, stage_data)
             
-            # Обновляем заготовку: привязываем к компоненту и добавляем размеры детали
+            # Обновляем ТОЛЬКО ОДНУ выбранную заготовку: привязываем к компоненту, добавляем размеры детали и дату изготовления
             blank_update_data = {
                 "profiletool_component_id": component_id,
                 "product_width": blank_data['product_width'],
                 "product_height": blank_data['product_height'],
-                "product_length": blank_data['product_length']
+                "product_length": blank_data['product_length'],
+                "date_product": QDate.currentDate().toString("yyyy-MM-dd")  # ← Устанавливаем дату изготовления
             }
+            
+            # Обновляем только выбранную заготовку
             api_manager.api_blank.update_blank(blank_id, blank_update_data)
 

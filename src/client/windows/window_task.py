@@ -336,12 +336,20 @@ class WindowTask(BaseWindow):
 
     def get_task_name(self, task):
         """Возвращает название задачи: артикул профиля или имя изделия"""
-        if task['profiletool_id']:
+        if task.get('profiletool_id'):
             profiletool = api_manager.get_by_id('profiletool', task['profiletool_id'])
-            return f"Инструмент {profiletool['profile']['article']}"
-        elif task['product_id']:
+            if profiletool and profiletool.get('profile'):
+                return f"Инструмент {profiletool['profile']['article']}"
+            elif profiletool:
+                # Если profile не загружен, получаем через profile_id
+                profile = api_manager.get_by_id('profile', profiletool.get('profile_id'))
+                if profile:
+                    return f"Инструмент {profile['article']}"
+            return "Инструмент N/A"
+        elif task.get('product_id'):
             product = api_manager.get_by_id('product', task['product_id'])
             return f"Изделие {product['name']}" if product else "Изделие N/A"
+        return "Задача N/A"
 
     def clear_info_panel(self):
         """Очистка таблицы компонентов"""
@@ -490,7 +498,7 @@ class WindowTask(BaseWindow):
             status = 4 # Изготовление
             self.update_component_history(status, task['component'])
         elif task['type']['name'] == 'Заготовка' and task['status']['name'] == 'В работе':
-            status = 11 # Изготовление
+            status = 10 # Заготовка
             self.update_component_history(status, task['component'])
         
 

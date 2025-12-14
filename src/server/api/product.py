@@ -2,7 +2,7 @@
 
 from typing import List
 from fastapi import APIRouter, Depends, HTTPException
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, selectinload
 
 from ..database import get_db
 from ..models.product import ModelProduct, ModelProductComponent
@@ -22,13 +22,18 @@ router = APIRouter(prefix="/api", tags=["product"])
 # =============================================================================
 @router.get("/product", response_model=List[SchemaProductResponse])
 def get_product(db: Session = Depends(get_db)):
-    """Получить все продукты"""
-    return db.query(ModelProduct).all()
+    """Получить все продукты с загрузкой связанных данных"""
+    return db.query(ModelProduct).options(
+        selectinload(ModelProduct.department),
+        selectinload(ModelProduct.component)
+    ).all()
 
 @router.get("/product/{product_id}/component", response_model=List[SchemaProductComponentResponse])
 def get_product_component(product_id: int, db: Session = Depends(get_db)):
-    """Получить все компоненты для продукта"""
-    return db.query(ModelProductComponent).filter(ModelProductComponent.product_id == product_id).all()
+    """Получить все компоненты для продукта с загрузкой типов"""
+    return db.query(ModelProductComponent).options(
+        selectinload(ModelProductComponent.type)
+    ).filter(ModelProductComponent.product_id == product_id).all()
 
 # =============================================================================
 # ROUTER.POST

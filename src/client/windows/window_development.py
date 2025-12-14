@@ -76,11 +76,26 @@ class WindowDevelopment(BaseWindow):
         """Обновление панели информации о задаче"""
         if self.task:
             self.ui.label_name.setText(self.get_task_name(self.task))
-            self.ui.label_description.setText(self.task['description'])
-            if self.task['profiletool']:
-                sketch_data = self.task['profiletool']['profile']["sketch"]
-                self.load_and_show_sketch(sketch_data)
-            else: self.ui.label_sketch.setText("Эскиз отсутствует")
+            self.ui.label_description.setText(self.task.get('description', ''))
+            
+            profiletool = self.task.get('profiletool')
+            if profiletool:
+                profile = profiletool.get('profile')
+                if profile and profile.get('sketch'):
+                    sketch_data = profile["sketch"]
+                    self.load_and_show_sketch(sketch_data)
+                elif profiletool.get('profile_id'):
+                    # Попытка получить profile через ID
+                    profile = api_manager.get_by_id('profile', profiletool['profile_id'])
+                    if profile and profile.get('sketch'):
+                        self.load_and_show_sketch(profile["sketch"])
+                    else:
+                        self.ui.label_sketch.setText("Эскиз отсутствует")
+                else:
+                    self.ui.label_sketch.setText("Эскиз отсутствует")
+            else:
+                self.ui.label_sketch.setText("Эскиз отсутствует")
+            
             self.update_table_task_component()
             
 
@@ -118,12 +133,20 @@ class WindowDevelopment(BaseWindow):
 
     def get_task_name(self, task):
         """Возвращает название задачи: артикул профиля или имя изделия"""
-        if task['profiletool_id']:
+        if task.get('profiletool_id'):
             profiletool = api_manager.get_by_id('profiletool', task['profiletool_id'])
-            return f"Инструмент {profiletool['profile']['article']}"
-        elif task['product_id']:
+            if profiletool and profiletool.get('profile'):
+                return f"Инструмент {profiletool['profile']['article']}"
+            elif profiletool:
+                # Если profile не загружен, получаем через profile_id
+                profile = api_manager.get_by_id('profile', profiletool.get('profile_id'))
+                if profile:
+                    return f"Инструмент {profile['article']}"
+            return "Инструмент N/A"
+        elif task.get('product_id'):
             product = api_manager.get_by_id('product', task['product_id'])
             return f"Изделие {product['name']}" if product else "Изделие N/A"
+        return "Задача N/A"
 
     def clear_info_panel(self):
         """Очистка панели информации о задаче"""

@@ -53,6 +53,7 @@ UI_PATHS = {
     "MACHINE_CONTENT": "ui/window_machine.ui",
     "BLANK_CONTENT": "ui/window_blank.ui",
     "SETTING_CONTENT": "ui/window_setting.ui",
+    "CONTENT_REPORT": "ui/content_report.ui",
     "DIALOG_CREATE_PROFILE": "ui/dialog_create_profile.ui",
     "DIALOG_EDIT_PROFILE": "ui/dialog_edit_profile.ui",
     "DIALOG_CREATE_PROFILETOOL": "ui/dialog_create_profiletool.ui",

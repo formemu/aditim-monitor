@@ -379,10 +379,30 @@ class WindowBlank(BaseWindow):
     
     def show_context_menu(self, pos):
         """Показать контекстное меню для заказа"""
-        if not self.selected_order:
+        table = self.ui.tableWidget_blank
+        item = table.itemAt(pos)
+        
+        if not item:
             return
         
-        table = self.ui.tableWidget_blank
+        # Получаем данные из кликнутого элемента
+        user_data = item.data(Qt.UserRole)
+        if not user_data:
+            return
+        
+        # Получаем данные заказа в зависимости от типа элемента
+        order_data = None
+        if user_data.get('type') == 'order_header':
+            order_data = user_data.get('order_data')
+        elif user_data.get('type') == 'group':
+            order_data = user_data.get('order_data')
+        
+        if not order_data:
+            return
+        
+        # Устанавливаем selected_order для других методов
+        self.selected_order = order_data
+        
         menu = QMenu(table)
         
         # Действие "Плита прибыла" - устанавливает дату прибытия для всех заготовок заказа

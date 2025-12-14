@@ -1,7 +1,7 @@
 """API routes for profile tool"""
 from typing import List
 from fastapi import APIRouter, Depends, HTTPException
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, selectinload
 
 from ..database import get_db
 from ..models.profiletool import ModelProfileTool , ModelProfileToolComponent, ModelProfileToolComponentHistory
@@ -23,14 +23,22 @@ router = APIRouter(prefix="/api", tags=["profile-tool"])
 # =============================================================================
 @router.get("/profile-tool", response_model=List[SchemaProfileToolResponse])
 def get_profiletool(db: Session = Depends(get_db)):
-    """Получить все инструменты профиля"""
-    return db.query(ModelProfileTool).all()
+    """Получить все инструменты профиля с загрузкой связанных данных"""
+    return db.query(ModelProfileTool).options(
+        selectinload(ModelProfileTool.profile),
+        selectinload(ModelProfileTool.dimension),
+        selectinload(ModelProfileTool.component).selectinload(ModelProfileToolComponent.type),
+        selectinload(ModelProfileTool.component).selectinload(ModelProfileToolComponent.history)
+    ).all()
 
 
 @router.get("/profile-tool/{profiletool_id}/component", response_model=List[SchemaProfileToolComponentResponse])
 def get_profiletool_component(profiletool_id: int, db: Session = Depends(get_db)):
-    """Получить все компоненты инструмента профиля"""
-    return db.query(ModelProfileToolComponent).filter(ModelProfileToolComponent.profiletool_id == profiletool_id).all()
+    """Получить все компоненты инструмента профиля с загрузкой типов и истории"""
+    return db.query(ModelProfileToolComponent).options(
+        selectinload(ModelProfileToolComponent.type),
+        selectinload(ModelProfileToolComponent.history).selectinload(ModelProfileToolComponentHistory.status)
+    ).filter(ModelProfileToolComponent.profiletool_id == profiletool_id).all()
 
 
 # =============================================================================

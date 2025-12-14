@@ -1,0 +1,391 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>Form</class>
+ <widget class="QWidget" name="Form">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>1200</width>
+    <height>800</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>Отчёты</string>
+  </property>
+  <layout class="QVBoxLayout" name="verticalLayout_main">
+   <item>
+    <widget class="QLabel" name="label_header">
+     <property name="text">
+      <string>ОТЧЁТЫ</string>
+     </property>
+     <property name="alignment">
+      <set>Qt::AlignCenter</set>
+     </property>
+     <property name="styleSheet">
+      <string>font-size: 24px; font-weight: bold; padding: 10px;</string>
+     </property>
+    </widget>
+   </item>
+   <item>
+    <widget class="QWidget" name="widget_controls" native="true">
+     <layout class="QHBoxLayout" name="horizontalLayout_controls">
+      <item>
+       <widget class="QGroupBox" name="groupBox_report_type">
+        <property name="title">
+         <string>Тип отчёта</string>
+        </property>
+        <layout class="QVBoxLayout" name="verticalLayout_report_type">
+         <item>
+          <widget class="QComboBox" name="comboBox_report_type">
+           <item>
+            <property name="text">
+             <string>Отчёт по задачам</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>Отчёт по станкам</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>Отчёт по заготовкам</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>Отчёт по инструментам</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>Сводный отчёт</string>
+            </property>
+           </item>
+          </widget>
+         </item>
+        </layout>
+       </widget>
+      </item>
+      <item>
+       <widget class="QGroupBox" name="groupBox_period">
+        <property name="title">
+         <string>Период</string>
+        </property>
+        <layout class="QVBoxLayout" name="verticalLayout_period">
+         <item>
+          <widget class="QRadioButton" name="radioButton_month">
+           <property name="text">
+            <string>Месяц</string>
+           </property>
+           <property name="checked">
+            <bool>true</bool>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QComboBox" name="comboBox_month">
+           <item>
+            <property name="text">
+             <string>Январь</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>Февраль</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>Март</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>Апрель</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>Май</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>Июнь</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>Июль</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>Август</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>Сентябрь</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>Октябрь</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>Ноябрь</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>Декабрь</string>
+            </property>
+           </item>
+          </widget>
+         </item>
+         <item>
+          <widget class="QComboBox" name="comboBox_year">
+           <item>
+            <property name="text">
+             <string>2023</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>2024</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>2025</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>2026</string>
+            </property>
+           </item>
+          </widget>
+         </item>
+         <item>
+          <widget class="QRadioButton" name="radioButton_range">
+           <property name="text">
+            <string>Произвольный диапазон</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QWidget" name="widget_date_range" native="true">
+           <property name="enabled">
+            <bool>false</bool>
+           </property>
+           <layout class="QHBoxLayout" name="horizontalLayout_date_range">
+            <property name="leftMargin">
+             <number>0</number>
+            </property>
+            <property name="topMargin">
+             <number>0</number>
+            </property>
+            <property name="rightMargin">
+             <number>0</number>
+            </property>
+            <property name="bottomMargin">
+             <number>0</number>
+            </property>
+            <item>
+             <widget class="QLabel" name="label_date_from">
+              <property name="text">
+               <string>От:</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QDateEdit" name="dateEdit_from">
+              <property name="calendarPopup">
+               <bool>true</bool>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QLabel" name="label_date_to">
+              <property name="text">
+               <string>До:</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QDateEdit" name="dateEdit_to">
+              <property name="calendarPopup">
+               <bool>true</bool>
+              </property>
+             </widget>
+            </item>
+           </layout>
+          </widget>
+         </item>
+        </layout>
+       </widget>
+      </item>
+      <item>
+       <widget class="QGroupBox" name="groupBox_filters">
+        <property name="title">
+         <string>Фильтры</string>
+        </property>
+        <layout class="QVBoxLayout" name="verticalLayout_filters">
+         <item>
+          <widget class="QCheckBox" name="checkBox_filter_department">
+           <property name="text">
+            <string>По отделу</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QComboBox" name="comboBox_department">
+           <property name="enabled">
+            <bool>false</bool>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QCheckBox" name="checkBox_filter_task_type">
+           <property name="text">
+            <string>По типу задачи</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QComboBox" name="comboBox_task_type">
+           <property name="enabled">
+            <bool>false</bool>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QCheckBox" name="checkBox_filter_status">
+           <property name="text">
+            <string>По статусу</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QComboBox" name="comboBox_status">
+           <property name="enabled">
+            <bool>false</bool>
+           </property>
+          </widget>
+         </item>
+        </layout>
+       </widget>
+      </item>
+     </layout>
+    </widget>
+   </item>
+   <item>
+    <widget class="QWidget" name="widget_buttons" native="true">
+     <layout class="QHBoxLayout" name="horizontalLayout_buttons">
+      <item>
+       <spacer name="horizontalSpacer">
+        <property name="orientation">
+         <enum>Qt::Horizontal</enum>
+        </property>
+        <property name="sizeHint" stdset="0">
+         <size>
+          <width>40</width>
+          <height>20</height>
+         </size>
+        </property>
+       </spacer>
+      </item>
+      <item>
+       <widget class="QPushButton" name="pushButton_generate">
+        <property name="text">
+         <string>Сформировать отчёт</string>
+        </property>
+        <property name="minimumSize">
+         <size>
+          <width>200</width>
+          <height>40</height>
+         </size>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QPushButton" name="pushButton_export">
+        <property name="text">
+         <string>Экспорт в Excel</string>
+        </property>
+        <property name="enabled">
+         <bool>false</bool>
+        </property>
+        <property name="minimumSize">
+         <size>
+          <width>150</width>
+          <height>40</height>
+         </size>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <spacer name="horizontalSpacer_2">
+        <property name="orientation">
+         <enum>Qt::Horizontal</enum>
+        </property>
+        <property name="sizeHint" stdset="0">
+         <size>
+          <width>40</width>
+          <height>20</height>
+         </size>
+        </property>
+       </spacer>
+      </item>
+     </layout>
+    </widget>
+   </item>
+   <item>
+    <widget class="QTabWidget" name="tabWidget_results">
+     <property name="currentIndex">
+      <number>0</number>
+     </property>
+     <widget class="QWidget" name="tab_table">
+      <attribute name="title">
+       <string>Таблица</string>
+      </attribute>
+      <layout class="QVBoxLayout" name="verticalLayout_table">
+       <item>
+        <widget class="QTableWidget" name="tableWidget_report">
+         <property name="alternatingRowColors">
+          <bool>true</bool>
+         </property>
+         <property name="selectionBehavior">
+          <enum>QAbstractItemView::SelectRows</enum>
+         </property>
+        </widget>
+       </item>
+      </layout>
+     </widget>
+     <widget class="QWidget" name="tab_summary">
+      <attribute name="title">
+       <string>Сводка</string>
+      </attribute>
+      <layout class="QVBoxLayout" name="verticalLayout_summary">
+       <item>
+        <widget class="QTextEdit" name="textEdit_summary">
+         <property name="readOnly">
+          <bool>true</bool>
+         </property>
+        </widget>
+       </item>
+      </layout>
+     </widget>
+    </widget>
+   </item>
+  </layout>
+ </widget>
+ <resources/>
+ <connections/>
+</ui>
