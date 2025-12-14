@@ -116,12 +116,17 @@
         </property>
         <column>
          <property name="text">
-          <string>Использовать</string>
+          <string/>
          </property>
         </column>
         <column>
          <property name="text">
           <string>Тип компонента</string>
+         </property>
+        </column>
+        <column>
+         <property name="text">
+          <string>Описание</string>
          </property>
         </column>
        </widget>

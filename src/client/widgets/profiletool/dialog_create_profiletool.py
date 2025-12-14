@@ -1,5 +1,5 @@
 """Диалог для создания инструмента профиля"""
-from PySide6.QtWidgets import (QTableWidgetItem, QCheckBox, QAbstractItemView, QListWidgetItem)
+from PySide6.QtWidgets import (QTableWidgetItem, QCheckBox, QAbstractItemView, QListWidgetItem, QHeaderView)
 from PySide6.QtCore import Qt, Slot
 from PySide6.QtGui import QPixmap
 import base64
@@ -33,12 +33,12 @@ class DialogCreateProfileTool(BaseDialog):
         # Настройка таблицы компонентов
         self.ui.tableWidget_components.setSelectionBehavior(QAbstractItemView.SelectRows)
         self.ui.tableWidget_components.setSelectionMode(QAbstractItemView.SingleSelection)
-        self.ui.tableWidget_components.horizontalHeader().setStretchLastSection(True)
-
-        # Устанавливаем ширины колонок
-        self.ui.tableWidget_components.setColumnWidth(0, 100)  # Использовать
-        self.ui.tableWidget_components.setColumnWidth(1, 200)  # Тип компонента
-        self.ui.tableWidget_components.setColumnWidth(2, 150)  # Статус
+        
+        # Автоматическая ширина колонок по содержимому
+        header = self.ui.tableWidget_components.horizontalHeader()
+        header.setSectionResizeMode(0, QHeaderView.ResizeToContents)  # Использовать
+        header.setSectionResizeMode(1, QHeaderView.ResizeToContents)  # Тип компонента
+        header.setSectionResizeMode(2, QHeaderView.Stretch)  # Описание (растягивается)
 
     # =============================================================================
     # Загрузка справочников и начальных данных
@@ -84,6 +84,9 @@ class DialogCreateProfileTool(BaseDialog):
             name_item.setFlags(name_item.flags() & ~Qt.ItemIsEditable)
             name_item.setData(Qt.UserRole, type['id'])
             self.ui.tableWidget_components.setItem(row, 1, name_item)
+            # Колонка 2: Описание (редактируемое)
+            description_item = QTableWidgetItem("")
+            self.ui.tableWidget_components.setItem(row, 2, description_item)
             # Сохраняем ссылки на виджеты для удобного доступа
             self.list_component_widget.append({
                 'type_id': type['id'],
@@ -154,8 +157,8 @@ class DialogCreateProfileTool(BaseDialog):
             checkbox = widget_data['checkbox']
             if checkbox.isChecked():
                 row = widget_data['row']
-                # Получаем описание из таблицы
-                description_item = self.ui.tableWidget_components.item(row, 3)
+                # Получаем описание из таблицы (колонка 2)
+                description_item = self.ui.tableWidget_components.item(row, 2)
                 description = description_item.text() if description_item else ""
                 component = {
                     "type_id": widget_data['type_id'],
