@@ -43,12 +43,43 @@ class BaseTable:
                 count_row=10
             )
         """
+        from PySide6.QtGui import QFont
+        from PySide6.QtWidgets import QHeaderView
+        
         table.setColumnCount(len(list_header))
         table.setHorizontalHeaderLabels(list_header)
         table.setRowCount(count_row)
         
+        # Увеличиваем шрифт таблицы
+        font = table.font()
+        font.setPointSize(12)
+        table.setFont(font)
+        
+        # Увеличиваем шрифт заголовков
+        header_font = table.horizontalHeader().font()
+        header_font.setPointSize(12)
+        header_font.setBold(True)
+        table.horizontalHeader().setFont(header_font)
+        
+        # Добавляем отступы между ячейками
+        table.setStyleSheet("""
+            QTableWidget::item {
+                padding: 5px;
+            }
+        """)
+        
+        # Настройка ширины колонок
+        header = table.horizontalHeader()
+        
+        # Все колонки кроме последней - по содержимому
+        for i in range(len(list_header) - 1):
+            header.setSectionResizeMode(i, QHeaderView.ResizeToContents)
+        
+        # Последняя колонка растягивается до конца
         if is_stretch_last:
-            table.horizontalHeader().setStretchLastSection(True)
+            header.setSectionResizeMode(len(list_header) - 1, QHeaderView.Stretch)
+        else:
+            header.setSectionResizeMode(len(list_header) - 1, QHeaderView.ResizeToContents)
 
     @staticmethod
     def populate_row(

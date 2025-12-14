@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>1231</width>
-    <height>801</height>
+    <width>1326</width>
+    <height>803</height>
    </rect>
   </property>
   <layout class="QGridLayout" name="gridLayout">
@@ -37,6 +37,9 @@
          <width>700</width>
          <height>0</height>
         </size>
+       </property>
+       <property name="focusPolicy">
+        <enum>Qt::FocusPolicy::NoFocus</enum>
        </property>
        <property name="alternatingRowColors">
         <bool>true</bool>
@@ -94,7 +97,7 @@
     <widget class="QFrame" name="frame">
      <property name="minimumSize">
       <size>
-       <width>450</width>
+       <width>600</width>
        <height>0</height>
       </size>
      </property>
@@ -135,24 +138,11 @@
        </widget>
       </item>
       <item>
-       <spacer name="verticalSpacer_before_sketch">
-        <property name="orientation">
-         <enum>Qt::Orientation::Vertical</enum>
-        </property>
-        <property name="sizeHint" stdset="0">
-         <size>
-          <width>20</width>
-          <height>20</height>
-         </size>
-        </property>
-       </spacer>
-      </item>
-      <item>
        <widget class="QLabel" name="label_sketch">
         <property name="minimumSize">
          <size>
-          <width>300</width>
-          <height>350</height>
+          <width>250</width>
+          <height>250</height>
          </size>
         </property>
         <property name="maximumSize">
@@ -170,26 +160,28 @@
        </widget>
       </item>
       <item>
-       <spacer name="verticalSpacer_bottom">
-        <property name="orientation">
-         <enum>Qt::Orientation::Vertical</enum>
-        </property>
-        <property name="sizeHint" stdset="0">
+       <widget class="QGroupBox" name="groupBox_component">
+        <property name="minimumSize">
          <size>
-          <width>20</width>
-          <height>40</height>
+          <width>0</width>
+          <height>0</height>
          </size>
         </property>
-       </spacer>
-      </item>
-      <item>
-       <widget class="QGroupBox" name="groupBox_component">
         <property name="title">
          <string>Компоненты</string>
         </property>
         <layout class="QVBoxLayout" name="verticalLayout">
          <item>
           <widget class="QTableWidget" name="tableWidget_component">
+           <property name="minimumSize">
+            <size>
+             <width>0</width>
+             <height>0</height>
+            </size>
+           </property>
+           <property name="focusPolicy">
+            <enum>Qt::FocusPolicy::NoFocus</enum>
+           </property>
            <property name="alternatingRowColors">
             <bool>true</bool>
            </property>

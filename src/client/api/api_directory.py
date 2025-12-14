@@ -41,10 +41,6 @@ class ApiDirectory(ApiClient):
         """Получение всех типов задач"""
         return self._request("GET", "/api/directory/dir_task_type")
 
-    def get_task_location(self):
-        """Получение всех местоположений задач"""
-        return self._request("GET", "/api/directory/dir_task_location")
-
     def get_blank_material(self):
         """Получение всех материалов заготовок"""
         return self._request("GET", "/api/directory/dir_blank_material")

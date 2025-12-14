@@ -20,7 +20,7 @@ def main():
     app.setAttribute(Qt.ApplicationAttribute.AA_UseHighDpiPixmaps, True)
 
     window = MainWindow()
-    window.show()
+    window.showMaximized()
 
     # Запуск асинхронного цикла
     loop = qasync.QEventLoop(app)

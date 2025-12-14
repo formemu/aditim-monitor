@@ -6,7 +6,6 @@ class Task(models.Model):
     profiletool = models.ForeignKey('ProfileTool', on_delete=models.CASCADE, null=True, blank=True)
     status = models.ForeignKey('DirTaskStatus', on_delete=models.CASCADE, db_column='status_id')
     type = models.ForeignKey('DirTaskType', on_delete=models.CASCADE, db_column='type_id')
-    location = models.ForeignKey('DirTaskLocation', on_delete=models.CASCADE, db_column='location_id', null=True, blank=True)
     description = models.TextField(blank=True, null=True)
 
     position = models.IntegerField(default=0)
@@ -173,18 +172,6 @@ class DirTaskType(models.Model):
     def __str__(self):
         return self.name
 
-class DirTaskLocation(models.Model):
-    name = models.CharField(max_length=50)
-    description = models.TextField(blank=True)
-
-    class Meta:
-        db_table = 'dir_task_location'
-        managed = False
-        verbose_name = 'Местоположение задачи'
-        verbose_name_plural = 'Местоположения задач'
-
-    def __str__(self):
-        return self.name
 
 class DirDepartment(models.Model):
     name = models.CharField(max_length=100)

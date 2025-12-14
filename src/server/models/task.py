@@ -18,7 +18,6 @@ class ModelTask(Base):
     profiletool_id = Column(Integer, ForeignKey("profiletool.id"), nullable=True)
     status_id = Column(Integer, ForeignKey("dir_task_status.id"), nullable=True, default=1)
     type_id = Column(Integer, ForeignKey("dir_task_type.id"), nullable=True, default=1)
-    location_id = Column(Integer, ForeignKey("dir_task_location.id"), nullable=True, default=1)
 
     description = Column(Text, nullable=True)
 
@@ -26,7 +25,6 @@ class ModelTask(Base):
     product = relationship("ModelProduct", back_populates="task")
     profiletool = relationship("ModelProfileTool", back_populates="task")
     status = relationship("ModelDirTaskStatus", back_populates="task")
-    location = relationship("ModelDirTaskLocation", back_populates="task")
     type = relationship("ModelDirTaskType", back_populates="task")
     component = relationship("ModelTaskComponent", back_populates="task", cascade="all, delete-orphan")
 

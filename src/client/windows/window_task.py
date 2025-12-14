@@ -69,14 +69,13 @@ class WindowTask(BaseWindow):
         """Обновление таблицы задач с корректным отображением и заполнением по ширине"""
         BaseTable.populate_table(
             self.ui.tableWidget_task,
-            ["№ задачи", "Название", "Тип работ", "Статус", "Местоположение", "Срок", "Создано", "Описание"],
+            ["№ задачи", "Название", "Тип работ", "Статус", "Срок", "Создано", "Описание"],
             api_manager.table['task'],
             func_row_mapper=lambda task: [
                 f"Задача № {task['id']}",
                 self.get_task_name(task),
                 task['type']['name'],
                 task['status']['name'],
-                task['location']['name'],
                 task['deadline'],
                 task['created'],
                 task.get('description', '') or ''
@@ -85,7 +84,7 @@ class WindowTask(BaseWindow):
         )
 
     def update_table_queue(self):
-        """Обновление таблицы очереди с корректным отображением и заполнением по ширине"""
+        """Обновление таблицы очереди"""
         BaseTable.populate_table(
             self.ui.tableWidget_queue,
             ["Позиция", "Название", "Тип работ", "Статус", "Срок", "Создано", "Описание"],
@@ -219,16 +218,18 @@ class WindowTask(BaseWindow):
                     len(self.task['component'])
                 )
                 for row, component in enumerate(self.task['component']):
-                    # Определяем статус
+                    # Определяем статус разработки
+                    # Ищем статусы, относящиеся к разработке (id 1, 2, 3)
+                    # 1 - Новая, 2 - В разработке, 3 - Разработан
                     history = component['profiletool_component']['history']
+                    status_name = "Новая"  # По умолчанию
+                    
                     if history:
-                        last_history = history[-1]
-                        if last_history['status']['id'] == 2:
-                            status_name = last_history['status']['name']
-                        else:
-                            status_name = "Разработан"
-                    else:
-                        status_name = "Новая"
+                        # Ищем последний статус из категории разработки
+                        dev_statuses = [h for h in history if h['status']['id'] in [1, 2, 3]]
+                        if dev_statuses:
+                            last_dev_status = dev_statuses[-1]
+                            status_name = last_dev_status['status']['name']
                     
                     BaseTable.populate_row(
                         table,
@@ -445,9 +446,21 @@ class WindowTask(BaseWindow):
     def show_context_menu(self, pos):
         """Показать контекстное меню для изменения статуса задачи"""
         table = self.ui.tableWidget_task
+        
+        # Получаем задачу из позиции клика
+        item = table.itemAt(pos)
+        if not item:
+            return
+        
+        task_id = item.data(Qt.UserRole)
+        self.task = api_manager.get_by_id("task", task_id)
+        
+        if not self.task:
+            return
+        
         menu = QMenu(table)
         status_menu = QMenu("Изменить статус", menu)
-        location_menu = QMenu("Изменить местоположение", menu)
+        
         for status in api_manager.directory['task_status']:
             # Проверяем, нужно ли добавлять этот статус в меню
             current_status_name = self.task['status']['name']
@@ -463,12 +476,11 @@ class WindowTask(BaseWindow):
             action.triggered.connect(lambda _, status_id=status['id']: self.change_task_status(status_id))
             status_menu.addAction(action)
         menu.addMenu(status_menu)
-        for location in api_manager.directory['task_location']:
-            action = QAction(location['name'], location_menu)
-            action.setCheckable(True)
-            action.triggered.connect(lambda _, location_id=location['id']: self.change_task_location(location_id))
-            location_menu.addAction(action)
-        menu.addMenu(location_menu)
+        
+        # Добавляем пункт "Изменить описание"
+        action_edit_description = QAction("Изменить описание", menu)
+        action_edit_description.triggered.connect(self.edit_task_description)
+        menu.addAction(action_edit_description)
 
         menu.exec(table.viewport().mapToGlobal(pos))
 
@@ -501,6 +513,28 @@ class WindowTask(BaseWindow):
             status = 10 # Заготовка
             self.update_component_history(status, task['component'])
         
+    def edit_task_description(self):
+        """Изменить описание задачи"""
+        from PySide6.QtWidgets import QInputDialog
+        
+        if not self.task:
+            return
+        
+        current_description = self.task.get('description', '') or ''
+        
+        # Показываем диалог для ввода нового описания
+        new_description, ok = QInputDialog.getMultiLineText(
+            self,
+            "Изменить описание задачи",
+            f"Задача: {self.get_task_name(self.task)}\n\nОписание:",
+            current_description
+        )
+        
+        if ok:
+            # Обновляем описание через API
+            update_data = {"description": new_description}
+            api_manager.api_task.update_task(self.task['id'], update_data)
+            
+            # Обновляем таблицы
+            self.refresh_data()
 
-    def change_task_location(self, location_id):
-        api_manager.api_task.update_task_location(self.task['id'], location_id)

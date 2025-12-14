@@ -43,7 +43,7 @@ class SchemaProfileToolComponentCreate(ProfileToolComponentBase):
 
 class ProfileToolComponentUpdate(BaseModel):
     """Частичное обновление компонента"""
-    type_id: int
+    type_id: Optional[int] = None
     description: Optional[str] = None
     variant: Optional[int] = None
 

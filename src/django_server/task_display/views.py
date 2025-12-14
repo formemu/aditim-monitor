@@ -10,8 +10,7 @@ def task_list_view(request):
         'product__department',
         'profiletool__profile',
         'status',
-        'type',
-        'location'
+        'type'
     ).prefetch_related(
         'component_list'
     ).filter(

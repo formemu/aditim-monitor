@@ -113,10 +113,6 @@ class SchemaDirWorkSubtype(SchemaDirectoryResponse):
     work_type_id: int
     work_type: Optional[SchemaDirWorkType] = None
 
-class SchemaDirTaskLocation(SchemaDirectoryResponse):
-    """Справочник: Локации задач"""
-    pass
-
 
 class SchemaDirBlankMaterial(SchemaDirectoryResponse):
     """Справочник: Материалы заготовок"""

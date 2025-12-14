@@ -33,7 +33,6 @@ def get_task(db: Session = Depends(get_db)):
         selectinload(ModelTask.product),
         selectinload(ModelTask.status),
         selectinload(ModelTask.type),
-        selectinload(ModelTask.location),
         selectinload(ModelTask.component).selectinload(ModelTaskComponent.stage),
         selectinload(ModelTask.component).selectinload(ModelTaskComponent.profiletool_component).selectinload(ModelProfileToolComponent.blank).selectinload(ModelBlank.material)
     ).order_by(ModelTask.id).all()
@@ -48,7 +47,6 @@ def get_taskdev(db: Session = Depends(get_db)):
         selectinload(ModelTask.product),
         selectinload(ModelTask.status),
         selectinload(ModelTask.type),
-        selectinload(ModelTask.location),
         selectinload(ModelTask.component).selectinload(ModelTaskComponent.stage)
     ).filter(ModelTask.type_id == type.id, ModelTask.status_id == status.id).order_by(ModelTask.position).all()
 
@@ -61,7 +59,6 @@ def get_queue(db: Session = Depends(get_db)):
         selectinload(ModelTask.product),
         selectinload(ModelTask.status),
         selectinload(ModelTask.type),
-        selectinload(ModelTask.location),
         selectinload(ModelTask.component).selectinload(ModelTaskComponent.stage)
     ).filter(ModelTask.status_id == status_in_progress.id, ModelTask.position.isnot(None)).order_by(ModelTask.position).all()
 
@@ -170,6 +167,26 @@ def reorder_queue(request: SchemaQueueReorderRequest, db: Session = Depends(get_
 # =============================================================================
 # ROUTER.PATCH
 # ===========================================================================
+@router.patch("/task/{task_id}", response_model=SchemaTaskResponse)
+def update_task(task_id: int, task: SchemaTaskUpdate, db: Session = Depends(get_db)):
+    """Обновить задачу (общий endpoint)"""
+    db_task = db.get(ModelTask, task_id)
+    
+    if not db_task:
+        raise HTTPException(status_code=404, detail="Task not found")
+    
+    # Обновляем только переданные поля
+    update_data = task.model_dump(exclude_unset=True)
+    for field, value in update_data.items():
+        setattr(db_task, field, value)
+    
+    db.commit()
+    db.refresh(db_task)
+    notify_clients("table", "task", "updated")
+    notify_clients("table", "taskdev", "updated")
+    notify_clients("table", "queue", "updated")
+    return db_task
+
 @router.patch("/task/{task_id}/status", response_model=SchemaTaskResponse)
 def update_task_status( task_id: int, task: SchemaTaskUpdate, db: Session = Depends(get_db)):
     """Обновить статус задачи"""
@@ -186,17 +203,6 @@ def update_task_status( task_id: int, task: SchemaTaskUpdate, db: Session = Depe
     notify_clients("table", "task", "updated")
     notify_clients("table", "taskdev", "updated")
     notify_clients("table", "queue", "updated")
-    return db_task
-
-# Обновление местоположения задачи
-@router.patch("/task/{task_id}/location", response_model=SchemaTaskResponse)
-def update_task_location(task_id: int, task: SchemaTaskUpdate, db: Session = Depends(get_db)):
-    """Обновить местоположение задачи"""
-    db_task = db.get(ModelTask, task_id)
-    db_task.location_id = task.location_id
-    db.commit()
-    db.refresh(db_task)
-    notify_clients("table", "task", "updated")
     return db_task
 
 

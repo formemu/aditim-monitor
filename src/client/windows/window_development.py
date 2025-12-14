@@ -60,11 +60,12 @@ class WindowDevelopment(BaseWindow):
         """Обновление таблицы задач разработки"""
         BaseTable.populate_table(
             self.ui.tableWidget_taskdev,
-            ["Название", "Срок"],
+            ["Название", "Срок", "Описание"],
             api_manager.table['taskdev'],
             func_row_mapper=lambda task: [
                 self.get_task_name(task),
-                task['deadline']
+                task['deadline'],
+                task.get('description', '') or ''
             ],
             func_id_getter=lambda task: task['id']
         )
@@ -105,13 +106,18 @@ class WindowDevelopment(BaseWindow):
         
         # Маппер для строки компонента
         def map_component_row(component):
-            # Последний статус из истории
+            # Определяем статус разработки
+            # Ищем статусы, относящиеся к разработке (id 1, 2, 3)
+            # 1 - Новая, 2 - В разработке, 3 - Разработан
             history = component.get('history', [])
+            status_name = "Новая"  # По умолчанию
+            
             if history:
-                last_history = history[-1]
-                status_name = last_history["status"]["name"]
-            else:
-                status_name = ""
+                # Ищем последний статус из категории разработки
+                dev_statuses = [h for h in history if h['status']['id'] in [1, 2, 3]]
+                if dev_statuses:
+                    last_dev_status = dev_statuses[-1]
+                    status_name = last_dev_status['status']['name']
             
             return [
                 component["type"]["name"],
@@ -119,10 +125,25 @@ class WindowDevelopment(BaseWindow):
                 component.get("description", "") or ""
             ]
         
+        # Функция для определения статуса компонента
+        def get_component_status_id(component):
+            history = component.get('history', [])
+            if history:
+                dev_statuses = [h for h in history if h['status']['id'] in [1, 2, 3]]
+                if dev_statuses:
+                    return dev_statuses[-1]['status']['id']
+            return 1  # По умолчанию "Новая"
+        
+        # Фильтруем только компоненты со статусом "В разработке" (id=2)
+        list_component_in_development = [
+            c for c in self.task['profiletool']['component']
+            if get_component_status_id(c) == 2
+        ]
+        
         BaseTable.populate_table(
             table,
             ["Название", "Статус", "Описание"],
-            self.task['profiletool']['component'],
+            list_component_in_development,
             func_row_mapper=map_component_row,
             func_id_getter=lambda c: c["id"]
         )
@@ -171,6 +192,18 @@ class WindowDevelopment(BaseWindow):
     def show_context_menu_main_table(self, pos):
         """Показать контекстное меню для изменения статуса задачи"""
         table = self.ui.tableWidget_taskdev
+        
+        # Получаем задачу из позиции клика
+        item = table.itemAt(pos)
+        if not item:
+            return
+        
+        task_id = item.data(Qt.UserRole)
+        self.task = api_manager.get_by_id("task", task_id)
+        
+        if not self.task:
+            return
+        
         menu = QMenu(table)
         status_menu = QMenu("Изменить статус", menu)
         for status in api_manager.directory['task_status']:
@@ -185,6 +218,17 @@ class WindowDevelopment(BaseWindow):
     def show_context_menu_component_table(self, pos):
         """Показать контекстное меню для изменения статуса компонента"""
         table = self.ui.tableWidget_component
+        
+        # Получаем компонент из позиции клика
+        item = table.itemAt(pos)
+        if not item:
+            return
+        
+        self.component_id = item.data(Qt.UserRole)
+        
+        if not self.component_id:
+            return
+        
         menu = QMenu(table)
         status_menu = QMenu("Изменить статус", menu)
         for status in api_manager.directory['component_status']:

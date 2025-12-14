@@ -107,6 +107,9 @@
           <enum>Qt::Orientation::Horizontal</enum>
          </property>
          <widget class="QTableWidget" name="tableWidget_blank">
+          <property name="focusPolicy">
+           <enum>Qt::FocusPolicy::NoFocus</enum>
+          </property>
           <property name="editTriggers">
            <set>QAbstractItemView::EditTrigger::NoEditTriggers</set>
           </property>

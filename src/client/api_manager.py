@@ -64,7 +64,6 @@ class ApiManager(QObject):
             ("work_type", "directory", self.api_directory.get_work_type),
             ("work_subtype", "directory", self.api_directory.get_work_subtype),
             ("task_type", "directory", self.api_directory.get_task_type),
-            ("task_location", "directory", self.api_directory.get_task_location),
             ("blank_material", "directory", self.api_directory.get_blank_material),
             ("blank_type", "directory", self.api_directory.get_blank_type),
             

@@ -33,7 +33,6 @@ class WizardTaskCreate(QWizard):
         self.product = None
         self.task_data = {
             "status_id": 1,
-            "location_id": 1,
             "created": QDate.currentDate().toString("yyyy-MM-dd"),
             "component": list()
         }

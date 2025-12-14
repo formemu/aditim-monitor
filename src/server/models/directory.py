@@ -68,10 +68,6 @@ class ModelDirWorkSubtype(ModelDirectoryBase):
     plan_stage = relationship("ModelPlanTaskComponentStage", back_populates="work_subtype")
     work_type = relationship("ModelDirWorkType", back_populates="work_subtype")
 
-class ModelDirTaskLocation(ModelDirectoryBase):
-    """Справочник локаций задач"""
-    __tablename__ = "dir_task_location"
-    task = relationship("ModelTask", back_populates="location")
 
 class ModelDirBlankMaterial(ModelDirectoryBase):
     """Справочник материалов заготовок"""

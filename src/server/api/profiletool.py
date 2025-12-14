@@ -12,7 +12,8 @@ from ..schemas.profiletool import (
     SchemaProfileToolUpdate,
     SchemaProfileToolComponentResponse,
     SchemaProfileToolComponentHistoryCreate,
-    SchemaProfileToolComponentHistoryResponse
+    SchemaProfileToolComponentHistoryResponse,
+    ProfileToolComponentUpdate
 )
 from ..events import notify_clients
 
@@ -124,6 +125,20 @@ def update_profiletool(profiletool_id: int, tool: SchemaProfileToolUpdate, db: S
     db.refresh(db_tool)
     notify_clients("table", "profiletool", "updated")
     return db_tool
+
+@router.patch("/profile-tool/component/{component_id}", response_model=SchemaProfileToolComponentResponse)
+def update_profiletool_component(component_id: int, component: ProfileToolComponentUpdate, db: Session = Depends(get_db)):
+    """Обновить компонент инструмента профиля"""
+    db_component = db.get(ModelProfileToolComponent, component_id)
+    if not db_component:
+        raise HTTPException(status_code=404, detail="Компонент не найден")
+    update_data = component.model_dump(exclude_unset=True)
+    for field, value in update_data.items():
+        setattr(db_component, field, value)
+    db.commit()
+    db.refresh(db_component)
+    notify_clients("table", "profiletool", "updated")
+    return db_component
 
 # =============================================================================
 # ROUTER.DELETE

@@ -1,5 +1,5 @@
 """Содержимое изделий для ADITIM Monitor Client с вкладками и компонентами"""
-from PySide6.QtWidgets import QMessageBox, QDialog, QMenu
+from PySide6.QtWidgets import QMessageBox, QDialog, QMenu, QInputDialog
 from PySide6.QtCore import Qt, QDate
 from PySide6.QtGui import QAction
 
@@ -191,7 +191,18 @@ class WindowProduct(BaseWindow):
     def show_context_menu_component_table(self, pos):
         """Показать контекстное меню для изменения статуса компонента"""
         table = self.ui.tableWidget_component
+        item = table.itemAt(pos)
+        if not item:
+            return
+            
         menu = QMenu(table)
+        
+        # Пункт для редактирования описания
+        edit_description_action = QAction("Изменить описание", menu)
+        edit_description_action.triggered.connect(self.edit_component_description)
+        menu.addAction(edit_description_action)
+        
+        # Подменю для изменения статуса
         status_menu = QMenu("Изменить статус", menu)
         for status in api_manager.directory['component_status']:
             if status['name'] in ['На испытаниях', 'В работе', 'На исправление', 'Брак']:
@@ -200,6 +211,7 @@ class WindowProduct(BaseWindow):
                 action.triggered.connect(lambda _, status_id=status['id']: self.change_component_history(status_id))
                 status_menu.addAction(action)
         menu.addMenu(status_menu)
+        
         menu.exec(table.viewport().mapToGlobal(pos))
 
     # =============================================================================
@@ -250,6 +262,44 @@ class WindowProduct(BaseWindow):
         )
 
         self.update_profiletool_component_table()
+
+    def edit_component_description(self):
+        """Редактирование описания компонента"""
+        table = self.ui.tableWidget_component
+        current_item = table.currentItem()
+        if not current_item:
+            QMessageBox.warning(self, "Внимание", "Выберите компонент для редактирования")
+            return
+        
+        component_id = current_item.data(Qt.UserRole)
+        if not component_id:
+            return
+        
+        # Получаем текущее описание из таблицы (колонка 3)
+        row = current_item.row()
+        description_item = table.item(row, 3)
+        current_description = description_item.text() if description_item else ""
+        
+        # Открываем диалог для ввода нового описания
+        new_description, ok = QInputDialog.getMultiLineText(
+            self,
+            "Изменить описание компонента",
+            "Описание:",
+            current_description
+        )
+        
+        if ok:
+            # Обновляем описание через API
+            try:
+                api_manager.api_profiletool.update_profiletool_component(
+                    component_id,
+                    {"description": new_description}
+                )
+                # Обновляем таблицу
+                self.update_profiletool_component_table()
+                QMessageBox.information(self, "Успех", "Описание компонента обновлено")
+            except Exception as e:
+                QMessageBox.critical(self, "Ошибка", f"Не удалось обновить описание: {str(e)}")
 
     # =============================================================================
     # ОБРАБОТЧИКИ СОБЫТИЙ: УПРАВЛЕНИЕ
