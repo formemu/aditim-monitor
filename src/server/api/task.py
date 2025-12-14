@@ -5,7 +5,8 @@ from fastapi import APIRouter, Depends, HTTPException, Query, Path, Body
 from sqlalchemy.orm import Session , selectinload
 from ..database import get_db
 from ..models.task import ModelTask, ModelTaskComponent, ModelTaskComponentStage
-from ..models.profiletool import ModelProfileTool
+from ..models.profiletool import ModelProfileTool, ModelProfileToolComponent
+from ..models.blank import ModelBlank
 from ..models.directory import ModelDirTaskStatus, ModelDirTaskType
 from ..schemas.task import (
     SchemaTaskCreate,
@@ -33,7 +34,8 @@ def get_task(db: Session = Depends(get_db)):
         selectinload(ModelTask.status),
         selectinload(ModelTask.type),
         selectinload(ModelTask.location),
-        selectinload(ModelTask.component).selectinload(ModelTaskComponent.stage)
+        selectinload(ModelTask.component).selectinload(ModelTaskComponent.stage),
+        selectinload(ModelTask.component).selectinload(ModelTaskComponent.profiletool_component).selectinload(ModelProfileToolComponent.blank).selectinload(ModelBlank.material)
     ).order_by(ModelTask.id).all()
 
 @router.get("/taskdev", response_model=List[SchemaTaskResponse])

@@ -3,7 +3,8 @@ import requests
 from typing import List, Dict
 from datetime import date
 
-BASE_URL = "http://0.0.0.0:8000/api"
+# BASE_URL = "http://0.0.0.0:8000/api"
+BASE_URL = "http://127.0.0.1:8000/api"
 # BASE_URL = "http://192.168.5.100:8000/api"
 
 def get_work_types():
@@ -64,7 +65,7 @@ def get_stages_for_machine(machine_id: int, work_type_id: int = None) -> List[Di
             if machine_match and work_type_match:
                 # Добавляем контекст
                 next_stage["task_id"] = task["id"]
-                next_stage["task_name"] = f"#{task['id']} — {task.get('product_name', 'Профиль')}"
+                next_stage["task_name"] = _get_task_name(task)
                 next_stage["component_id"] = component.get("id")
                 next_stage["component_name"] = (
                     component["profiletool_component"]["type"]["name"]
@@ -73,6 +74,65 @@ def get_stages_for_machine(machine_id: int, work_type_id: int = None) -> List[Di
                 )
                 next_stages.append(next_stage)
     return next_stages
+
+def _get_blank_info(component_dict: Dict) -> Dict:
+    """Извлекает информацию о заготовке из компонента профиля
+    
+    Returns:
+        Dict с ключами:
+        - blank_size: str - размеры заготовки "ШxВxД"
+        - product_size: str - размеры детали "ШxВxД"  
+        - material: str - материал заготовки
+    """
+    profiletool_component = component_dict.get('profiletool_component')
+    if not profiletool_component:
+        return {}
+    
+    # Получаем заготовку компонента (если есть)
+    list_blank = profiletool_component.get('blank', [])
+    if not list_blank:
+        return {}
+    
+    # Берем последнюю заготовку (с date_product)
+    blank = None
+    for b in list_blank:
+        if b.get('date_product'):
+            blank = b
+            break
+    
+    if not blank:
+        return {}
+    
+    # Формируем строки размеров
+    blank_width = blank.get('blank_width', 0) or 0
+    blank_height = blank.get('blank_height', 0) or 0
+    blank_length = blank.get('blank_length', 0) or 0
+    blank_size = f"{blank_width}×{blank_height}×{blank_length}"
+    
+    product_width = blank.get('product_width', 0) or 0
+    product_height = blank.get('product_height', 0) or 0
+    product_length = blank.get('product_length', 0) or 0
+    product_size = f"{product_width}×{product_height}×{product_length}"
+    
+    material = blank.get('material', {}).get('name', 'N/A') if blank.get('material') else 'N/A'
+    
+    return {
+        'blank_size': blank_size,
+        'product_size': product_size,
+        'material': material
+    }
+
+def _get_task_name(task: Dict) -> str:
+    """Возвращает название задачи: артикул профиля или имя изделия"""
+    if task.get('profiletool_id'):
+        profiletool = task.get('profiletool')
+        if profiletool and profiletool.get('profile'):
+            return f"Инструмент {profiletool['profile']['article']}"
+        return "Инструмент N/A"
+    elif task.get('product_id'):
+        product = task.get('product')
+        return f"Изделие {product['name']}" if product else "Изделие N/A"
+    return "Задача N/A"
 
 def get_quenching_stages(work_type_id: int) -> List[Dict]:
     """
@@ -108,7 +168,7 @@ def get_quenching_stages(work_type_id: int) -> List[Dict]:
             if next_stage:
                 # Добавляем контекст
                 next_stage["task_id"] = task["id"]
-                next_stage["task_name"] = f"#{task['id']} — {task.get('product_name', 'Профиль')}"
+                next_stage["task_name"] = _get_task_name(task)
                 next_stage["component_id"] = component.get("id")
                 next_stage["component_name"] = (
                     component["profiletool_component"]["type"]["name"]
@@ -160,13 +220,20 @@ def get_all_stages_by_work_type(work_type_id: int) -> List[Dict]:
             if work_type_match:
                 # Добавляем контекст
                 next_stage["task_id"] = task["id"]
-                next_stage["task_name"] = f"#{task['id']} — {task.get('product_name', 'Профиль')}"
+                next_stage["task_name"] = _get_task_name(task)
+                next_stage["task_type_id"] = task.get("type_id", 0)
                 next_stage["component_id"] = component.get("id")
                 next_stage["component_name"] = (
                     component["profiletool_component"]["type"]["name"]
                     if component.get("profiletool_component")
                     else (component["product_component"]["name"] if component.get("product_component") else "Без имени")
                 )
+                
+                # Для задач заготовок (type_id = 3) добавляем информацию о размерах
+                if task.get("type_id") == 3:
+                    blank_info = _get_blank_info(component)
+                    next_stage["blank_info"] = blank_info
+                
                 list_stage.append(next_stage)
     
     return list_stage

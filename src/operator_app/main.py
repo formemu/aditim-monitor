@@ -115,6 +115,10 @@ class OperatorApp:
                     on_click=lambda e, sid=stage["id"]: self._mark_finish(sid),
                 )
                 
+                # Описание этапа (если есть)
+                description = stage.get('description', '')
+                description_text = ft.Text(f"📝 {description}", italic=True, color=ft.Colors.GREY_700) if description else ft.Container()
+                
                 self.column_stage.controls.append(
                     ft.Card(
                         content=ft.Container(
@@ -123,6 +127,7 @@ class OperatorApp:
                                 ft.Text(f"{stage['task_name']} — {stage['component_name']}", 
                                     weight=ft.FontWeight.BOLD, size=16),
                                 ft.Text(f"Операция: {stage['work_subtype']['name']}", color=ft.Colors.ORANGE),
+                                description_text,
                                 ft.Text(f"Уехала: {stage['start'] or '—'}"),
                                 ft.Text(f"Приехала: {stage['finish'] or '—'}"),
                                 ft.Row([button_start, button_finish])
@@ -168,6 +173,22 @@ class OperatorApp:
                 # Информация о текущем станке
                 text_machine = f"Станок: {stage['machine']['name']}" if stage.get("machine") else "Станок не выбран"
                 
+                # Описание этапа (если есть)
+                description = stage.get('description', '')
+                description_text = ft.Text(f"📝 {description}", italic=True, color=ft.Colors.GREY_700) if description else ft.Container()
+                
+                # Информация о заготовке (для type_id = 3)
+                blank_info_controls = []
+                if stage.get("task_type_id") == 3 and stage.get("blank_info"):
+                    blank_info = stage["blank_info"]
+                    blank_info_controls = [
+                        ft.Divider(height=1),
+                        ft.Text("📦 Габариты заготовки:", weight=ft.FontWeight.BOLD, size=14, color=ft.Colors.BLUE),
+                        ft.Text(f"Материал: {blank_info.get('material', 'N/A')}", color=ft.Colors.BLUE_GREY),
+                        ft.Text(f"Из чего: {blank_info.get('blank_size', 'N/A')} мм", color=ft.Colors.BLUE_GREY),
+                        ft.Text(f"Что сделать: {blank_info.get('product_size', 'N/A')} мм", color=ft.Colors.GREEN_700),
+                    ]
+                
                 self.column_stage.controls.append(
                     ft.Card(
                         content=ft.Container(
@@ -176,6 +197,8 @@ class OperatorApp:
                                 ft.Text(f"{stage['task_name']} — {stage['component_name']}", 
                                     weight=ft.FontWeight.BOLD, size=16),
                                 ft.Text(f"Операция: {stage['work_subtype']['name']}"),
+                                description_text,
+                                *blank_info_controls,
                                 ft.Text(text_machine, color=ft.Colors.BLUE_700),
                                 ft.Text(f"Начал: {stage['start'] or '—'}"),
                                 ft.Text(f"Завершил: {stage['finish'] or '—'}"),

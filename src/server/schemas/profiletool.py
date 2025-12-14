@@ -2,6 +2,7 @@
 from typing import Optional, List
 from pydantic import BaseModel, ConfigDict
 from ..schemas.directory import SchemaDirToolDimension, SchemaDirComponentStatus, SchemaDirProfiletoolComponentType
+from ..schemas.blank import SchemaBlankResponse
 from datetime import date
 
 
@@ -51,6 +52,7 @@ class SchemaProfileToolComponentResponse(ProfileToolComponentBase):
     profiletool_id: int
     type: Optional[SchemaDirProfiletoolComponentType] = None
     history: List["SchemaProfileToolComponentHistoryResponse"] = []
+    blank: List[SchemaBlankResponse] = []
 
 class SchemaProfileToolComponentHistoryCreate(BaseModel):
     """Схема создания истории компонента (без component_id — берётся из URL)"""

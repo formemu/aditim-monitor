@@ -155,12 +155,24 @@ class WizardTaskCreate(QWizard):
         self.task_data['created'] = QDate.currentDate().toString("yyyy-MM-dd")
         if self.task_data["profiletool_id"]:
             if self.task_data['type_id'] == 0:
+                # Проверка для задачи "Разработка"
+                if not self.validate_profiletool_exists():
+                    return
                 self.create_profiletool_task_dev()
             elif self.task_data['type_id'] == 1:
+                # Проверка для задачи "Изготовление"
+                if not self.validate_profiletool_exists():
+                    return
                 self.create_profiletool_task_prod()
             elif self.task_data['type_id'] == 2:
+                # Проверка для задачи "Изменение"
+                if not self.validate_profiletool_exists():
+                    return
                 self.create_profiletool_task_rev()
             elif self.task_data['type_id'] == 3:
+                # Проверяем наличие инструмента и компонентов
+                if not self.validate_profiletool_exists():
+                    return  # Не создаем задачу, если нет инструмента или компонентов
                 # Проверяем наличие заготовок перед созданием задачи
                 if not self.validate_blank_availability():
                     return  # Не создаем задачу, если недостаточно заготовок
@@ -194,6 +206,48 @@ class WizardTaskCreate(QWizard):
         for component in self.task_data["component"]:
             component_data = {"profiletool_component_id": component['id']}
             api_manager.api_task.create_task_component(task['id'], component_data)
+
+    def validate_profiletool_exists(self):
+        """Проверка наличия инструмента и его компонентов перед созданием задачи"""
+        from PySide6.QtWidgets import QMessageBox
+        
+        # Проверяем, что инструмент выбран
+        if not self.profileTool:
+            QMessageBox.warning(
+                self,
+                "Ошибка",
+                "Инструмент не выбран!\n\n"
+                "Выберите инструмент профиля для создания задачи."
+            )
+            return False
+        
+        # Проверяем, что у инструмента есть компоненты
+        list_component = self.profileTool.get('component', [])
+        if not list_component or len(list_component) == 0:
+            profile_article = self.task_data.get('profile', {}).get('article', 'N/A')
+            dimension_name = self.profileTool.get('dimension', {}).get('name', 'N/A')
+            
+            # Определяем тип задачи для сообщения
+            task_type_names = {
+                0: "разработку",
+                1: "изготовление",
+                2: "изменение",
+                3: "изготовление заготовок"
+            }
+            task_type = task_type_names.get(self.task_data.get('type_id', 3), "выполнение работ")
+            
+            QMessageBox.warning(
+                self,
+                "Ошибка: нет компонентов инструмента",
+                f"У инструмента профиля '{profile_article}' (размерность {dimension_name}) "
+                f"отсутствуют компоненты!\n\n"
+                f"Невозможно создать задачу на {task_type}, "
+                f"так как нет компонентов для работы.\n\n"
+                f"Сначала создайте компоненты инструмента в разделе 'Профили'."
+            )
+            return False
+        
+        return True
 
     def validate_blank_availability(self):
         """Проверка достаточного количества заготовок для всех компонентов"""
